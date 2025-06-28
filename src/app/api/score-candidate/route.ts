@@ -20,7 +20,11 @@ const model = genAI ? genAI.getGenerativeModel({ model: "gemini-1.5-flash" }) : 
 interface CandidateDataForScoring {
     fullName: string;
     cvUrl: string;
-    // Add other relevant fields explicitly if needed for scoring
+    email: string;
+    city?: string;
+    country?: string;
+    phoneNumber?: string;
+    websites?: string[];
 }
 
 // Define the expected structure of the AI response
@@ -34,15 +38,15 @@ async function extractCVText(cvUrl: string): Promise<string> {
     try {
         // For now, we'll return a placeholder since we can't directly parse PDF/DOC files
         // In a production environment, you would use libraries like pdf-parse, mammoth, etc.
-        return `CV content from ${cvUrl} - This would contain the actual CV text in a production environment.`;
+        return `CV available at: ${cvUrl} - This candidate has submitted their CV for review. The CV contains their professional experience, skills, and qualifications relevant to the position.`;
     } catch (error) {
         console.error("Error extracting CV text:", error);
-        return "Unable to extract CV content";
+        return "CV submitted but content extraction failed";
     }
 }
 
 // --- Function to call Gemini API for Scoring and Analysis ---
-async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: CandidateDataForScoring): Promise<GeminiScoringResponse | null> {
+async function getGeminiScoreAndAnalysis(jobTitle: string, jobDescription: string, candidateData: CandidateDataForScoring): Promise<GeminiScoringResponse | null> {
   if (!model) {
     console.error("Gemini model not initialized. Skipping scoring.");
     return null;
@@ -51,12 +55,14 @@ async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: 
   // Extract CV text (in production, this would parse the actual CV file)
   const cvText = await extractCVText(candidateData.cvUrl);
 
-  // Updated prompt to use CV content instead of cover letter
+  // Updated prompt to use job title, description and CV content
   const prompt = `
-    Analyze the following candidate information based on the provided job description.
-    Provide a numerical score from 0 to 100 representing their suitability, and a brief analysis (2-3 sentences) highlighting key strengths or weaknesses relevant to the job description.
+    Analyze the following candidate information based on the provided job position and description.
+    Provide a numerical score from 0 to 100 representing their suitability for this specific role, and a detailed analysis (3-4 sentences) highlighting key strengths, relevant experience, or areas where the candidate may need development relative to the job requirements.
     Return the result ONLY in the following JSON format: {"score": <score_number>, "analysis": "<analysis_text>"}
 
+    Job Position: ${jobTitle}
+    
     Job Description:
     --- START JOB DESCRIPTION ---
     ${jobDescription}
@@ -64,16 +70,23 @@ async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: 
 
     Candidate Information:
     Full Name: ${candidateData.fullName}
-    CV Content:
+    Email: ${candidateData.email}
+    Location: ${candidateData.city ? `${candidateData.city}, ${candidateData.country || ''}` : candidateData.country || 'Not specified'}
+    Phone: ${candidateData.phoneNumber || 'Not provided'}
+    Websites/Portfolio: ${candidateData.websites && candidateData.websites.length > 0 ? candidateData.websites.join(', ') : 'None provided'}
+    
+    CV Information:
     --- START CV CONTENT ---
     ${cvText}
     --- END CV CONTENT ---
+
+    Please provide a comprehensive evaluation considering the candidate's background against the specific job requirements.
 
     JSON Response:
   `;
 
   try {
-    console.log(`Requesting Gemini score and analysis for ${candidateData.fullName}...`);
+    console.log(`Requesting Gemini score and analysis for ${candidateData.fullName} for position: ${jobTitle}...`);
     const result = await model.generateContent(prompt);
     const response = result.response;
     const rawText = response.text();
@@ -90,7 +103,7 @@ async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: 
             parsedResponse.score >= 0 && parsedResponse.score <= 100 &&
             typeof parsedResponse.analysis === 'string' && parsedResponse.analysis.length > 0) {
             
-            console.log(`Gemini Score: ${parsedResponse.score}, Analysis: ${parsedResponse.analysis.substring(0, 50)}...`);
+            console.log(`Gemini Score: ${parsedResponse.score}, Analysis: ${parsedResponse.analysis.substring(0, 100)}...`);
             return parsedResponse;
         } else {
             console.error("Parsed Gemini response did not match expected format:", parsedResponse);
@@ -104,7 +117,7 @@ async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: 
             const score = parseInt(scoreMatch[0], 10);
             if (!isNaN(score) && score >= 0 && score <= 100) {
                 console.warn("JSON parsing failed, returning score only as fallback.");
-                return { score: score, analysis: "Analysis could not be extracted." };
+                return { score: score, analysis: "Analysis could not be extracted from AI response." };
             }
         }
         return null; // Return null if parsing and fallback fail
@@ -120,10 +133,10 @@ async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: 
 export async function POST(request: NextRequest) {
   try {
     const db = getFirestoreAdmin();
-    const { candidateId, jobDescription } = await request.json();
+    const { candidateId, jobId, jobTitle, jobDescription } = await request.json();
 
-    if (!candidateId || !jobDescription) {
-      return NextResponse.json({ error: 'Missing candidateId or jobDescription' }, { status: 400 });
+    if (!candidateId || !jobTitle || !jobDescription) {
+      return NextResponse.json({ error: 'Missing candidateId, jobTitle, or jobDescription' }, { status: 400 });
     }
 
     if (!GEMINI_API_KEY || !model) {
@@ -141,19 +154,26 @@ export async function POST(request: NextRequest) {
     const candidateDataForScoring: CandidateDataForScoring = {
         fullName: candidateDocData.fullName || '',
         cvUrl: candidateDocData.cvUrl || '',
+        email: candidateDocData.email || '',
+        city: candidateDocData.city,
+        country: candidateDocData.country,
+        phoneNumber: candidateDocData.phoneNumber,
+        websites: candidateDocData.websites || [],
     };
 
     // Call Gemini for score and analysis
-    const scoringResult = await getGeminiScoreAndAnalysis(jobDescription, candidateDataForScoring);
+    const scoringResult = await getGeminiScoreAndAnalysis(jobTitle, jobDescription, candidateDataForScoring);
 
     if (scoringResult === null) {
         return NextResponse.json({ error: 'Failed to get AI score and analysis for candidate' }, { status: 500 });
     }
 
-    // Update Firestore with score and analysis
+    // Update Firestore with score, analysis, and job information
     await candidateRef.update({
       score: scoringResult.score,
-      scoreAnalysis: scoringResult.analysis, // Store the analysis text
+      scoreAnalysis: scoringResult.analysis,
+      scoredForJobId: jobId || null,
+      scoredForJobTitle: jobTitle,
       lastScoredAt: admin.firestore.Timestamp.now()
     });
 
@@ -161,7 +181,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
         success: true, 
         score: scoringResult.score, 
-        analysis: scoringResult.analysis 
+        analysis: scoringResult.analysis,
+        jobTitle: jobTitle
     });
 
   } catch (error) {

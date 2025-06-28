@@ -45,7 +45,6 @@ interface Candidate {
     id: string;
     fullName: string;
     email: string;
-    coverLetter: string;
     websites: string[];
     cvUrl: string;
     passportUrl: string;
@@ -247,7 +246,7 @@ function DashboardContent() {
     };
 
     // --- API Call Handlers ---
-    const handleScoreSubmit = async (jobDescription: string) => {
+    const handleScoreSubmit = async (jobId: string, jobTitle: string, jobDescription: string) => {
         if (!selectedCandidate) return;
         setIsScoring(true);
         setScoringError(null);
@@ -255,7 +254,12 @@ function DashboardContent() {
             const response = await fetch('/api/score-candidate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ candidateId: selectedCandidate.id, jobDescription }),
+                body: JSON.stringify({ 
+                    candidateId: selectedCandidate.id, 
+                    jobId, 
+                    jobTitle, 
+                    jobDescription 
+                }),
             });
             const result = await response.json();
             if (!response.ok) {
@@ -868,6 +872,192 @@ function DashboardContent() {
                         >
                             Clear All Filters
                         </button>
+                    </div>
+
+                    {/* Quick Filter Buttons */}
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">Quick Filters:</h4>
+                        
+                        {/* Status Quick Filters */}
+                        <div className="mb-3">
+                            <span className="text-xs font-medium text-gray-600 mr-2">Status:</span>
+                            <div className="inline-flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setFilterStatus('all')}
+                                    className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                        filterStatus === 'all' 
+                                            ? 'bg-gray-600 text-white border-gray-600' 
+                                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    All
+                                </button>
+                                <button
+                                    onClick={() => setFilterStatus('submitted')}
+                                    className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                        filterStatus === 'submitted' 
+                                            ? 'bg-blue-600 text-white border-blue-600' 
+                                            : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                                    }`}
+                                >
+                                    Submitted ({candidates.filter(c => c.status === 'submitted').length})
+                                </button>
+                                <button
+                                    onClick={() => setFilterStatus('interview_scheduled')}
+                                    className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                        filterStatus === 'interview_scheduled' 
+                                            ? 'bg-green-600 text-white border-green-600' 
+                                            : 'bg-white text-green-600 border-green-300 hover:bg-green-50'
+                                    }`}
+                                >
+                                    Scheduled ({candidates.filter(c => c.status === 'interview_scheduled').length})
+                                </button>
+                                <button
+                                    onClick={() => setFilterStatus('rejected')}
+                                    className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                        filterStatus === 'rejected' 
+                                            ? 'bg-red-600 text-white border-red-600' 
+                                            : 'bg-white text-red-600 border-red-300 hover:bg-red-50'
+                                    }`}
+                                >
+                                    Rejected ({candidates.filter(c => c.status === 'rejected').length})
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Popular Cities Quick Filters */}
+                        {candidates.length > 0 && (
+                            <div className="mb-3">
+                                <span className="text-xs font-medium text-gray-600 mr-2">Popular Cities:</span>
+                                <div className="inline-flex flex-wrap gap-2">
+                                    {Array.from(new Set(candidates.map(c => c.city).filter(Boolean)))
+                                        .slice(0, 5)
+                                        .map(city => (
+                                            <button
+                                                key={city}
+                                                onClick={() => setFilterCity(filterCity === city ? '' : city)}
+                                                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                                    filterCity === city 
+                                                        ? 'bg-indigo-600 text-white border-indigo-600' 
+                                                        : 'bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50'
+                                                }`}
+                                            >
+                                                {city} ({candidates.filter(c => c.city === city).length})
+                                            </button>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Popular Countries Quick Filters */}
+                        {candidates.length > 0 && (
+                            <div className="mb-3">
+                                <span className="text-xs font-medium text-gray-600 mr-2">Popular Countries:</span>
+                                <div className="inline-flex flex-wrap gap-2">
+                                    {Array.from(new Set(candidates.map(c => c.country).filter(Boolean)))
+                                        .slice(0, 5)
+                                        .map(country => (
+                                            <button
+                                                key={country}
+                                                onClick={() => setFilterCountry(filterCountry === country ? '' : country)}
+                                                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                                    filterCountry === country 
+                                                        ? 'bg-purple-600 text-white border-purple-600' 
+                                                        : 'bg-white text-purple-600 border-purple-300 hover:bg-purple-50'
+                                                }`}
+                                            >
+                                                {country} ({candidates.filter(c => c.country === country).length})
+                                            </button>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Job Titles Quick Filters */}
+                        {candidates.length > 0 && (
+                            <div className="mb-3">
+                                <span className="text-xs font-medium text-gray-600 mr-2">Job Positions:</span>
+                                <div className="inline-flex flex-wrap gap-2">
+                                    {Array.from(new Set(candidates.map(c => c.jobTitleText).filter(Boolean)))
+                                        .slice(0, 5)
+                                        .map(jobTitle => (
+                                            <button
+                                                key={jobTitle}
+                                                onClick={() => setFilterJobTitle(filterJobTitle === jobTitle ? '' : jobTitle)}
+                                                className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                                    filterJobTitle === jobTitle 
+                                                        ? 'bg-teal-600 text-white border-teal-600' 
+                                                        : 'bg-white text-teal-600 border-teal-300 hover:bg-teal-50'
+                                                }`}
+                                            >
+                                                {jobTitle} ({candidates.filter(c => c.jobTitleText === jobTitle).length})
+                                            </button>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Score Range Quick Filters */}
+                        <div className="mb-3">
+                            <span className="text-xs font-medium text-gray-600 mr-2">Score Ranges:</span>
+                            <div className="inline-flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => {
+                                        setFilterAgeMin('');
+                                        setFilterAgeMax('');
+                                    }}
+                                    className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                        !filterAgeMin && !filterAgeMax 
+                                            ? 'bg-gray-600 text-white border-gray-600' 
+                                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    All Ages
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setFilterAgeMin('18');
+                                        setFilterAgeMax('25');
+                                    }}
+                                    className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                        filterAgeMin === '18' && filterAgeMax === '25' 
+                                            ? 'bg-yellow-600 text-white border-yellow-600' 
+                                            : 'bg-white text-yellow-600 border-yellow-300 hover:bg-yellow-50'
+                                    }`}
+                                >
+                                    18-25 years
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setFilterAgeMin('26');
+                                        setFilterAgeMax('35');
+                                    }}
+                                    className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                        filterAgeMin === '26' && filterAgeMax === '35' 
+                                            ? 'bg-orange-600 text-white border-orange-600' 
+                                            : 'bg-white text-orange-600 border-orange-300 hover:bg-orange-50'
+                                    }`}
+                                >
+                                    26-35 years
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setFilterAgeMin('36');
+                                        setFilterAgeMax('');
+                                    }}
+                                    className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                                        filterAgeMin === '36' && !filterAgeMax 
+                                            ? 'bg-red-600 text-white border-red-600' 
+                                            : 'bg-white text-red-600 border-red-300 hover:bg-red-50'
+                                    }`}
+                                >
+                                    36+ years
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 

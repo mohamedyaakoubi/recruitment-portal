@@ -7,7 +7,6 @@ interface Candidate {
     id: string;
     fullName: string;
     email: string;
-    coverLetter: string;
     websites: string[];
     cvUrl: string;
     passportUrl: string;
@@ -93,10 +92,6 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({ isOpen, o
                         ) : (
                             <p className="text-gray-500 italic">No websites provided.</p>
                         )}
-                    </div>
-                    <div>
-                        <strong>Cover Letter:</strong>
-                        <p className="mt-1 p-2 border rounded bg-gray-50 whitespace-pre-wrap text-sm">{candidate.coverLetter || 'N/A'}</p>
                     </div>
                     <div className="flex gap-4">
                         <a href={candidate.cvUrl} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">View CV</a>
