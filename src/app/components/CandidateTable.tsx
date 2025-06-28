@@ -1,5 +1,5 @@
 // src/app/components/CandidateTable.tsx
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Timestamp } from 'firebase/firestore';
 
 interface Candidate {
@@ -22,6 +22,9 @@ interface CandidateTableProps {
   onStatusChange: (candidateId: string, newStatus: string) => void;
 }
 
+type SortField = 'firstName' | 'lastName' | 'email' | 'age' | 'city' | 'country' | 'submittedAt' | 'status' | 'score';
+type SortDirection = 'asc' | 'desc';
+
 const CandidateTable: React.FC<CandidateTableProps> = ({
   candidates,
   statusUpdateLoading,
@@ -29,11 +32,102 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
   onScoreCandidate,
   onStatusChange
 }) => {
+  const [sortField, setSortField] = useState<SortField>('submittedAt');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const splitName = (fullName: string) => {
+    const parts = fullName.trim().split(' ');
+    const firstName = parts[0] || '';
+    const lastName = parts.slice(1).join(' ') || '';
+    return { firstName, lastName };
+  };
+
+  const sortedCandidates = useMemo(() => {
+    return [...candidates].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortField) {
+        case 'firstName':
+          aValue = splitName(a.fullName).firstName.toLowerCase();
+          bValue = splitName(b.fullName).firstName.toLowerCase();
+          break;
+        case 'lastName':
+          aValue = splitName(a.fullName).lastName.toLowerCase();
+          bValue = splitName(b.fullName).lastName.toLowerCase();
+          break;
+        case 'email':
+          aValue = a.email.toLowerCase();
+          bValue = b.email.toLowerCase();
+          break;
+        case 'age':
+          aValue = a.dateOfBirth ? calculateAge(a.dateOfBirth) : 0;
+          bValue = b.dateOfBirth ? calculateAge(b.dateOfBirth) : 0;
+          break;
+        case 'city':
+          aValue = (a.city || '').toLowerCase();
+          bValue = (b.city || '').toLowerCase();
+          break;
+        case 'country':
+          aValue = (a.country || '').toLowerCase();
+          bValue = (b.country || '').toLowerCase();
+          break;
+        case 'submittedAt':
+          aValue = a.submittedAt?.toMillis() || 0;
+          bValue = b.submittedAt?.toMillis() || 0;
+          break;
+        case 'status':
+          aValue = a.status.toLowerCase();
+          bValue = b.status.toLowerCase();
+          break;
+        case 'score':
+          aValue = a.score || 0;
+          bValue = b.score || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [candidates, sortField, sortDirection]);
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) {
+      return (
+        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      );
+    }
+    
+    return sortDirection === 'asc' ? (
+      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+      </svg>
+    ) : (
+      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    );
+  };
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       submitted: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Submitted' },
       interview_scheduled: { bg: 'bg-green-100', text: 'text-green-800', label: 'Interview Scheduled' },
-      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' }
+      rejected: { bg: 'bg-red-100', text: 'text-red-800', label: 'Rejected' },
+      approved: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: 'Approved' }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || 
@@ -55,13 +149,6 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
     return age;
   };
 
-  const splitName = (fullName: string) => {
-    const parts = fullName.trim().split(' ');
-    const firstName = parts[0] || '';
-    const lastName = parts.slice(1).join(' ') || '';
-    return { firstName, lastName };
-  };
-
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
@@ -73,75 +160,84 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                First Name
-                <button className="ml-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                <button 
+                  onClick={() => handleSort('firstName')}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>First Name</span>
+                  {getSortIcon('firstName')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Last Name
-                <button className="ml-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                <button 
+                  onClick={() => handleSort('lastName')}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>Last Name</span>
+                  {getSortIcon('lastName')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-                <button className="ml-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                <button 
+                  onClick={() => handleSort('email')}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>Email</span>
+                  {getSortIcon('email')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Age
-                <button className="ml-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                <button 
+                  onClick={() => handleSort('age')}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>Age</span>
+                  {getSortIcon('age')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                City
-                <button className="ml-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                <button 
+                  onClick={() => handleSort('city')}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>City</span>
+                  {getSortIcon('city')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Country
-                <button className="ml-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                <button 
+                  onClick={() => handleSort('country')}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>Country</span>
+                  {getSortIcon('country')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Submitted
-                <button className="ml-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                <button 
+                  onClick={() => handleSort('submittedAt')}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>Submitted</span>
+                  {getSortIcon('submittedAt')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-                <button className="ml-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                <button 
+                  onClick={() => handleSort('status')}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>Status</span>
+                  {getSortIcon('status')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                AI Score
-                <button className="ml-1 text-gray-400 hover:text-gray-600">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
+                <button 
+                  onClick={() => handleSort('score')}
+                  className="flex items-center space-x-1 hover:text-gray-700"
+                >
+                  <span>AI Score</span>
+                  {getSortIcon('score')}
                 </button>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -150,7 +246,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {candidates.map((candidate) => {
+            {sortedCandidates.map((candidate) => {
               const { firstName, lastName } = splitName(candidate.fullName);
               const age = candidate.dateOfBirth ? calculateAge(candidate.dateOfBirth) : null;
               
@@ -207,7 +303,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
         </table>
       </div>
       
-      {candidates.length === 0 && (
+      {sortedCandidates.length === 0 && (
         <div className="text-center py-12">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4a1 1 0 00-1-1H9a1 1 0 00-1 1v1" />

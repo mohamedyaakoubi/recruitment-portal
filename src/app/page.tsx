@@ -7,15 +7,18 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from 'next/image';
 
 export default function CandidateForm() {
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('');
+  const [countryCode, setCountryCode] = useState('+358');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
+  const [countrySearch, setCountrySearch] = useState('');
   const [jobTitle, setJobTitle] = useState('');
-  const [websites, setWebsites] = useState('');
+  const [websites, setWebsites] = useState<string[]>(['']);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [jobs, setJobs] = useState<any[]>([]);
@@ -26,6 +29,77 @@ export default function CandidateForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Country codes list
+  const countryCodes = [
+    { code: '+1', country: 'United States', flag: '🇺🇸' },
+    { code: '+1', country: 'Canada', flag: '🇨🇦' },
+    { code: '+44', country: 'United Kingdom', flag: '🇬🇧' },
+    { code: '+33', country: 'France', flag: '🇫🇷' },
+    { code: '+49', country: 'Germany', flag: '🇩🇪' },
+    { code: '+39', country: 'Italy', flag: '🇮🇹' },
+    { code: '+34', country: 'Spain', flag: '🇪🇸' },
+    { code: '+31', country: 'Netherlands', flag: '🇳🇱' },
+    { code: '+46', country: 'Sweden', flag: '🇸🇪' },
+    { code: '+47', country: 'Norway', flag: '🇳🇴' },
+    { code: '+45', country: 'Denmark', flag: '🇩🇰' },
+    { code: '+358', country: 'Finland', flag: '🇫🇮' },
+    { code: '+41', country: 'Switzerland', flag: '🇨🇭' },
+    { code: '+43', country: 'Austria', flag: '🇦🇹' },
+    { code: '+32', country: 'Belgium', flag: '🇧🇪' },
+    { code: '+351', country: 'Portugal', flag: '🇵🇹' },
+    { code: '+30', country: 'Greece', flag: '🇬🇷' },
+    { code: '+48', country: 'Poland', flag: '🇵🇱' },
+    { code: '+420', country: 'Czech Republic', flag: '🇨🇿' },
+    { code: '+36', country: 'Hungary', flag: '🇭🇺' },
+    { code: '+91', country: 'India', flag: '🇮🇳' },
+    { code: '+86', country: 'China', flag: '🇨🇳' },
+    { code: '+81', country: 'Japan', flag: '🇯🇵' },
+    { code: '+82', country: 'South Korea', flag: '🇰🇷' },
+    { code: '+61', country: 'Australia', flag: '🇦🇺' },
+    { code: '+64', country: 'New Zealand', flag: '🇳🇿' },
+    { code: '+27', country: 'South Africa', flag: '🇿🇦' },
+    { code: '+55', country: 'Brazil', flag: '🇧🇷' },
+    { code: '+52', country: 'Mexico', flag: '🇲🇽' },
+    { code: '+7', country: 'Russia', flag: '🇷🇺' },
+    { code: '+90', country: 'Turkey', flag: '🇹🇷' },
+    { code: '+971', country: 'UAE', flag: '🇦🇪' },
+    { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+    { code: '+20', country: 'Egypt', flag: '🇪🇬' },
+    { code: '+212', country: 'Morocco', flag: '🇲🇦' },
+    { code: '+216', country: 'Tunisia', flag: '🇹🇳' },
+    { code: '+213', country: 'Algeria', flag: '🇩🇿' }
+  ];
+
+  // Countries list for country field
+  const countries = [
+    'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia', 'Austria', 'Bangladesh', 'Belgium', 'Brazil', 'Canada',
+    'China', 'Czech Republic', 'Denmark', 'Egypt', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'India',
+    'Italy', 'Japan', 'Mexico', 'Morocco', 'Netherlands', 'New Zealand', 'Norway', 'Poland', 'Portugal', 'Russia',
+    'Saudi Arabia', 'South Africa', 'South Korea', 'Spain', 'Sweden', 'Switzerland', 'Tunisia', 'Turkey', 'UAE',
+    'United Kingdom', 'United States'
+  ];
+
+  const filteredCountries = countries.filter(c => 
+    c.toLowerCase().includes(countrySearch.toLowerCase())
+  );
+
+  // Website management functions
+  const addWebsite = () => {
+    setWebsites([...websites, '']);
+  };
+
+  const removeWebsite = (index: number) => {
+    if (websites.length > 1) {
+      setWebsites(websites.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateWebsite = (index: number, value: string) => {
+    const newWebsites = [...websites];
+    newWebsites[index] = value;
+    setWebsites(newWebsites);
+  };
 
   // Load jobs on component mount
   useEffect(() => {
@@ -85,7 +159,7 @@ export default function CandidateForm() {
     setSuccess(null);
 
     // Updated validation to include job category and title
-    if (!fullName || !email || !gender || !phoneNumber || !dateOfBirth || !city || !country || !selectedCategory || !jobTitle || !cvFile || !passportFile) {
+    if (!firstName || !lastName || !email || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !country || !selectedCategory || !jobTitle || !cvFile || !passportFile) {
       setError("Please fill in all required fields and upload both files.");
       return;
     }
@@ -109,17 +183,20 @@ export default function CandidateForm() {
       // 2. Add candidate data to Firestore (updated fields)
       const candidatesCollectionRef = collection(db, "candidates");
       await addDoc(candidatesCollectionRef, {
-        fullName,
+        firstName,
+        lastName,
+        fullName: `${firstName} ${lastName}`, // Keep for backward compatibility
         email,
         gender,
-        phoneNumber,
+        countryCode,
+        phoneNumber: `${countryCode} ${phoneNumber}`,
         dateOfBirth,
         city,
         country,
         jobCategory: selectedCategory,
         jobTitle,
         jobTitleText: selectedJob?.title || '',
-        websites: websites.split(',').map(w => w.trim()).filter(w => w),
+        websites: websites.filter(w => w.trim() !== ''),
         cvUrl,
         passportUrl,
         submittedAt: serverTimestamp(),
@@ -128,17 +205,20 @@ export default function CandidateForm() {
       });
 
       // Reset form
-      setFullName('');
+      setFirstName('');
+      setLastName('');
       setEmail('');
       setGender('');
+      setCountryCode('+358');
       setPhoneNumber('');
       setDateOfBirth('');
       setCity('');
       setCountry('');
+      setCountrySearch('');
       setSelectedCategory('');
       setJobTitle('');
       setSelectedJob(null);
-      setWebsites('');
+      setWebsites(['']);
       setCvFile(null);
       setPassportFile(null);
       
@@ -202,20 +282,38 @@ export default function CandidateForm() {
             <div className="bg-gray-50 p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Personal Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Full Name */}
+                {/* First Name */}
                 <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name <span className="text-red-500">*</span>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="fullName"
-                    id="fullName"
+                    name="firstName"
+                    id="firstName"
                     required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your full name"
+                    placeholder="Enter your first name"
+                    disabled={isLoading}
+                  />
+                </div>
+
+                {/* Last Name */}
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    id="lastName"
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter your last name"
                     disabled={isLoading}
                   />
                 </div>
@@ -263,17 +361,31 @@ export default function CandidateForm() {
                   <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    id="phoneNumber"
-                    required
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="+358 123 456 789"
-                    disabled={isLoading}
-                  />
+                  <div className="flex">
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="px-3 py-3 border border-gray-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                      disabled={isLoading}
+                    >
+                      {countryCodes.map((item, index) => (
+                        <option key={index} value={item.code}>
+                          {item.flag} {item.code} {item.country}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      id="phoneNumber"
+                      required
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="flex-1 px-4 py-3 border border-l-0 border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="123 456 789"
+                      disabled={isLoading}
+                    />
+                  </div>
                 </div>
 
                 {/* Date of Birth */}
@@ -312,21 +424,43 @@ export default function CandidateForm() {
                 </div>
 
                 {/* Country */}
-                <div>
+                <div className="relative">
                   <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
                     Country <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="country"
-                    id="country"
-                    required
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
+                    name="countrySearch"
+                    id="countrySearch"
+                    value={countrySearch}
+                    onChange={(e) => setCountrySearch(e.target.value)}
+                    onFocus={() => setCountrySearch('')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter your country"
+                    placeholder="Search and select your country"
                     disabled={isLoading}
                   />
+                  {countrySearch !== '' && filteredCountries.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredCountries.map((countryOption, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            setCountry(countryOption);
+                            setCountrySearch(countryOption);
+                          }}
+                          className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                        >
+                          {countryOption}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {country && (
+                    <div className="mt-1 text-sm text-green-600">
+                      Selected: {country}
+                    </div>
+                  )}
                 </div>
 
                 {/* Job Category */}
@@ -390,21 +524,48 @@ export default function CandidateForm() {
             <div className="bg-gray-50 p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Additional Information</h2>
               
-              {/* Websites */}
+              {/* Websites/Links */}
               <div className="mb-6">
-                <label htmlFor="websites" className="block text-sm font-medium text-gray-700 mb-2">
-                  Websites (Optional, comma-separated)
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Websites & Links (Optional)
                 </label>
-                <input
-                  type="text"
-                  name="websites"
-                  id="websites"
-                  value={websites}
-                  onChange={(e) => setWebsites(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., LinkedIn, GitHub, Portfolio"
-                  disabled={isLoading}
-                />
+                <div className="space-y-3">
+                  {websites.map((website, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <input
+                        type="url"
+                        value={website}
+                        onChange={(e) => updateWebsite(index, e.target.value)}
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="https://linkedin.com/in/yourprofile or https://github.com/yourusername"
+                        disabled={isLoading}
+                      />
+                      {websites.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeWebsite(index)}
+                          className="px-3 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                          disabled={isLoading}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addWebsite}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={isLoading}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>Add Another Link</span>
+                  </button>
+                </div>
               </div>
             </div>
 

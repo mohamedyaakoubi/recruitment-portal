@@ -66,6 +66,7 @@ const getStatusChartData = (candidates: Candidate[]) => {
         { name: 'Submitted', value: counts.submitted || 0 },
         { name: 'Interview Scheduled', value: counts.interview_scheduled || 0 },
         { name: 'Rejected', value: counts.rejected || 0 },
+        { name: 'Approved', value: counts.approved || 0 },
     ].filter(item => item.value > 0);
 };
 
@@ -194,7 +195,8 @@ function DashboardContent() {
         const rejected = candidates.filter(c => c.status === 'rejected').length;
         const scheduled = candidates.filter(c => c.status === 'interview_scheduled').length;
         const submitted = candidates.filter(c => c.status === 'submitted').length;
-        return { total, rejected, scheduled, submitted };
+        const approved = candidates.filter(c => c.status === 'approved').length;
+        return { total, rejected, scheduled, submitted, approved };
     }, [candidates]);
 
     // Filtered candidates

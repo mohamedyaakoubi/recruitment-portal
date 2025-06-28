@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing candidateId or newStatus' }, { status: 400 });
         }
 
-        const validStatuses = ['submitted', 'rejected', 'interview_scheduled'];
+        const validStatuses = ['submitted', 'rejected', 'interview_scheduled', 'approved'];
         if (!validStatuses.includes(newStatus)) {
             return NextResponse.json({ error: 'Invalid status provided' }, { status: 400 });
         }

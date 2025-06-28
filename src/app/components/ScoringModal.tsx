@@ -28,12 +28,12 @@ interface ScoringModalProps {
     isOpen: boolean;
     onClose: () => void;
     candidate: Candidate | null;
-    onScoreSubmit: (jobId: string, jobTitle: string, jobDescription: string) => Promise<void>;
-    isScoring: boolean;
-    scoringError: string | null;
+    onSubmit: (jobId: string, jobTitle: string, jobDescription: string) => Promise<void>;
+    isLoading: boolean;
+    error: string | null;
 }
 
-const ScoringModal: React.FC<ScoringModalProps> = ({ isOpen, onClose, candidate, onScoreSubmit, isScoring, scoringError }) => {
+const ScoringModal: React.FC<ScoringModalProps> = ({ isOpen, onClose, candidate, onSubmit, isLoading, error }) => {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [selectedJobId, setSelectedJobId] = useState('');
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
@@ -71,7 +71,7 @@ const ScoringModal: React.FC<ScoringModalProps> = ({ isOpen, onClose, candidate,
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (selectedJob) {
-            onScoreSubmit(selectedJob.id, selectedJob.title, selectedJob.description);
+            onSubmit(selectedJob.id, selectedJob.title, selectedJob.description);
         }
     };
 
@@ -113,9 +113,9 @@ const ScoringModal: React.FC<ScoringModalProps> = ({ isOpen, onClose, candidate,
                         </div>
                     )}
 
-                    {scoringError && (
+                    {error && (
                         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-red-600 text-sm">Error: {scoringError}</p>
+                            <p className="text-red-600 text-sm">Error: {error}</p>
                         </div>
                     )}
 
@@ -123,17 +123,17 @@ const ScoringModal: React.FC<ScoringModalProps> = ({ isOpen, onClose, candidate,
                         <button 
                             type="button" 
                             onClick={onClose} 
-                            disabled={isScoring} 
+                            disabled={isLoading} 
                             className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 disabled:opacity-50"
                         >
                             Cancel
                         </button>
                         <button 
                             type="submit" 
-                            disabled={isScoring || !selectedJob} 
+                            disabled={isLoading || !selectedJob} 
                             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
                         >
-                            {isScoring ? 'Scoring...' : 'Score Candidate'}
+                            {isLoading ? 'Scoring...' : 'Score Candidate'}
                         </button>
                     </div>
                 </form>
