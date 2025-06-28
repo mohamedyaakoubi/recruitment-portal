@@ -19,6 +19,9 @@ export default function CandidateForm() {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [jobs, setJobs] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [filteredJobs, setFilteredJobs] = useState<any[]>([]);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +35,7 @@ export default function CandidateForm() {
         const data = await response.json();
         if (response.ok) {
           setJobs(data.jobs || []);
+          setCategories(data.categories || []);
         }
       } catch (error) {
         console.error('Error loading jobs:', error);
@@ -40,10 +44,27 @@ export default function CandidateForm() {
     loadJobs();
   }, []);
 
+  // Filter jobs when category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      const filtered = jobs.filter(job => job.category === selectedCategory);
+      setFilteredJobs(filtered);
+    } else {
+      setFilteredJobs([]);
+    }
+    // Reset job selection when category changes
+    setJobTitle('');
+    setSelectedJob(null);
+  }, [selectedCategory, jobs]);
+
+  const handleCategorySelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCategory(e.target.value);
+  };
+
   const handleJobSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedJobId = e.target.value;
     setJobTitle(selectedJobId);
-    const job = jobs.find(j => j.id === selectedJobId);
+    const job = filteredJobs.find(j => j.id === selectedJobId);
     setSelectedJob(job || null);
   };
 
@@ -63,8 +84,8 @@ export default function CandidateForm() {
     setError(null);
     setSuccess(null);
 
-    // Updated validation to include job title
-    if (!fullName || !email || !gender || !phoneNumber || !dateOfBirth || !city || !country || !jobTitle || !cvFile || !passportFile) {
+    // Updated validation to include job category and title
+    if (!fullName || !email || !gender || !phoneNumber || !dateOfBirth || !city || !country || !selectedCategory || !jobTitle || !cvFile || !passportFile) {
       setError("Please fill in all required fields and upload both files.");
       return;
     }
@@ -95,6 +116,7 @@ export default function CandidateForm() {
         dateOfBirth,
         city,
         country,
+        jobCategory: selectedCategory,
         jobTitle,
         jobTitleText: selectedJob?.title || '',
         websites: websites.split(',').map(w => w.trim()).filter(w => w),
@@ -113,6 +135,7 @@ export default function CandidateForm() {
       setDateOfBirth('');
       setCity('');
       setCountry('');
+      setSelectedCategory('');
       setJobTitle('');
       setSelectedJob(null);
       setWebsites('');
@@ -306,8 +329,31 @@ export default function CandidateForm() {
                   />
                 </div>
 
+                {/* Job Category */}
+                <div>
+                  <label htmlFor="jobCategory" className="block text-sm font-medium text-gray-700 mb-2">
+                    Job Category <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="jobCategory"
+                    id="jobCategory"
+                    required
+                    value={selectedCategory}
+                    onChange={handleCategorySelection}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={isLoading}
+                  >
+                    <option value="">Select a category first</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Job Title */}
-                <div className="md:col-span-2">
+                <div>
                   <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700 mb-2">
                     Job Position <span className="text-red-500">*</span>
                   </label>
@@ -318,10 +364,12 @@ export default function CandidateForm() {
                     value={jobTitle}
                     onChange={handleJobSelection}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    disabled={isLoading}
+                    disabled={isLoading || !selectedCategory}
                   >
-                    <option value="">Select a job position</option>
-                    {jobs.map((job) => (
+                    <option value="">
+                      {selectedCategory ? 'Select a job position' : 'Please select a category first'}
+                    </option>
+                    {filteredJobs.map((job) => (
                       <option key={job.id} value={job.id}>
                         {job.title}
                       </option>
@@ -331,6 +379,7 @@ export default function CandidateForm() {
                     <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                       <h4 className="font-medium text-blue-900 mb-1">Job Description:</h4>
                       <p className="text-sm text-blue-800">{selectedJob.description}</p>
+                      <p className="text-xs text-blue-600 mt-1">Category: {selectedJob.category}</p>
                     </div>
                   )}
                 </div>
