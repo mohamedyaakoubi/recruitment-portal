@@ -11,7 +11,7 @@ interface Candidate {
     cvUrl: string;
     passportUrl: string;
     submittedAt: Timestamp;
-    status: 'submitted' | 'rejected' | 'interview_scheduled' | string;
+    status: 'submitted' | 'rejected' | 'interview_scheduled' | 'approved' | string;
     score: number | null;
     scoreAnalysis?: string;
     lastScoredAt?: Timestamp;
@@ -35,6 +35,10 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({ isOpen, o
 
     const handleReject = () => {
         onStatusChange(candidate.id, 'rejected');
+    };
+
+    const handleApprove = () => {
+        onStatusChange(candidate.id, 'approved');
     };
 
     const handleScheduleClick = () => {
@@ -77,7 +81,12 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({ isOpen, o
                 <div className="space-y-4">
                     <p><strong>Email:</strong> {candidate.email}</p>
                     <p><strong>Submitted:</strong> {candidate.submittedAt?.toDate().toLocaleString()}</p>
-                    <p><strong>Status:</strong> <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${candidate.status === 'rejected' ? 'bg-red-100 text-red-800' : candidate.status === 'interview_scheduled' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>{candidate.status}</span></p>
+                    <p><strong>Status:</strong> <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        candidate.status === 'rejected' ? 'bg-red-100 text-red-800' : 
+                        candidate.status === 'interview_scheduled' ? 'bg-green-100 text-green-800' : 
+                        candidate.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
+                        'bg-blue-100 text-blue-800'
+                    }`}>{candidate.status.replace('_', ' ')}</span></p>
                     {candidate.interviewDate && (
                          <p><strong>Interview Scheduled:</strong> {candidate.interviewDate.toDate().toLocaleString()}</p>
                     )}
@@ -113,20 +122,47 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({ isOpen, o
                     <div className="mt-6 pt-4 border-t flex flex-col sm:flex-row justify-end gap-3">
                         {!showScheduleInput ? (
                             <>
-                                <button 
-                                    onClick={handleReject} 
-                                    disabled={statusUpdateLoading || candidate.status === 'rejected'}
-                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {statusUpdateLoading ? 'Rejecting...' : 'Reject Candidate'}
-                                </button>
-                                <button 
-                                    onClick={handleScheduleClick} 
-                                    disabled={statusUpdateLoading || candidate.status === 'interview_scheduled'}
-                                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {statusUpdateLoading ? '...' : 'Schedule Interview'}
-                                </button>
+                                {/* Reject button - available for submitted and scheduled candidates */}
+                                {(candidate.status === 'submitted' || candidate.status === 'interview_scheduled') && (
+                                    <button 
+                                        onClick={handleReject} 
+                                        disabled={statusUpdateLoading}
+                                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {statusUpdateLoading ? 'Rejecting...' : 'Reject Candidate'}
+                                    </button>
+                                )}
+                                
+                                {/* Schedule button - only for submitted candidates */}
+                                {candidate.status === 'submitted' && (
+                                    <button 
+                                        onClick={handleScheduleClick} 
+                                        disabled={statusUpdateLoading}
+                                        className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {statusUpdateLoading ? '...' : 'Schedule Interview'}
+                                    </button>
+                                )}
+                                
+                                {/* Approve button - available for submitted and scheduled candidates */}
+                                {(candidate.status === 'submitted' || candidate.status === 'interview_scheduled') && (
+                                    <button 
+                                        onClick={handleApprove} 
+                                        disabled={statusUpdateLoading}
+                                        className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {statusUpdateLoading ? 'Approving...' : 'Approve Candidate'}
+                                    </button>
+                                )}
+                                
+                                {/* Status message for final states */}
+                                {(candidate.status === 'rejected' || candidate.status === 'approved') && (
+                                    <div className="text-center py-2">
+                                        <p className="text-gray-600 italic">
+                                            This candidate has been {candidate.status}. No further actions available.
+                                        </p>
+                                    </div>
+                                )}
                             </>
                         ) : (
                             <div className="w-full flex flex-col sm:flex-row items-center gap-3 border p-3 rounded bg-green-50">
