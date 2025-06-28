@@ -486,7 +486,7 @@ function DashboardContent() {
                 onClose={closeProfileModal}
                 candidate={selectedCandidate}
                 onStatusChange={handleStatusChange}
-                statusUpdateLoading={statusUpdateLoading}
+                statusUpdateLoading={selectedCandidate ? statusUpdateLoading[selectedCandidate.id] || false : false}
                 onScheduleInterview={() => setIsInterviewSchedulingOpen(true)}
             />
 

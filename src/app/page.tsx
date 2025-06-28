@@ -19,6 +19,7 @@ export default function CandidateForm() {
   const [countrySearch, setCountrySearch] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [websites, setWebsites] = useState<string[]>(['']);
+  const [additionalInfo, setAdditionalInfo] = useState<{type: 'link' | 'file' | 'text', content: string, file?: File}[]>([{type: 'link', content: ''}]);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [jobs, setJobs] = useState<any[]>([]);
@@ -84,7 +85,24 @@ export default function CandidateForm() {
     c.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
-  // Website management functions
+  // Additional information management functions
+  const addAdditionalInfo = (type: 'link' | 'file' | 'text') => {
+    setAdditionalInfo([...additionalInfo, {type, content: ''}]);
+  };
+
+  const removeAdditionalInfo = (index: number) => {
+    if (additionalInfo.length > 1) {
+      setAdditionalInfo(additionalInfo.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateAdditionalInfo = (index: number, content: string, file?: File) => {
+    const newInfo = [...additionalInfo];
+    newInfo[index] = {...newInfo[index], content, file};
+    setAdditionalInfo(newInfo);
+  };
+
+  // Website management functions (keeping for backward compatibility)
   const addWebsite = () => {
     setWebsites([...websites, '']);
   };
@@ -524,26 +542,69 @@ export default function CandidateForm() {
             <div className="bg-gray-50 p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Additional Information</h2>
               
-              {/* Websites/Links */}
+              {/* Dynamic Additional Info */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Websites & Links (Optional)
+                  Links, Files & Additional Information (Optional)
                 </label>
                 <div className="space-y-3">
-                  {websites.map((website, index) => (
+                  {additionalInfo.map((info, index) => (
                     <div key={index} className="flex items-center space-x-2">
-                      <input
-                        type="url"
-                        value={website}
-                        onChange={(e) => updateWebsite(index, e.target.value)}
-                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="https://linkedin.com/in/yourprofile or https://github.com/yourusername"
+                      <select
+                        value={info.type}
+                        onChange={(e) => {
+                          const newInfo = [...additionalInfo];
+                          newInfo[index] = {...newInfo[index], type: e.target.value as 'link' | 'file' | 'text', content: '', file: undefined};
+                          setAdditionalInfo(newInfo);
+                        }}
+                        className="px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 min-w-[100px]"
                         disabled={isLoading}
-                      />
-                      {websites.length > 1 && (
+                      >
+                        <option value="link">Link</option>
+                        <option value="file">File</option>
+                        <option value="text">Text</option>
+                      </select>
+                      
+                      {info.type === 'link' && (
+                        <input
+                          type="url"
+                          value={info.content}
+                          onChange={(e) => updateAdditionalInfo(index, e.target.value)}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="https://linkedin.com/in/yourprofile or https://github.com/yourusername"
+                          disabled={isLoading}
+                        />
+                      )}
+                      
+                      {info.type === 'file' && (
+                        <input
+                          type="file"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              updateAdditionalInfo(index, file.name, file);
+                            }
+                          }}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                          disabled={isLoading}
+                        />
+                      )}
+                      
+                      {info.type === 'text' && (
+                        <textarea
+                          value={info.content}
+                          onChange={(e) => updateAdditionalInfo(index, e.target.value)}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter additional information, notes, or comments..."
+                          rows={2}
+                          disabled={isLoading}
+                        />
+                      )}
+                      
+                      {additionalInfo.length > 1 && (
                         <button
                           type="button"
-                          onClick={() => removeWebsite(index)}
+                          onClick={() => removeAdditionalInfo(index)}
                           className="px-3 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                           disabled={isLoading}
                         >
@@ -554,17 +615,45 @@ export default function CandidateForm() {
                       )}
                     </div>
                   ))}
-                  <button
-                    type="button"
-                    onClick={addWebsite}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={isLoading}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>Add Another Link</span>
-                  </button>
+                  
+                  {/* Add buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => addAdditionalInfo('link')}
+                      className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={isLoading}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      <span>Add Link</span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => addAdditionalInfo('file')}
+                      className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      disabled={isLoading}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                      <span>Add File</span>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => addAdditionalInfo('text')}
+                      className="flex items-center space-x-2 px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      disabled={isLoading}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                      </svg>
+                      <span>Add Text</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
