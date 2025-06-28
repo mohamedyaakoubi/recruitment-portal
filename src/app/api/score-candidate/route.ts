@@ -19,7 +19,7 @@ const model = genAI ? genAI.getGenerativeModel({ model: "gemini-1.5-flash" }) : 
 // Define a type for the candidate data expected by the scoring function
 interface CandidateDataForScoring {
     fullName: string;
-    coverLetter: string;
+    cvUrl: string;
     // Add other relevant fields explicitly if needed for scoring
 }
 
@@ -29,6 +29,18 @@ interface GeminiScoringResponse {
     analysis: string;
 }
 
+// Function to extract text from CV file (simplified - in production you'd use proper PDF/DOC parsing)
+async function extractCVText(cvUrl: string): Promise<string> {
+    try {
+        // For now, we'll return a placeholder since we can't directly parse PDF/DOC files
+        // In a production environment, you would use libraries like pdf-parse, mammoth, etc.
+        return `CV content from ${cvUrl} - This would contain the actual CV text in a production environment.`;
+    } catch (error) {
+        console.error("Error extracting CV text:", error);
+        return "Unable to extract CV content";
+    }
+}
+
 // --- Function to call Gemini API for Scoring and Analysis ---
 async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: CandidateDataForScoring): Promise<GeminiScoringResponse | null> {
   if (!model) {
@@ -36,7 +48,10 @@ async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: 
     return null;
   }
 
-  // Updated prompt to request score AND analysis in a structured format
+  // Extract CV text (in production, this would parse the actual CV file)
+  const cvText = await extractCVText(candidateData.cvUrl);
+
+  // Updated prompt to use CV content instead of cover letter
   const prompt = `
     Analyze the following candidate information based on the provided job description.
     Provide a numerical score from 0 to 100 representing their suitability, and a brief analysis (2-3 sentences) highlighting key strengths or weaknesses relevant to the job description.
@@ -49,10 +64,10 @@ async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: 
 
     Candidate Information:
     Full Name: ${candidateData.fullName}
-    Cover Letter:
-    --- START COVER LETTER ---
-    ${candidateData.coverLetter}
-    --- END COVER LETTER ---
+    CV Content:
+    --- START CV CONTENT ---
+    ${cvText}
+    --- END CV CONTENT ---
 
     JSON Response:
   `;
@@ -67,7 +82,6 @@ async function getGeminiScoreAndAnalysis(jobDescription: string, candidateData: 
     // Attempt to parse the JSON response
     try {
         // Clean potential markdown/code block formatting
-        // Corrected syntax error here: removed stray parenthesis
         const cleanedText = rawText.replace(/```json\n?|```/g, "").trim(); 
         const parsedResponse: GeminiScoringResponse = JSON.parse(cleanedText);
 
@@ -126,7 +140,7 @@ export async function POST(request: NextRequest) {
     const candidateDocData = candidateSnap.data() as DocumentData;
     const candidateDataForScoring: CandidateDataForScoring = {
         fullName: candidateDocData.fullName || '',
-        coverLetter: candidateDocData.coverLetter || '',
+        cvUrl: candidateDocData.cvUrl || '',
     };
 
     // Call Gemini for score and analysis

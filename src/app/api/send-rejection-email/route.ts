@@ -1,0 +1,161 @@
+// src/app/api/send-rejection-email/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { candidateEmail, candidateName, jobTitle } = await request.json();
+
+    if (!candidateEmail || !candidateName) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Create SMTP transporter
+    const transporter = nodemailer.createTransporter({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    // Email template
+    const htmlTemplate = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Application Status Update</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          .header {
+            background-color: #1e3a8a;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+          }
+          .content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+          }
+          .logo {
+            max-width: 200px;
+            margin-bottom: 20px;
+          }
+          .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 14px;
+            color: #666;
+          }
+          .contact-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <img src="https://internationalskills.fi/wp-content/uploads/2023/07/logo-skills.png" alt="International Skills" class="logo">
+          <h1>Application Status Update</h1>
+        </div>
+        
+        <div class="content">
+          <p>Dear ${candidateName},</p>
+          
+          <p>Thank you for your interest in ${jobTitle ? `the ${jobTitle} position` : 'opportunities'} at International Skills Labor Company and for taking the time to submit your application.</p>
+          
+          <p>After careful consideration of your qualifications and experience, we have decided to move forward with other candidates whose background more closely aligns with our current requirements.</p>
+          
+          <p>We appreciate the time and effort you invested in the application process. Your skills and experience are valuable, and we encourage you to apply for future positions that match your qualifications.</p>
+          
+          <p>We will keep your resume on file and may contact you if a suitable opportunity arises in the future.</p>
+          
+          <p>Thank you again for your interest in International Skills Labor Company. We wish you the best of luck in your job search.</p>
+          
+          <div class="contact-info">
+            <h3>Contact Information:</h3>
+            <p><strong>Email:</strong> wassim@internationalskills.fi</p>
+            <p><strong>Phone:</strong> +358 452644966 | +216 29 581 180</p>
+            <p><strong>Website:</strong> <a href="https://internationalskills.fi">internationalskills.fi</a></p>
+          </div>
+          
+          <div class="footer">
+            <p>Best regards,<br>
+            <strong>International Skills Labor Company</strong><br>
+            Human Resources Department</p>
+            
+            <p><em>This is an automated message. Please do not reply to this email.</em></p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const textTemplate = `
+Dear ${candidateName},
+
+Thank you for your interest in ${jobTitle ? `the ${jobTitle} position` : 'opportunities'} at International Skills Labor Company and for taking the time to submit your application.
+
+After careful consideration of your qualifications and experience, we have decided to move forward with other candidates whose background more closely aligns with our current requirements.
+
+We appreciate the time and effort you invested in the application process. Your skills and experience are valuable, and we encourage you to apply for future positions that match your qualifications.
+
+We will keep your resume on file and may contact you if a suitable opportunity arises in the future.
+
+Thank you again for your interest in International Skills Labor Company. We wish you the best of luck in your job search.
+
+Contact Information:
+Email: wassim@internationalskills.fi
+Phone: +358 452644966 | +216 29 581 180
+Website: internationalskills.fi
+
+Best regards,
+International Skills Labor Company
+Human Resources Department
+
+This is an automated message. Please do not reply to this email.
+    `;
+
+    // Send email
+    const mailOptions = {
+      from: {
+        name: 'International Skills Labor Company',
+        address: process.env.SMTP_USER || 'noreply@internationalskills.fi'
+      },
+      to: candidateEmail,
+      subject: `Application Status Update - International Skills Labor Company`,
+      text: textTemplate,
+      html: htmlTemplate,
+      replyTo: 'wassim@internationalskills.fi'
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    console.log(`Rejection email sent to ${candidateEmail}`);
+    return NextResponse.json({ success: true, message: 'Rejection email sent successfully' });
+
+  } catch (error) {
+    console.error('Error sending rejection email:', error);
+    return NextResponse.json(
+      { error: 'Failed to send rejection email', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+
