@@ -125,3 +125,7 @@ This project is a web application for managing candidate applications, built wit
 *   **Email Notifications:** Require valid SMTP credentials in environment variables. If not configured, emails will not be sent, but status updates will still work.
 *   **Security:** The provided Firebase security rules are basic examples. **Review and strengthen them** based on your specific security requirements before deploying to production.
 
+
+
+This line was added by Manus AI.
+
