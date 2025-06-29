@@ -106,6 +106,7 @@ function DashboardContent() {
     const [filterCity, setFilterCity] = useState<string>('');
     const [filterCountry, setFilterCountry] = useState<string>('');
     const [filterJobTitle, setFilterJobTitle] = useState<string>('');
+    const [filterCategory, setFilterCategory] = useState<string>('');
     const [filterAgeMin, setFilterAgeMin] = useState<string>('');
     const [filterAgeMax, setFilterAgeMax] = useState<string>('');
     
@@ -263,6 +264,7 @@ function DashboardContent() {
         setFilterCity('');
         setFilterCountry('');
         setFilterJobTitle('');
+        setFilterCategory('');
         setFilterAgeMin('');
         setFilterAgeMax('');
     };
@@ -419,6 +421,7 @@ function DashboardContent() {
                 filterCity={filterCity}
                 filterCountry={filterCountry}
                 filterJobTitle={filterJobTitle}
+                filterCategory={filterCategory}
                 filterAgeMin={filterAgeMin}
                 filterAgeMax={filterAgeMax}
                 onFilterStatusChange={setFilterStatus}
@@ -426,6 +429,7 @@ function DashboardContent() {
                 onFilterCityChange={setFilterCity}
                 onFilterCountryChange={setFilterCountry}
                 onFilterJobTitleChange={setFilterJobTitle}
+                onFilterCategoryChange={setFilterCategory}
                 onFilterAgeMinChange={setFilterAgeMin}
                 onFilterAgeMaxChange={setFilterAgeMax}
                 onClearAllFilters={clearAllFilters}
@@ -479,7 +483,7 @@ function DashboardContent() {
                 onClose={closeProfileModal}
                 candidate={selectedCandidate}
                 onStatusChange={handleStatusChange}
-                statusUpdateLoading={statusUpdateLoading}
+                statusUpdateLoading={selectedCandidate ? statusUpdateLoading[selectedCandidate.id] || false : false}
                 onScheduleInterview={() => setIsInterviewSchedulingOpen(true)}
             />
 

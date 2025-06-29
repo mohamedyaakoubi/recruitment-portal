@@ -1,23 +1,8 @@
 // src/app/api/jobs/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
+import { JOB_CATEGORIES } from '@/lib/job-categories';
 import admin from 'firebase-admin';
-
-// Job categories
-
-export const JOB_CATEGORIES = [
-  'Agricole',
-  'Bâtiment et travail publique',
-  'Development & IT',
-  'Industriel',
-  'Restauration',
-  'Santé',
-  'Services',
-  'Sociale',
-  'Tourisme'
-] as const;
-
-export type JobCategory = typeof JOB_CATEGORIES[number];
 
 export async function GET() {
   try {
