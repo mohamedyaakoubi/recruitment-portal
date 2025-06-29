@@ -16,8 +16,8 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
   isOpen,
   onClose,
   candidate,
-  onScheduleInterview,
-  isScheduling
+  onSchedule,
+  isLoading
 }) => {
   const [interviewDate, setInterviewDate] = useState('');
   const [interviewTime, setInterviewTime] = useState('');
@@ -36,15 +36,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
     }
 
     try {
-      await onScheduleInterview({
-        candidateId: candidate.id,
-        candidateEmail: candidate.email,
-        candidateName: candidate.fullName,
-        interviewDate,
-        interviewTime,
-        jobTitle: candidate.jobTitleText,
-        adminEmail
-      });
+      await onSchedule(candidate.id, 'interview_scheduled', interviewTimestampISO);
       
       // Reset form
       setInterviewDate('');
@@ -73,7 +65,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 focus:outline-none"
-            disabled={isScheduling}
+            disabled={isLoading}
           >
             ✕
           </button>
@@ -106,7 +98,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               min={tomorrow}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              disabled={isScheduling}
+              disabled={isLoading}
             />
           </div>
 
@@ -120,7 +112,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               onChange={(e) => setInterviewTime(e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              disabled={isScheduling}
+              disabled={isLoading}
             >
               <option value="">Select time</option>
               <option value="09:00">09:00 AM</option>
@@ -153,7 +145,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               value={adminEmail}
               onChange={(e) => setAdminEmail(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              disabled={isScheduling}
+              disabled={isLoading}
             />
           </div>
 
@@ -168,7 +160,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="Any additional information for the interview..."
-              disabled={isScheduling}
+              disabled={isLoading}
             />
           </div>
 
@@ -183,16 +175,16 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               type="button"
               onClick={handleClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              disabled={isScheduling}
+              disabled={isLoading}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isScheduling}
+              disabled={isLoading}
             >
-              {isScheduling ? 'Scheduling...' : 'Schedule Interview'}
+              {isLoading ? 'Scheduling...' : 'Schedule Interview'}
             </button>
           </div>
         </form>

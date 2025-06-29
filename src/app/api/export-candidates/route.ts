@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const filterName = searchParams.get('name') || '';
 
     const db = getFirestoreAdmin();
-    let query = db.collection("candidates");
+    let query: any = db.collection("candidates");
 
     // Apply filters
     if (filterStatus !== 'all') {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
     const snapshot = await query.orderBy('submittedAt', 'desc').get();
     
-    let candidates = snapshot.docs.map(doc => {
+    let candidates = snapshot.docs.map((doc: any) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     // Apply name filter
     if (filterName) {
-      candidates = candidates.filter(candidate => 
+      candidates = candidates.filter((candidate: any) => 
         candidate.fullName.toLowerCase().includes(filterName.toLowerCase())
       );
     }
