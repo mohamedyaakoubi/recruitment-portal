@@ -2,17 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Timestamp } from 'firebase/firestore';
 
-interface Candidate {
-  id: string;
-  fullName: string;
-  email: string;
-  submittedAt?: Timestamp;
-  status: string;
-  score: number | null;
-  city?: string;
-  country?: string;
-  dateOfBirth?: string;
-}
+import type { Candidate } from '@/types';
 
 interface CandidateTableProps {
   candidates: Candidate[];
