@@ -263,15 +263,15 @@ export default function CandidateForm() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-blue-900 text-white py-4 px-6">
+      <header className="bg-blue-900 text-white p-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center">
             <Image 
               src="/logo-skills.png" 
               alt="International Skills" 
-              width={200} 
-              height={60}
-              className="h-12 w-auto"
+              width={180} 
+              height={50}
+              className="h-10 sm:h-12 w-auto"
             />
           </div>
           <div className="hidden md:flex items-center space-x-6 text-sm">
@@ -288,16 +288,16 @@ export default function CandidateForm() {
       </header>
 
       {/* Main Content */}
-      <main className="flex min-h-screen flex-col items-center justify-center p-6">
-        <div className="w-full max-w-4xl p-8 space-y-8 bg-white rounded-lg shadow-lg">
+      <main className="flex min-h-screen flex-col items-center justify-start sm:justify-center p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-4xl p-6 sm:p-8 space-y-8 bg-white rounded-lg shadow-lg">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Candidate Application</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Candidate Application</h1>
             <p className="text-gray-600">Apply for your dream job opportunity</p>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Information Section */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Personal Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* First Name */}
@@ -337,7 +337,7 @@ export default function CandidateForm() {
                 </div>
 
                 {/* Email */}
-                <div>
+                <div className="md:col-span-2">
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email Address <span className="text-red-500">*</span>
                   </label>
@@ -373,39 +373,7 @@ export default function CandidateForm() {
                     <option value="female">Female</option>
                   </select>
                 </div>
-
-                {/* Phone Number */}
-                <div>
-                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="px-3 py-3 border border-gray-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                      disabled={isLoading}
-                    >
-                      {countryCodes.map((item, index) => (
-                        <option key={index} value={item.code}>
-                          {item.flag} {item.code} {item.country}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      id="phoneNumber"
-                      required
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="flex-1 px-4 py-3 border border-l-0 border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="123 456 789"
-                      disabled={isLoading}
-                    />
-                  </div>
-                </div>
-
+                
                 {/* Date of Birth */}
                 <div>
                   <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
@@ -421,6 +389,38 @@ export default function CandidateForm() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     disabled={isLoading}
                   />
+                </div>
+
+                {/* Phone Number */}
+                <div className="md:col-span-2">
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex flex-col sm:flex-row">
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="px-3 py-3 border border-gray-300 rounded-lg sm:rounded-r-none shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                      disabled={isLoading}
+                    >
+                      {countryCodes.map((item, index) => (
+                        <option key={index} value={item.code}>
+                          {item.flag} {item.code}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      name="phoneNumber"
+                      id="phoneNumber"
+                      required
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="flex-1 w-full mt-2 sm:mt-0 px-4 py-3 border border-gray-300 sm:border-l-0 rounded-lg sm:rounded-l-none shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="123 456 789"
+                      disabled={isLoading}
+                    />
+                  </div>
                 </div>
 
                 {/* City */}
@@ -454,10 +454,10 @@ export default function CandidateForm() {
                     onChange={(e) => setCountrySearch(e.target.value)}
                     onFocus={() => setCountrySearch('')}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Search and select your country"
+                    placeholder="Search your country"
                     disabled={isLoading}
                   />
-                  {countrySearch !== '' && filteredCountries.length > 0 && (
+                  {countrySearch !== '' && filteredCountries.length > 0 && country !== countrySearch && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {filteredCountries.map((countryOption, index) => (
                         <button
@@ -495,7 +495,7 @@ export default function CandidateForm() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     disabled={isLoading}
                   >
-                    <option value="">Select a category first</option>
+                    <option value="">Select a category</option>
                     {categories.map((category) => (
                       <option key={category} value={category}>
                         {category}
@@ -505,7 +505,7 @@ export default function CandidateForm() {
                 </div>
 
                 {/* Job Title */}
-                <div>
+                <div className="md:col-span-2">
                   <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700 mb-2">
                     Job Position <span className="text-red-500">*</span>
                   </label>
@@ -539,17 +539,16 @@ export default function CandidateForm() {
             </div>
 
             {/* Additional Information Section */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Additional Information</h2>
               
-              {/* Dynamic Additional Info */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Links, Files & Additional Information (Optional)
+                  Links, Files & Notes (Optional)
                 </label>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {additionalInfo.map((info, index) => (
-                    <div key={index} className="flex items-center space-x-2">
+                    <div key={index} className="flex flex-col sm:flex-row items-stretch gap-2">
                       <select
                         value={info.type}
                         onChange={(e) => {
@@ -557,7 +556,7 @@ export default function CandidateForm() {
                           newInfo[index] = {...newInfo[index], type: e.target.value as 'link' | 'file' | 'text', content: '', file: undefined};
                           setAdditionalInfo(newInfo);
                         }}
-                        className="px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 min-w-[100px]"
+                        className="w-full sm:w-auto px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
                         disabled={isLoading}
                       >
                         <option value="link">Link</option>
@@ -565,50 +564,50 @@ export default function CandidateForm() {
                         <option value="text">Text</option>
                       </select>
                       
-                      {info.type === 'link' && (
-                        <input
-                          type="url"
-                          value={info.content}
-                          onChange={(e) => updateAdditionalInfo(index, e.target.value)}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="https://linkedin.com/in/yourprofile or https://github.com/yourusername"
-                          disabled={isLoading}
-                        />
-                      )}
-                      
-                      {info.type === 'file' && (
-                        <input
-                          type="file"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              updateAdditionalInfo(index, file.name, file);
-                            }
-                          }}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                          disabled={isLoading}
-                        />
-                      )}
-                      
-                      {info.type === 'text' && (
-                        <textarea
-                          value={info.content}
-                          onChange={(e) => updateAdditionalInfo(index, e.target.value)}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter additional information, notes, or comments..."
-                          rows={2}
-                          disabled={isLoading}
-                        />
-                      )}
+                      <div className="flex-1">
+                        {info.type === 'link' && (
+                          <input
+                            type="url"
+                            value={info.content}
+                            onChange={(e) => updateAdditionalInfo(index, e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="https://linkedin.com/in/yourprofile"
+                            disabled={isLoading}
+                          />
+                        )}
+                        {info.type === 'file' && (
+                          <input
+                            type="file"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                updateAdditionalInfo(index, file.name, file);
+                              }
+                            }}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            disabled={isLoading}
+                          />
+                        )}
+                        {info.type === 'text' && (
+                          <textarea
+                            value={info.content}
+                            onChange={(e) => updateAdditionalInfo(index, e.target.value)}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter notes or comments..."
+                            rows={2}
+                            disabled={isLoading}
+                          />
+                        )}
+                      </div>
                       
                       {additionalInfo.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeAdditionalInfo(index)}
-                          className="px-3 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                          className="w-full sm:w-auto flex justify-center items-center px-3 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500"
                           disabled={isLoading}
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
@@ -616,42 +615,15 @@ export default function CandidateForm() {
                     </div>
                   ))}
                   
-                  {/* Add buttons */}
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => addAdditionalInfo('link')}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      disabled={isLoading}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                      <span>Add Link</span>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <button type="button" onClick={() => addAdditionalInfo('link')} className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200" disabled={isLoading}>
+                      <span>+ Add Link</span>
                     </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => addAdditionalInfo('file')}
-                      className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      disabled={isLoading}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                      </svg>
-                      <span>Add File</span>
+                    <button type="button" onClick={() => addAdditionalInfo('file')} className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200" disabled={isLoading}>
+                      <span>+ Add File</span>
                     </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => addAdditionalInfo('text')}
-                      className="flex items-center space-x-2 px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      disabled={isLoading}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                      </svg>
-                      <span>Add Text</span>
+                    <button type="button" onClick={() => addAdditionalInfo('text')} className="flex items-center space-x-2 px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200" disabled={isLoading}>
+                      <span>+ Add Text</span>
                     </button>
                   </div>
                 </div>
@@ -659,7 +631,7 @@ export default function CandidateForm() {
             </div>
 
             {/* File Upload Section */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Required Documents</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* CV Upload */}
@@ -667,16 +639,7 @@ export default function CandidateForm() {
                   <label htmlFor="cv" className="block text-sm font-medium text-gray-700 mb-2">
                     Upload CV <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="file"
-                    name="cv"
-                    id="cv"
-                    required
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleFileChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    disabled={isLoading}
-                  />
+                  <input type="file" name="cv" id="cv" required accept=".pdf,.doc,.docx" onChange={handleFileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" disabled={isLoading}/>
                   <p className="mt-1 text-xs text-gray-500">PDF, DOC, DOCX only.</p>
                 </div>
 
@@ -685,40 +648,19 @@ export default function CandidateForm() {
                   <label htmlFor="passport" className="block text-sm font-medium text-gray-700 mb-2">
                     Upload Passport/ID <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="file"
-                    name="passport"
-                    id="passport"
-                    required
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    disabled={isLoading}
-                  />
+                  <input type="file" name="passport" id="passport" required accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" disabled={isLoading}/>
                   <p className="mt-1 text-xs text-gray-500">PDF, JPG, PNG only.</p>
                 </div>
               </div>
             </div>
 
             {/* Status Messages */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-            {success && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-600">{success}</p>
-              </div>
-            )}
+            {error && <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-600">{error}</div>}
+            {success && <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-600">{success}</div>}
 
             {/* Submit Button */}
-            <div className="text-center">
-              <button
-                type="submit"
-                className="w-full md:w-auto px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                disabled={isLoading}
-              >
+            <div className="text-center pt-4">
+              <button type="submit" className="w-full md:w-auto px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled={isLoading}>
                 {isLoading ? 'Submitting...' : 'Submit Application'}
               </button>
             </div>
@@ -727,9 +669,9 @@ export default function CandidateForm() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-blue-900 text-white py-8 px-6">
+      <footer className="bg-blue-900 text-white py-8 px-6 mt-12">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
             {/* Contact Information */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
@@ -744,33 +686,24 @@ export default function CandidateForm() {
             <div>
               <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
               <div className="space-y-2 text-sm">
-                <a href="https://www.facebook.com/profile.php?id=61571369068485" target="_blank" rel="noopener noreferrer" className="block hover:text-blue-300 transition-colors">
-                  📘 Facebook
-                </a>
-                <a href="https://www.instagram.com/internationalskillscompany?igsh=MTI4enh4ODNzOGN5Mw%3D%3D" target="_blank" rel="noopener noreferrer" className="block hover:text-blue-300 transition-colors">
-                  📷 Instagram
-                </a>
-                <a href="https://www.linkedin.com/company/international-skills-labor-company/" target="_blank" rel="noopener noreferrer" className="block hover:text-blue-300 transition-colors">
-                  💼 LinkedIn
-                </a>
+                <a href="https://www.facebook.com/profile.php?id=61571369068485" target="_blank" rel="noopener noreferrer" className="block hover:text-blue-300 transition-colors">Facebook</a>
+                <a href="https://www.instagram.com/internationalskillscompany?igsh=MTI4enh4ODNzOGN5Mw%3D%3D" target="_blank" rel="noopener noreferrer" className="block hover:text-blue-300 transition-colors">Instagram</a>
+                <a href="https://www.linkedin.com/company/international-skills-labor-company/" target="_blank" rel="noopener noreferrer" className="block hover:text-blue-300 transition-colors">LinkedIn</a>
               </div>
             </div>
 
             {/* Company Info */}
             <div>
               <h3 className="text-lg font-semibold mb-4">International Skills</h3>
-              <p className="text-sm text-gray-300">
-                Connecting talented professionals with international opportunities.
-              </p>
+              <p className="text-sm text-gray-300">Connecting talented professionals with international opportunities.</p>
             </div>
           </div>
           
           <div className="border-t border-blue-800 mt-8 pt-4 text-center text-sm text-gray-300">
-            <p>&copy; 2024 International Skills. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} International Skills. All rights reserved.</p>
           </div>
         </div>
       </footer>
     </div>
   );
 }
-
