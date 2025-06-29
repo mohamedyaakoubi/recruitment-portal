@@ -4,6 +4,7 @@ import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import admin from 'firebase-admin';
 
 // Job categories
+
 export const JOB_CATEGORIES = [
   'Agricole',
   'Bâtiment et travail publique',

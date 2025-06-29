@@ -2,25 +2,14 @@
 import React, { useState } from 'react';
 import { format, addDays } from 'date-fns';
 
+import type { Candidate } from '@/types';
+
 interface InterviewSchedulingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  candidate: {
-    id: string;
-    fullName: string;
-    email: string;
-    jobTitleText?: string;
-  } | null;
-  onScheduleInterview: (interviewData: {
-    candidateId: string;
-    candidateEmail: string;
-    candidateName: string;
-    interviewDate: string;
-    interviewTime: string;
-    jobTitle?: string;
-    adminEmail?: string;
-  }) => Promise<void>;
-  isScheduling: boolean;
+  candidate: Candidate | null;
+  onSchedule: (candidateId: string, newStatus: string, interviewTimestampISO?: string) => Promise<void>;
+  isLoading: boolean;
 }
 
 const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({

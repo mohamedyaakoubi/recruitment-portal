@@ -31,25 +31,7 @@ import InterviewSchedulingModal from '../components/InterviewSchedulingModal';
 const locales = { 'en-US': enUS };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
-// Types
-interface Candidate {
-    id: string;
-    fullName: string;
-    email: string;
-    websites: string[];
-    cvUrl: string;
-    passportUrl: string;
-    submittedAt: Timestamp;
-    status: 'submitted' | 'rejected' | 'interview_scheduled' | string;
-    score: number | null;
-    scoreAnalysis?: string;
-    lastScoredAt?: Timestamp;
-    interviewDate?: Timestamp;
-    city?: string;
-    country?: string;
-    jobTitleText?: string;
-    dateOfBirth?: string;
-}
+import type { Candidate } from '@/types';
 
 interface InterviewEvent extends CalendarEvent {
     resource: Candidate;

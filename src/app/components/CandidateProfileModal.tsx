@@ -3,20 +3,7 @@
 import React, { useState } from 'react';
 import { Timestamp } from 'firebase/firestore';
 
-interface Candidate {
-    id: string;
-    fullName: string;
-    email: string;
-    websites: string[];
-    cvUrl: string;
-    passportUrl: string;
-    submittedAt: Timestamp;
-    status: 'submitted' | 'rejected' | 'interview_scheduled' | 'approved' | string;
-    score: number | null;
-    scoreAnalysis?: string;
-    lastScoredAt?: Timestamp;
-    interviewDate?: Timestamp;
-}
+import type { Candidate } from '@/types';
 
 interface CandidateProfileModalProps {
     isOpen: boolean;
@@ -24,6 +11,7 @@ interface CandidateProfileModalProps {
     candidate: Candidate | null;
     onStatusChange: (candidateId: string, newStatus: string, interviewTimestampISO?: string) => Promise<void>;
     statusUpdateLoading: boolean;
+    onScheduleInterview: () => void;
 }
 
 const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({ isOpen, onClose, candidate, onStatusChange, statusUpdateLoading }) => {

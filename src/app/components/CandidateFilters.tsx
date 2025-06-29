@@ -1,13 +1,7 @@
 // src/app/components/CandidateFilters.tsx
 import React from 'react';
 
-interface Candidate {
-  status: string;
-  city?: string;
-  country?: string;
-  jobTitleText?: string;
-  jobCategory?: string;
-}
+import type { Candidate } from '@/types';
 
 interface CandidateFiltersProps {
   candidates: Candidate[];
@@ -215,7 +209,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
           <div>
             <span className="text-sm font-medium text-gray-600 mr-3">Popular Cities:</span>
             <div className="inline-flex flex-wrap gap-2">
-              {Array.from(new Set(candidates.map(c => c.city).filter(Boolean)))
+              {Array.from(new Set(candidates.map(c => c.city).filter((c): c is string => !!c)))
                 .slice(0, 5)
                 .map(city => (
                   <button
@@ -240,7 +234,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
           <div>
             <span className="text-sm font-medium text-gray-600 mr-3">Popular Countries:</span>
             <div className="inline-flex flex-wrap gap-2">
-              {Array.from(new Set(candidates.map(c => c.country).filter(Boolean)))
+              {Array.from(new Set(candidates.map(c => c.country).filter((c): c is string => !!c)))
                 .slice(0, 5)
                 .map(country => (
                   <button
@@ -265,7 +259,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
           <div>
             <span className="text-sm font-medium text-gray-600 mr-3">Job Categories:</span>
             <div className="inline-flex flex-wrap gap-2">
-              {Array.from(new Set(candidates.map(c => c.jobCategory).filter(Boolean)))
+              {Array.from(new Set(candidates.map(c => c.jobCategory).filter((c): c is string => !!c)))
                 .slice(0, 5)
                 .map(category => (
                   <button
@@ -290,7 +284,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
           <div>
             <span className="text-sm font-medium text-gray-600 mr-3">Job Positions:</span>
             <div className="inline-flex flex-wrap gap-2">
-              {Array.from(new Set(candidates.map(c => c.jobTitleText).filter(Boolean)))
+              {Array.from(new Set(candidates.map(c => c.jobTitleText).filter((c): c is string => !!c)))
                 .slice(0, 5)
                 .map(jobTitle => (
                   <button
@@ -315,4 +309,3 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
 };
 
 export default CandidateFilters;
-
