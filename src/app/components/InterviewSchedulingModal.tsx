@@ -35,6 +35,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
       return;
     }
 
+    const interviewTimestampISO = `${interviewDate}T${interviewTime}:00`;
     try {
       await onSchedule(candidate.id, 'interview_scheduled', interviewTimestampISO);
       
