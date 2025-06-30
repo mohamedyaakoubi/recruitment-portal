@@ -21,6 +21,7 @@ import DashboardCharts from '../components/DashboardCharts';
 import CandidateFilters from '../components/CandidateFilters';
 import CandidateTable from '../components/CandidateTable';
 import ScoringModal from '../components/ScoringModal';
+import Tabs from '../components/Tabs';
 import CandidateProfileModal from '../components/CandidateProfileModal';
 import JobManagement from '../components/JobManagement';
 import Toast from '../components/Toast';
@@ -31,26 +32,9 @@ import InterviewSchedulingModal from '../components/InterviewSchedulingModal';
 const locales = { 'en-US': enUS };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
-// Types
-interface Candidate {
-    id: string;
-    fullName: string;
-    email: string;
-    websites: string[];
-    cvUrl: string;
-    passportUrl: string;
-    submittedAt: Timestamp;
-    status: 'submitted' | 'rejected' | 'interview_scheduled' | string;
-    score: number | null;
-    scoreAnalysis?: string;
-    lastScoredAt?: Timestamp;
-    interviewDate?: Timestamp;
-    city?: string;
-    country?: string;
-    jobTitleText?: string;
-    dateOfBirth?: string;
-}
+import type { Candidate } from '@/types';
 
+// Types
 interface InterviewEvent extends CalendarEvent {
     resource: Candidate;
 }
@@ -101,6 +85,7 @@ function DashboardContent() {
     const [loadingCandidates, setLoadingCandidates] = useState(true);
     
     // Filter states
+    const [activeTab, setActiveTab] = useState<string>('main');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterName, setFilterName] = useState<string>('');
     const [filterCity, setFilterCity] = useState<string>('');
@@ -205,6 +190,7 @@ function DashboardContent() {
             const cityMatch = filterCity === '' || (candidate.city && candidate.city.toLowerCase().includes(filterCity.toLowerCase()));
             const countryMatch = filterCountry === '' || (candidate.country && candidate.country.toLowerCase().includes(filterCountry.toLowerCase()));
             const jobTitleMatch = filterJobTitle === '' || (candidate.jobTitleText && candidate.jobTitleText.toLowerCase().includes(filterJobTitle.toLowerCase()));
+            const categoryMatch = filterCategory === '' || (candidate.jobCategory && candidate.jobCategory.toLowerCase().includes(filterCategory.toLowerCase()));
             
             // Age filtering
             let ageMatch = true;
@@ -218,10 +204,19 @@ function DashboardContent() {
                 if (filterAgeMin && age < parseInt(filterAgeMin)) ageMatch = false;
                 if (filterAgeMax && age > parseInt(filterAgeMax)) ageMatch = false;
             }
+
+            let tabMatch = true;
+            if (activeTab === 'main') {
+                tabMatch = candidate.status === 'submitted' || candidate.status === 'interview_scheduled';
+            } else if (activeTab === 'approved') {
+                tabMatch = candidate.status === 'approved';
+            } else if (activeTab === 'rejected') {
+                tabMatch = candidate.status === 'rejected';
+            }
             
-            return statusMatch && nameMatch && cityMatch && countryMatch && jobTitleMatch && ageMatch;
+            return statusMatch && nameMatch && cityMatch && countryMatch && jobTitleMatch && categoryMatch && ageMatch && tabMatch;
         });
-    }, [candidates, filterStatus, filterName, filterCity, filterCountry, filterJobTitle, filterAgeMin, filterAgeMax]);
+    }, [candidates, filterStatus, filterName, filterCity, filterCountry, filterJobTitle, filterCategory, filterAgeMin, filterAgeMax, activeTab]);
 
     // Chart data
     const statusChartData = useMemo(() => getStatusChartData(candidates), [candidates]);
@@ -441,6 +436,7 @@ function DashboardContent() {
                 onViewCandidate={openProfileModal}
                 onScoreCandidate={openScoringModal}
                 onStatusChange={handleStatusChange}
+                filters={{ status: filterStatus, name: filterName, city: filterCity, country: filterCountry, jobTitle: filterJobTitle, category: filterCategory, ageMin: filterAgeMin, ageMax: filterAgeMax }}
             />
 
             {/* Calendar Section */}
