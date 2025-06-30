@@ -1,6 +1,7 @@
 // src/app/components/CandidateTable.tsx
 import React, { useState, useMemo } from 'react';
 import { Timestamp } from 'firebase/firestore';
+import * as XLSX from 'xlsx';
 
 import type { Candidate } from '@/types';
 
@@ -10,6 +11,16 @@ interface CandidateTableProps {
   onViewCandidate: (candidate: Candidate) => void;
   onScoreCandidate: (candidate: Candidate) => void;
   onStatusChange: (candidateId: string, newStatus: string) => void;
+  filters: {
+    status: string;
+    name: string;
+    city: string;
+    country: string;
+    jobTitle: string;
+    category: string;
+    ageMin: string;
+    ageMax: string;
+  };
 }
 
 type SortField = 'firstName' | 'lastName' | 'email' | 'age' | 'city' | 'country' | 'submittedAt' | 'status' | 'score';
@@ -20,10 +31,12 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
   statusUpdateLoading,
   onViewCandidate,
   onScoreCandidate,
-  onStatusChange
+  onStatusChange,
+  filters
 }) => {
   const [sortField, setSortField] = useState<SortField>('submittedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -31,6 +44,59 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
     } else {
       setSortField(field);
       setSortDirection('asc');
+    }
+  };
+
+  const handleExport = async (format: 'csv' | 'xlsx' | 'json') => {
+    setIsExporting(true);
+    try {
+      const params = new URLSearchParams({
+        format,
+        status: filters.status,
+        name: filters.name,
+        city: filters.city,
+        country: filters.country,
+        jobTitle: filters.jobTitle,
+        category: filters.category,
+        ageMin: filters.ageMin,
+        ageMax: filters.ageMax,
+      });
+      const response = await fetch(`/api/export-candidates?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to export candidates');
+      }
+
+      if (format === 'xlsx') {
+        const { data, filename } = await response.json();
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Candidates');
+        XLSX.writeFile(workbook, filename);
+      } else {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = 'candidates';
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+          if (filenameMatch && filenameMatch.length > 1) {
+            filename = filenameMatch[1];
+          }
+        }
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+      // You might want to show a toast notification here
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -141,8 +207,31 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h3 className="text-xl font-bold text-gray-800">Candidate List</h3>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => handleExport('csv')}
+            disabled={isExporting}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+          >
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </button>
+          <button
+            onClick={() => handleExport('xlsx')}
+            disabled={isExporting}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:bg-gray-400"
+          >
+            {isExporting ? 'Exporting...' : 'Export XLSX'}
+          </button>
+          <button
+            onClick={() => handleExport('json')}
+            disabled={isExporting}
+            className="px-3 py-1.5 text-xs font-medium text-white bg-gray-600 rounded-md hover:bg-gray-700 disabled:bg-gray-400"
+          >
+            {isExporting ? 'Exporting...' : 'Export JSON'}
+          </button>
+        </div>
       </div>
       
       <div className="overflow-x-auto">

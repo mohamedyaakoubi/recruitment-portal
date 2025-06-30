@@ -21,6 +21,7 @@ import DashboardCharts from '../components/DashboardCharts';
 import CandidateFilters from '../components/CandidateFilters';
 import CandidateTable from '../components/CandidateTable';
 import ScoringModal from '../components/ScoringModal';
+import Tabs from '../components/Tabs';
 import CandidateProfileModal from '../components/CandidateProfileModal';
 import JobManagement from '../components/JobManagement';
 import Toast from '../components/Toast';
@@ -84,6 +85,7 @@ function DashboardContent() {
     const [loadingCandidates, setLoadingCandidates] = useState(true);
     
     // Filter states
+    const [activeTab, setActiveTab] = useState<string>('main');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterName, setFilterName] = useState<string>('');
     const [filterCity, setFilterCity] = useState<string>('');
@@ -203,10 +205,19 @@ function DashboardContent() {
                 if (filterAgeMin && age < parseInt(filterAgeMin)) ageMatch = false;
                 if (filterAgeMax && age > parseInt(filterAgeMax)) ageMatch = false;
             }
+
+            let tabMatch = true;
+            if (activeTab === 'main') {
+                tabMatch = candidate.status === 'submitted' || candidate.status === 'interview_scheduled';
+            } else if (activeTab === 'approved') {
+                tabMatch = candidate.status === 'approved';
+            } else if (activeTab === 'rejected') {
+                tabMatch = candidate.status === 'rejected';
+            }
             
-            return statusMatch && nameMatch && cityMatch && countryMatch && jobTitleMatch && categoryMatch && ageMatch;
+            return statusMatch && nameMatch && cityMatch && countryMatch && jobTitleMatch && categoryMatch && ageMatch && tabMatch;
         });
-    }, [candidates, filterStatus, filterName, filterCity, filterCountry, filterJobTitle, filterCategory, filterAgeMin, filterAgeMax]);
+    }, [candidates, filterStatus, filterName, filterCity, filterCountry, filterJobTitle, filterCategory, filterAgeMin, filterAgeMax, activeTab]);
 
     // Chart data
     const statusChartData = useMemo(() => getStatusChartData(candidates), [candidates]);
@@ -420,13 +431,27 @@ function DashboardContent() {
                 onClearAllFilters={clearAllFilters}
             />
 
-            <CandidateTable
-                candidates={filteredCandidates}
-                statusUpdateLoading={statusUpdateLoading}
-                onViewCandidate={openProfileModal}
-                onScoreCandidate={openScoringModal}
-                onStatusChange={handleStatusChange}
-            />
+            <div className="mt-8 bg-white p-6 rounded-lg shadow-sm">
+                <h2 className="text-xl font-semibold mb-4">Candidate List</h2>
+                <Tabs
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    tabs={[
+                        { label: 'Main', value: 'main' },
+                        { label: 'Approved', value: 'approved' },
+                        { label: 'Rejected', value: 'rejected' },
+                    ]}
+                >
+                    <CandidateTable
+                        candidates={filteredCandidates}
+                        statusUpdateLoading={statusUpdateLoading}
+                        onViewCandidate={openProfileModal}
+                        onScoreCandidate={openScoringModal}
+                        onStatusChange={handleStatusChange}
+                        filters={{ status: filterStatus, name: filterName, city: filterCity, country: filterCountry, jobTitle: filterJobTitle, category: filterCategory, ageMin: filterAgeMin, ageMax: filterAgeMax }}
+                    />
+                </Tabs>
+            </div>
 
             {/* Calendar Section */}
             <section className="mt-8">

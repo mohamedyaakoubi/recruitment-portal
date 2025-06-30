@@ -6,6 +6,8 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from 'next/image';
 
+import SuccessToast from './components/SuccessToast';
+
 export default function CandidateForm() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -30,6 +32,7 @@ export default function CandidateForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   // Country codes list
   const countryCodes = [
@@ -247,6 +250,7 @@ export default function CandidateForm() {
       if (passportInput) passportInput.value = '';
 
       setSuccess("Application submitted successfully!");
+      setShowSuccessToast(true);
 
     } catch (err) {
       console.error("Error submitting application:", err);
@@ -288,18 +292,18 @@ export default function CandidateForm() {
       </header>
 
       {/* Main Content */}
-      <main className="flex min-h-screen flex-col items-center justify-center p-6">
-        <div className="w-full max-w-4xl p-8 space-y-8 bg-white rounded-lg shadow-lg">
+      <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-4xl p-4 sm:p-8 space-y-8 bg-white rounded-lg shadow-lg">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Candidate Application</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Candidate Application</h1>
             <p className="text-gray-600">Apply for your dream job opportunity</p>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Information Section */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Personal Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* First Name */}
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -337,7 +341,7 @@ export default function CandidateForm() {
                 </div>
 
                 {/* Email */}
-                <div>
+                <div className="sm:col-span-2">
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email Address <span className="text-red-500">*</span>
                   </label>
@@ -379,16 +383,16 @@ export default function CandidateForm() {
                   <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex">
+                  <div className="flex flex-col sm:flex-row">
                     <select
                       value={countryCode}
                       onChange={(e) => setCountryCode(e.target.value)}
-                      className="px-3 py-3 border border-gray-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                      className="px-3 py-3 border border-gray-300 rounded-t-lg sm:rounded-l-lg sm:rounded-t-none shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 w-full sm:w-auto"
                       disabled={isLoading}
                     >
                       {countryCodes.map((item, index) => (
                         <option key={index} value={item.code}>
-                          {item.flag} {item.code} {item.country}
+                          {item.flag} {item.code}
                         </option>
                       ))}
                     </select>
@@ -399,7 +403,7 @@ export default function CandidateForm() {
                       required
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="flex-1 px-4 py-3 border border-l-0 border-gray-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 px-4 py-3 border-t-0 sm:border-l-0 sm:border-t border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-b-none shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="123 456 789"
                       disabled={isLoading}
                     />
@@ -442,7 +446,7 @@ export default function CandidateForm() {
                 </div>
 
                 {/* Country */}
-                <div className="relative">
+                <div className="relative sm:col-span-2">
                   <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
                     Country <span className="text-red-500">*</span>
                   </label>
@@ -482,7 +486,7 @@ export default function CandidateForm() {
                 </div>
 
                 {/* Job Category */}
-                <div>
+                <div className="sm:col-span-2">
                   <label htmlFor="jobCategory" className="block text-sm font-medium text-gray-700 mb-2">
                     Job Category <span className="text-red-500">*</span>
                   </label>
@@ -505,7 +509,7 @@ export default function CandidateForm() {
                 </div>
 
                 {/* Job Title */}
-                <div>
+                <div className="sm:col-span-2">
                   <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700 mb-2">
                     Job Position <span className="text-red-500">*</span>
                   </label>
@@ -539,7 +543,7 @@ export default function CandidateForm() {
             </div>
 
             {/* Additional Information Section */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Additional Information</h2>
               
               {/* Dynamic Additional Info */}
@@ -549,7 +553,7 @@ export default function CandidateForm() {
                 </label>
                 <div className="space-y-3">
                   {additionalInfo.map((info, index) => (
-                    <div key={index} className="flex items-center space-x-2">
+                    <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                       <select
                         value={info.type}
                         onChange={(e) => {
@@ -570,7 +574,7 @@ export default function CandidateForm() {
                           type="url"
                           value={info.content}
                           onChange={(e) => updateAdditionalInfo(index, e.target.value)}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="flex-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="https://linkedin.com/in/yourprofile or https://github.com/yourusername"
                           disabled={isLoading}
                         />
@@ -585,7 +589,7 @@ export default function CandidateForm() {
                               updateAdditionalInfo(index, file.name, file);
                             }
                           }}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                          className="flex-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                           disabled={isLoading}
                         />
                       )}
@@ -594,7 +598,7 @@ export default function CandidateForm() {
                         <textarea
                           value={info.content}
                           onChange={(e) => updateAdditionalInfo(index, e.target.value)}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="flex-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="Enter additional information, notes, or comments..."
                           rows={2}
                           disabled={isLoading}
@@ -605,7 +609,7 @@ export default function CandidateForm() {
                         <button
                           type="button"
                           onClick={() => removeAdditionalInfo(index)}
-                          className="px-3 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                          className="px-3 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 self-center sm:self-auto"
                           disabled={isLoading}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -617,7 +621,7 @@ export default function CandidateForm() {
                   ))}
                   
                   {/* Add buttons */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mt-2">
                     <button
                       type="button"
                       onClick={() => addAdditionalInfo('link')}
@@ -659,9 +663,9 @@ export default function CandidateForm() {
             </div>
 
             {/* File Upload Section */}
-            <div className="bg-gray-50 p-6 rounded-lg">
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Required Documents</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* CV Upload */}
                 <div>
                   <label htmlFor="cv" className="block text-sm font-medium text-gray-700 mb-2">
@@ -706,17 +710,12 @@ export default function CandidateForm() {
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
-            {success && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-600">{success}</p>
-              </div>
-            )}
 
             {/* Submit Button */}
             <div className="text-center">
               <button
                 type="submit"
-                className="w-full md:w-auto px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={isLoading}
               >
                 {isLoading ? 'Submitting...' : 'Submit Application'}
@@ -726,10 +725,16 @@ export default function CandidateForm() {
         </div>
       </main>
 
+      <SuccessToast
+        message={success || ''}
+        isVisible={showSuccessToast}
+        onClose={() => setShowSuccessToast(false)}
+      />
+
       {/* Footer */}
       <footer className="bg-blue-900 text-white py-8 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {/* Contact Information */}
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
@@ -757,7 +762,7 @@ export default function CandidateForm() {
             </div>
 
             {/* Company Info */}
-            <div>
+            <div className="sm:col-span-2 md:col-span-1">
               <h3 className="text-lg font-semibold mb-4">International Skills</h3>
               <p className="text-sm text-gray-300">
                 Connecting talented professionals with international opportunities.

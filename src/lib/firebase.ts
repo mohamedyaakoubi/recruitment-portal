@@ -8,13 +8,13 @@ import { getStorage } from 'firebase/storage';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: 'REDACTED_GOOGLE_API_KEY',
-  authDomain: 'international-skills.firebaseapp.com',
-  projectId: 'international-skills',
-  storageBucket: 'international-skills.firebasestorage.app', // Fix this line
-  messagingSenderId: '1093075040692',
-  appId: '1:1093075040692:web:a7feb048441dc000279ae1',
-  measurementId: 'G-54NZWDZVBH',
+  apiKey: "REDACTED_GOOGLE_API_KEY",
+  authDomain: "international-skills.firebaseapp.com",
+  projectId: "international-skills",
+  storageBucket: "international-skills.firebasestorage.app",
+  messagingSenderId: "1093075040692",
+  appId: "1:1093075040692:web:a7feb048441dc000279ae1",
+  measurementId: "G-54NZWDZVBH"
 };
 
 // Initialize Firebase
