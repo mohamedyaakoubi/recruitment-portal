@@ -1,23 +1,29 @@
+"use client";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth"; // Import AuthProvider
+import { useState, useEffect } from "react";
+import Loader from "./components/Loader";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "Candidate Application Portal",
-  description: "Submit your application or manage candidates",
-};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2000); // Simulate a loading time
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <html lang="en">
       <body className={inter.className}>
+        {loading && <Loader />}
         <AuthProvider> {/* Wrap children with AuthProvider */}
           {children}
         </AuthProvider>

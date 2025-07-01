@@ -1,4 +1,3 @@
-// src/app/components/InterviewSchedulingModal.tsx
 import React, { useState } from 'react';
 import { format, addDays } from 'date-fns';
 
@@ -8,7 +7,14 @@ interface InterviewSchedulingModalProps {
   isOpen: boolean;
   onClose: () => void;
   candidate: Candidate | null;
-  onSchedule: (candidateId: string, newStatus: string, interviewTimestampISO?: string) => Promise<void>;
+  onSchedule: (
+    candidateId: string, 
+    date: string, 
+    time: string, 
+    duration: number,
+    adminEmail: string,
+    notes?: string
+  ) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -21,11 +27,39 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
 }) => {
   const [interviewDate, setInterviewDate] = useState('');
   const [interviewTime, setInterviewTime] = useState('');
+  const [duration, setDuration] = useState(30); // Default 30 minutes
   const [adminEmail, setAdminEmail] = useState('wassim@internationalskills.fi');
   const [notes, setNotes] = useState('');
 
   // Get tomorrow's date as minimum date
   const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd');
+
+  // Generate time slots with better AM/PM display
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 8; hour <= 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const time24 = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour12 === 0 ? 12 : hour12;
+        const time12 = `${displayHour}:${minute.toString().padStart(2, '0')} ${ampm}`;
+        slots.push({ 
+          value: time24, 
+          label: `${time12} (${time24})`,
+          period: ampm,
+          sortTime: hour * 60 + minute
+        });
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
+  // Group time slots by AM/PM for better UX
+  const morningSlots = timeSlots.filter(slot => slot.period === 'AM');
+  const afternoonSlots = timeSlots.filter(slot => slot.period === 'PM');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,23 +69,32 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
       return;
     }
 
-    const interviewTimestampISO = `${interviewDate}T${interviewTime}:00`;
     try {
-      await onSchedule(candidate.id, 'interview_scheduled', interviewTimestampISO);
+      await onSchedule(
+        candidate.id,
+        interviewDate,
+        interviewTime,
+        duration,
+        adminEmail || 'wassim@internationalskills.fi',
+        notes
+      );
       
-      // Reset form
+      // Reset form on success
       setInterviewDate('');
       setInterviewTime('');
+      setDuration(30);
       setNotes('');
-      onClose();
+      
     } catch (error) {
-      console.error('Failed to schedule interview:', error);
+      // Error handling is done in the parent component
+      console.error('Error in modal:', error);
     }
   };
 
   const handleClose = () => {
     setInterviewDate('');
     setInterviewTime('');
+    setDuration(30);
     setNotes('');
     onClose();
   };
@@ -60,9 +103,9 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Schedule Interview</h3>
+          <h3 className="text-lg font-semibold text-gray-900">📅 Schedule Google Meet Interview</h3>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 focus:outline-none"
@@ -72,16 +115,16 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
           </button>
         </div>
         
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
           <p className="text-sm text-gray-700">
-            <strong>Candidate:</strong> {candidate.fullName}
+            <strong>👤 Candidate:</strong> {candidate.fullName}
           </p>
           <p className="text-sm text-gray-700">
-            <strong>Email:</strong> {candidate.email}
+            <strong>📧 Email:</strong> {candidate.email}
           </p>
           {candidate.jobTitleText && (
             <p className="text-sm text-gray-700">
-              <strong>Position:</strong> {candidate.jobTitleText}
+              <strong>💼 Position:</strong> {candidate.jobTitleText}
             </p>
           )}
         </div>
@@ -89,7 +132,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="interviewDate" className="block text-sm font-medium text-gray-700 mb-1">
-              Interview Date *
+              📅 Interview Date *
             </label>
             <input
               type="date"
@@ -98,94 +141,155 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               onChange={(e) => setInterviewDate(e.target.value)}
               min={tomorrow}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               disabled={isLoading}
             />
           </div>
 
           <div>
             <label htmlFor="interviewTime" className="block text-sm font-medium text-gray-700 mb-1">
-              Interview Time *
+              ⏰ Interview Time * (Finland Time)
             </label>
             <select
               id="interviewTime"
               value={interviewTime}
               onChange={(e) => setInterviewTime(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               disabled={isLoading}
             >
               <option value="">Select time</option>
-              <option value="09:00">09:00 AM</option>
-              <option value="09:30">09:30 AM</option>
-              <option value="10:00">10:00 AM</option>
-              <option value="10:30">10:30 AM</option>
-              <option value="11:00">11:00 AM</option>
-              <option value="11:30">11:30 AM</option>
-              <option value="12:00">12:00 PM</option>
-              <option value="12:30">12:30 PM</option>
-              <option value="13:00">01:00 PM</option>
-              <option value="13:30">01:30 PM</option>
-              <option value="14:00">02:00 PM</option>
-              <option value="14:30">02:30 PM</option>
-              <option value="15:00">03:00 PM</option>
-              <option value="15:30">03:30 PM</option>
-              <option value="16:00">04:00 PM</option>
-              <option value="16:30">04:30 PM</option>
-              <option value="17:00">05:00 PM</option>
+              <optgroup label="🌅 Morning (AM)">
+                {morningSlots.map(slot => (
+                  <option key={slot.value} value={slot.value}>
+                    {slot.label}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="🌆 Afternoon/Evening (PM)">
+                {afternoonSlots.map(slot => (
+                  <option key={slot.value} value={slot.value}>
+                    {slot.label}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-1">
+              ⏱️ Duration *
+            </label>
+            <select
+              id="duration"
+              value={duration}
+              onChange={(e) => setDuration(parseInt(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              disabled={isLoading}
+            >
+              <option value={15}>15 minutes</option>
+              <option value={30}>30 minutes (recommended)</option>
+              <option value={45}>45 minutes</option>
+              <option value={60}>1 hour</option>
+              <option value={90}>1.5 hours</option>
+              <option value={120}>2 hours</option>
             </select>
           </div>
 
           <div>
             <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700 mb-1">
-              Admin Email (for notifications)
+              👨‍💼 Interviewer Email
             </label>
             <input
               type="email"
               id="adminEmail"
               value={adminEmail}
               onChange={(e) => setAdminEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               disabled={isLoading}
+              placeholder="wassim@internationalskills.fi"
             />
           </div>
 
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-              Additional Notes (optional)
+              📝 Additional Notes (optional)
             </label>
             <textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               placeholder="Any additional information for the interview..."
               disabled={isLoading}
             />
           </div>
 
-          <div className="bg-yellow-50 p-3 rounded-lg">
-            <p className="text-sm text-yellow-800">
-              <strong>Note:</strong> The candidate will receive an email invitation with Google Meet link and calendar event. The interview duration is set to 1 hour.
-            </p>
+          <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <span className="text-green-400 text-lg">✅</span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-800">
+                  <strong>What happens next:</strong>
+                </p>
+                <ul className="text-sm text-green-700 mt-2 space-y-1">
+                  <li>• Google Calendar event will be created automatically</li>
+                  <li>• Google Meet link will be generated</li>
+                  <li>• Both candidate and interviewer receive email invitations</li>
+                  <li>• Calendar reminders are set (24h and 1h before)</li>
+                  <li>• Interview duration: {duration} minutes</li>
+                </ul>
+              </div>
+            </div>
           </div>
+
+          {/* Show cancellation info if interview is already scheduled */}
+          {candidate.status === 'interview_scheduled' && (
+            <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <span className="text-yellow-400 text-lg">⚠️</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> This candidate already has an interview scheduled. 
+                    Scheduling a new interview will cancel the existing one and create a new Google Meet event.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               disabled={isLoading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               disabled={isLoading}
             >
-              {isLoading ? 'Scheduling...' : 'Schedule Interview'}
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Scheduling...
+                </>
+              ) : (
+                <>
+                  🎥 Schedule Google Meet Interview
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -195,4 +299,3 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
 };
 
 export default InterviewSchedulingModal;
-

@@ -11,7 +11,7 @@ import { parse } from 'date-fns/parse';
 import { startOfWeek } from 'date-fns/startOfWeek';
 import { getDay } from 'date-fns/getDay';
 import { enUS } from 'date-fns/locale/en-US';
-import { addHours } from 'date-fns/addHours';
+import { addMinutes, isBefore } from 'date-fns';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 // Import components
@@ -37,6 +37,8 @@ import type { Candidate } from '@/types';
 // Types
 interface InterviewEvent extends CalendarEvent {
     resource: Candidate;
+    isCompleted: boolean;
+    eventType: 'scheduled' | 'completed';
 }
 
 // Chart Data Preparation
@@ -50,6 +52,7 @@ const getStatusChartData = (candidates: Candidate[]) => {
         { name: 'Submitted', value: counts.submitted || 0 },
         { name: 'Interview Scheduled', value: counts.interview_scheduled || 0 },
         { name: 'Rejected', value: counts.rejected || 0 },
+        { name: 'Approved', value: counts.approved || 0 },
     ].filter(item => item.value > 0);
 };
 
@@ -94,6 +97,9 @@ function DashboardContent() {
     const [filterCategory, setFilterCategory] = useState<string>('');
     const [filterAgeMin, setFilterAgeMin] = useState<string>('');
     const [filterAgeMax, setFilterAgeMax] = useState<string>('');
+    
+    // Calendar filter states
+    const [calendarFilter, setCalendarFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
     
     // Modal states
     const [isScoringModalOpen, setIsScoringModalOpen] = useState(false);
@@ -144,6 +150,9 @@ function DashboardContent() {
                         email: data.email || '',
                         scoreAnalysis: data.scoreAnalysis || '',
                         interviewDate: data.interviewDate || undefined,
+                        calendarEventId: data.calendarEventId || '',
+                        meetLink: data.meetLink || '',
+                        duration: data.duration || 30,
                         ...data
                     } as Candidate);
                 });
@@ -161,17 +170,42 @@ function DashboardContent() {
         }
     }, [user]);
 
-    // Calendar events
-    const interviewEvents: InterviewEvent[] = useMemo(() => {
+    // Calendar events with completion status
+    const allInterviewEvents: InterviewEvent[] = useMemo(() => {
+        const now = new Date();
+        
         return candidates
-            .filter(c => c.status === 'interview_scheduled' && c.interviewDate)
-            .map(c => ({
-                title: `Interview: ${c.fullName}`,
-                start: c.interviewDate!.toDate(),
-                end: addHours(c.interviewDate!.toDate(), 1),
-                resource: c,
-            }));
+            .filter(c => c.interviewDate)
+            .map(c => {
+                const interviewStart = c.interviewDate!.toDate();
+                const duration = c.duration || 30; // Use candidate's duration or default to 30 minutes
+                const interviewEnd = new Date(interviewStart.getTime() + (duration * 60 * 1000));
+                const isCompleted = isBefore(interviewEnd, now);
+                
+                return {
+                    title: isCompleted 
+                        ? `✓ Completed: ${c.fullName}` 
+                        : `Interview: ${c.fullName}`,
+                    start: interviewStart,
+                    end: interviewEnd,
+                    resource: c,
+                    isCompleted,
+                    eventType: isCompleted ? 'completed' as const : 'scheduled' as const,
+                };
+            });
     }, [candidates]);
+
+    // Filtered calendar events based on calendar filter
+    const filteredInterviewEvents = useMemo(() => {
+        switch (calendarFilter) {
+            case 'upcoming':
+                return allInterviewEvents.filter(event => !event.isCompleted);
+            case 'completed':
+                return allInterviewEvents.filter(event => event.isCompleted);
+            default:
+                return allInterviewEvents;
+        }
+    }, [allInterviewEvents, calendarFilter]);
 
     // Stats calculation
     const stats = useMemo(() => {
@@ -179,7 +213,8 @@ function DashboardContent() {
         const rejected = candidates.filter(c => c.status === 'rejected').length;
         const scheduled = candidates.filter(c => c.status === 'interview_scheduled').length;
         const submitted = candidates.filter(c => c.status === 'submitted').length;
-        return { total, rejected, scheduled, submitted };
+        const approved = candidates.filter(c => c.status === 'approved').length;
+        return { total, rejected, scheduled, submitted, approved };
     }, [candidates]);
 
     // Filtered candidates
@@ -272,6 +307,32 @@ function DashboardContent() {
         }, 5000);
     };
 
+    // Calendar event style function
+    const eventStyleGetter = (event: InterviewEvent) => {
+        const style: React.CSSProperties = {
+            borderRadius: '4px',
+            opacity: 0.8,
+            color: 'white',
+            border: '0px',
+            display: 'block',
+            fontSize: '12px',
+            fontWeight: 'bold',
+        };
+
+        if (event.isCompleted) {
+            // Completed interviews - green with checkmark
+            style.backgroundColor = '#10B981'; // Green
+            style.borderLeft = '4px solid #047857'; // Darker green border
+            style.opacity = 0.9;
+        } else {
+            // Upcoming interviews - blue
+            style.backgroundColor = '#3B82F6'; // Blue
+            style.borderLeft = '4px solid #1D4ED8'; // Darker blue border
+        }
+
+        return { style };
+    };
+
     // API handlers
     const handleScoreSubmit = async (jobId: string, jobTitle: string, jobDescription: string) => {
         if (!selectedCandidate) return;
@@ -293,6 +354,7 @@ function DashboardContent() {
                 throw new Error(result.error || 'Failed to score candidate');
             }
             console.log('Scoring successful:', result);
+            showToast('Candidate scored successfully!', 'success');
             closeScoringModal();
         } catch (error) {
             console.error('Scoring failed:', error);
@@ -318,6 +380,92 @@ function DashboardContent() {
         }
         
         performStatusChange(candidateId, newStatus, interviewTimestampISO);
+    };
+
+    // Schedule interview handler - now uses Google Meet API
+    const handleScheduleInterview = async (
+        candidateId: string, 
+        date: string, 
+        time: string, 
+        duration: number,
+        adminEmail: string,
+        notes?: string
+    ) => {
+        const candidate = candidates.find(c => c.id === candidateId);
+        if (!candidate) return;
+
+        setIsScheduling(true);
+        
+        try {
+            const response = await fetch('/api/schedule-interview-meet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    candidateId: candidate.id,
+                    candidateEmail: candidate.email,
+                    candidateName: candidate.fullName,
+                    interviewDate: date,
+                    interviewTime: time,
+                    duration,
+                    jobTitle: candidate.jobTitleText,
+                    adminEmail,
+                    notes
+                }),
+            });
+
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to schedule interview');
+            }
+
+            showToast('Interview scheduled successfully with Google Meet!', 'success');
+            setIsInterviewSchedulingOpen(false);
+            
+        } catch (error) {
+            console.error('Failed to schedule interview:', error);
+            showToast(`Failed to schedule interview: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+        } finally {
+            setIsScheduling(false);
+        }
+    };
+
+    // Cancel interview handler
+    const handleCancelInterview = async (candidateId: string, reason?: string) => {
+        const candidate = candidates.find(c => c.id === candidateId);
+        setConfirmationModal({
+            isOpen: true,
+            title: 'Cancel Scheduled Interview',
+            message: `Are you sure you want to cancel the interview for ${candidate?.fullName || 'this candidate'}? This will delete the calendar event and notify the candidate.`,
+            onConfirm: async () => {
+                setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+                setStatusUpdateLoading(prev => ({ ...prev, [candidateId]: true }));
+                
+                try {
+                    const response = await fetch('/api/cancel-interview', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            candidateId, 
+                            reason: reason || 'Cancelled by admin'
+                        }),
+                    });
+                    
+                    const result = await response.json();
+                    if (!response.ok) {
+                        throw new Error(result.error || 'Failed to cancel interview');
+                    }
+                    
+                    showToast('Interview cancelled successfully and candidate has been notified.', 'success');
+                    closeProfileModal();
+                } catch (error) {
+                    console.error('Cancel interview failed:', error);
+                    showToast(`Failed to cancel interview: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+                } finally {
+                    setStatusUpdateLoading(prev => ({ ...prev, [candidateId]: false }));
+                }
+            }
+        });
     };
 
     const performStatusChange = async (candidateId: string, newStatus: string, interviewTimestampISO?: string) => {
@@ -430,32 +578,116 @@ function DashboardContent() {
                 onClearAllFilters={clearAllFilters}
             />
 
-            <CandidateTable
-                candidates={filteredCandidates}
-                statusUpdateLoading={statusUpdateLoading}
-                onViewCandidate={openProfileModal}
-                onScoreCandidate={openScoringModal}
-                onStatusChange={handleStatusChange}
-                filters={{ status: filterStatus, name: filterName, city: filterCity, country: filterCountry, jobTitle: filterJobTitle, category: filterCategory, ageMin: filterAgeMin, ageMax: filterAgeMax }}
-            />
+            <div className="mt-8 bg-white p-6 rounded-lg shadow-sm">
+                <h2 className="text-xl font-semibold mb-4">Candidate List</h2>
+                <Tabs
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
+                    tabs={[
+                        { label: 'Main', value: 'main' },
+                        { label: 'Approved', value: 'approved' },
+                        { label: 'Rejected', value: 'rejected' },
+                    ]}
+                >
+                    <CandidateTable
+                        candidates={filteredCandidates}
+                        statusUpdateLoading={statusUpdateLoading}
+                        onViewCandidate={openProfileModal}
+                        onScoreCandidate={openScoringModal}
+                        onStatusChange={handleStatusChange}
+                        filters={{ status: filterStatus, name: filterName, city: filterCity, country: filterCountry, jobTitle: filterJobTitle, category: filterCategory, ageMin: filterAgeMin, ageMax: filterAgeMax }}
+                    />
+                </Tabs>
+            </div>
 
-            {/* Calendar Section */}
+            {/* Enhanced Calendar Section */}
             <section className="mt-8">
                 <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-                    <h3 className="text-xl font-bold text-gray-800 mb-6">Interview Schedule</h3>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                        <h3 className="text-xl font-bold text-gray-800">Interview Schedule</h3>
+                        
+                        {/* Calendar Filter Buttons */}
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm font-medium text-gray-600 mr-2">Filter:</span>
+                            <button
+                                onClick={() => setCalendarFilter('all')}
+                                className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                                    calendarFilter === 'all' 
+                                        ? 'bg-gray-600 text-white border-gray-600' 
+                                        : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                }`}
+                            >
+                                All ({allInterviewEvents.length})
+                            </button>
+                            <button
+                                onClick={() => setCalendarFilter('upcoming')}
+                                className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                                    calendarFilter === 'upcoming' 
+                                        ? 'bg-blue-600 text-white border-blue-600' 
+                                        : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                                }`}
+                            >
+                                Upcoming ({allInterviewEvents.filter(e => !e.isCompleted).length})
+                            </button>
+                            <button
+                                onClick={() => setCalendarFilter('completed')}
+                                className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                                    calendarFilter === 'completed' 
+                                        ? 'bg-green-600 text-white border-green-600' 
+                                        : 'bg-white text-green-600 border-green-300 hover:bg-green-50'
+                                }`}
+                            >
+                                Completed ({allInterviewEvents.filter(e => e.isCompleted).length})
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="flex items-center space-x-6 mb-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                            <div className="w-4 h-4 bg-blue-500 rounded border-l-4 border-blue-700"></div>
+                            <span className="text-sm text-gray-600">Upcoming Interviews</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <div className="w-4 h-4 bg-green-500 rounded border-l-4 border-green-700"></div>
+                            <span className="text-sm text-gray-600">Completed Interviews</span>
+                        </div>
+                    </div>
+
                     <div style={{ height: '500px' }}>
                         <Calendar
                             localizer={localizer}
-                            events={interviewEvents}
+                            events={filteredInterviewEvents}
                             startAccessor="start"
                             endAccessor="end"
                             style={{ height: '100%' }}
                             views={['month', 'week', 'day']}
                             defaultView="month"
                             popup
+                            eventPropGetter={eventStyleGetter}
                             onSelectEvent={(event) => openProfileModal(event.resource)}
+                            tooltipAccessor={(event) => {
+                                const candidate = event.resource;
+                                const status = event.isCompleted ? 'Completed' : 'Scheduled';
+                                const time = format(event.start as Date, 'PPpp');
+                                return `${status}: ${candidate.fullName} - ${time}`;
+                            }}
                         />
                     </div>
+
+                    {filteredInterviewEvents.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h2a1 1 0 011 1v10a1 1 0 01-1 1H5a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
+                            </svg>
+                            <p className="text-lg font-medium">No interviews {calendarFilter === 'all' ? '' : calendarFilter}</p>
+                            <p className="text-sm">
+                                {calendarFilter === 'all' && 'Schedule some interviews to see them here.'}
+                                {calendarFilter === 'upcoming' && 'No upcoming interviews scheduled.'}
+                                {calendarFilter === 'completed' && 'No completed interviews yet.'}
+                            </p>
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -479,6 +711,7 @@ function DashboardContent() {
                 onClose={closeProfileModal}
                 candidate={selectedCandidate}
                 onStatusChange={handleStatusChange}
+                onCancelInterview={handleCancelInterview} // ✅ Added the missing prop
                 statusUpdateLoading={selectedCandidate ? statusUpdateLoading[selectedCandidate.id] || false : false}
                 onScheduleInterview={() => setIsInterviewSchedulingOpen(true)}
             />
@@ -487,7 +720,7 @@ function DashboardContent() {
                 isOpen={isInterviewSchedulingOpen}
                 onClose={() => setIsInterviewSchedulingOpen(false)}
                 candidate={selectedCandidate}
-                onSchedule={handleStatusChange}
+                onSchedule={handleScheduleInterview} // ✅ Updated to use the correct handler
                 isLoading={isScheduling}
             />
 
@@ -512,4 +745,3 @@ function DashboardContent() {
 export default function AdminDashboard() {
     return <DashboardContent />;
 }
-

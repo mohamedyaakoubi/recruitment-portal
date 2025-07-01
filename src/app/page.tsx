@@ -1,12 +1,20 @@
 "use client";
 
-import React, { useState, FormEvent, useEffect } from 'react';
+import React, { useState, FormEvent, useEffect, useRef } from 'react';
 import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from 'next/image';
 
 import SuccessToast from './components/SuccessToast';
+
+// Helper component for social media icons in the footer
+const SocialIcon = ({ href, children }: { href: string, children: React.ReactNode }) => (
+  <a href={href} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+    {children}
+  </a>
+);
+
 
 export default function CandidateForm() {
   const [firstName, setFirstName] = useState('');
@@ -33,47 +41,65 @@ export default function CandidateForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [showCountryList, setShowCountryList] = useState(false);
+  const countryRef = useRef<HTMLDivElement>(null);
 
   // Country codes list
-  const countryCodes = [
-    { code: '+1', country: 'United States', flag: '🇺🇸' },
-    { code: '+1', country: 'Canada', flag: '🇨🇦' },
-    { code: '+44', country: 'United Kingdom', flag: '🇬🇧' },
-    { code: '+33', country: 'France', flag: '🇫🇷' },
-    { code: '+49', country: 'Germany', flag: '🇩🇪' },
-    { code: '+39', country: 'Italy', flag: '🇮🇹' },
-    { code: '+34', country: 'Spain', flag: '🇪🇸' },
-    { code: '+31', country: 'Netherlands', flag: '🇳🇱' },
-    { code: '+46', country: 'Sweden', flag: '🇸🇪' },
-    { code: '+47', country: 'Norway', flag: '🇳🇴' },
-    { code: '+45', country: 'Denmark', flag: '🇩🇰' },
-    { code: '+358', country: 'Finland', flag: '🇫🇮' },
-    { code: '+41', country: 'Switzerland', flag: '🇨🇭' },
-    { code: '+43', country: 'Austria', flag: '🇦🇹' },
-    { code: '+32', country: 'Belgium', flag: '🇧🇪' },
-    { code: '+351', country: 'Portugal', flag: '🇵🇹' },
-    { code: '+30', country: 'Greece', flag: '🇬🇷' },
-    { code: '+48', country: 'Poland', flag: '🇵🇱' },
-    { code: '+420', country: 'Czech Republic', flag: '🇨🇿' },
-    { code: '+36', country: 'Hungary', flag: '🇭🇺' },
-    { code: '+91', country: 'India', flag: '🇮🇳' },
-    { code: '+86', country: 'China', flag: '🇨🇳' },
-    { code: '+81', country: 'Japan', flag: '🇯🇵' },
-    { code: '+82', country: 'South Korea', flag: '🇰🇷' },
-    { code: '+61', country: 'Australia', flag: '🇦🇺' },
-    { code: '+64', country: 'New Zealand', flag: '🇳🇿' },
-    { code: '+27', country: 'South Africa', flag: '🇿🇦' },
-    { code: '+55', country: 'Brazil', flag: '🇧🇷' },
-    { code: '+52', country: 'Mexico', flag: '🇲🇽' },
-    { code: '+7', country: 'Russia', flag: '🇷🇺' },
-    { code: '+90', country: 'Turkey', flag: '🇹🇷' },
-    { code: '+971', country: 'UAE', flag: '🇦🇪' },
-    { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
-    { code: '+20', country: 'Egypt', flag: '🇪🇬' },
-    { code: '+212', country: 'Morocco', flag: '🇲🇦' },
-    { code: '+216', country: 'Tunisia', flag: '🇹🇳' },
-    { code: '+213', country: 'Algeria', flag: '🇩🇿' }
-  ];
+const countryCodes = [
+  { code: '+1', country: 'United States', flag: '🇺🇸', iso: 'US' },
+  { code: '+1', country: 'Canada', flag: '🇨🇦', iso: 'CA' },
+  { code: '+44', country: 'United Kingdom', flag: '🇬🇧', iso: 'GB' },
+  { code: '+33', country: 'France', flag: '🇫🇷', iso: 'FR' },
+  { code: '+49', country: 'Germany', flag: '🇩🇪', iso: 'DE' },
+  { code: '+39', country: 'Italy', flag: '🇮🇹', iso: 'IT' },
+  { code: '+34', country: 'Spain', flag: '🇪🇸', iso: 'ES' },
+  { code: '+31', country: 'Netherlands', flag: '🇳🇱', iso: 'NL' },
+  { code: '+46', country: 'Sweden', flag: '🇸🇪', iso: 'SE' },
+  { code: '+47', country: 'Norway', flag: '🇳🇴', iso: 'NO' },
+  { code: '+45', country: 'Denmark', flag: '🇩🇰', iso: 'DK' },
+  { code: '+358', country: 'Finland', flag: '🇫🇮', iso: 'FI' },
+  { code: '+41', country: 'Switzerland', flag: '🇨🇭', iso: 'CH' },
+  { code: '+43', country: 'Austria', flag: '🇦🇹', iso: 'AT' },
+  { code: '+32', country: 'Belgium', flag: '🇧🇪', iso: 'BE' },
+  { code: '+351', country: 'Portugal', flag: '🇵🇹', iso: 'PT' },
+  { code: '+30', country: 'Greece', flag: '🇬🇷', iso: 'GR' },
+  { code: '+48', country: 'Poland', flag: '🇵🇱', iso: 'PL' },
+  { code: '+420', country: 'Czech Republic', flag: '🇨🇿', iso: 'CZ' },
+  { code: '+36', country: 'Hungary', flag: '🇭🇺', iso: 'HU' },
+  { code: '+91', country: 'India', flag: '🇮🇳', iso: 'IN' },
+  { code: '+86', country: 'China', flag: '🇨🇳', iso: 'CN' },
+  { code: '+81', country: 'Japan', flag: '🇯🇵', iso: 'JP' },
+  { code: '+82', country: 'South Korea', flag: '🇰🇷', iso: 'KR' },
+  { code: '+61', country: 'Australia', flag: '🇦🇺', iso: 'AU' },
+  { code: '+64', country: 'New Zealand', flag: '🇳🇿', iso: 'NZ' },
+  { code: '+27', country: 'South Africa', flag: '🇿🇦', iso: 'ZA' },
+  { code: '+55', country: 'Brazil', flag: '🇧🇷', iso: 'BR' },
+  { code: '+52', country: 'Mexico', flag: '🇲🇽', iso: 'MX' },
+  { code: '+7', country: 'Russia', flag: '🇷🇺', iso: 'RU' },
+  { code: '+90', country: 'Turkey', flag: '🇹🇷', iso: 'TR' },
+  { code: '+971', country: 'UAE', flag: '🇦🇪', iso: 'AE' },
+  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦', iso: 'SA' },
+  { code: '+20', country: 'Egypt', flag: '🇪🇬', iso: 'EG' },
+  { code: '+212', country: 'Morocco', flag: '🇲🇦', iso: 'MA' },
+  { code: '+216', country: 'Tunisia', flag: '🇹🇳', iso: 'TN' },
+  { code: '+213', country: 'Algeria', flag: '🇩🇿', iso: 'DZ' }
+];
+
+// Add this helper function to convert country ISO code to flag emoji
+const getFlagEmoji = (countryCode: string) => {
+  if (typeof String.fromCodePoint === "undefined") return countryCode;
+  
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  
+  try {
+    return String.fromCodePoint(...codePoints);
+  } catch {
+    return countryCode;
+  }
+};
 
   // Countries list for country field
   const countries = [
@@ -88,7 +114,6 @@ export default function CandidateForm() {
     c.toLowerCase().includes(countrySearch.toLowerCase())
   );
 
-  // Additional information management functions
   const addAdditionalInfo = (type: 'link' | 'file' | 'text') => {
     setAdditionalInfo([...additionalInfo, {type, content: ''}]);
   };
@@ -105,7 +130,6 @@ export default function CandidateForm() {
     setAdditionalInfo(newInfo);
   };
 
-  // Website management functions (keeping for backward compatibility)
   const addWebsite = () => {
     setWebsites([...websites, '']);
   };
@@ -122,7 +146,6 @@ export default function CandidateForm() {
     setWebsites(newWebsites);
   };
 
-  // Load jobs on component mount
   useEffect(() => {
     const loadJobs = async () => {
       try {
@@ -139,7 +162,6 @@ export default function CandidateForm() {
     loadJobs();
   }, []);
 
-  // Filter jobs when category changes
   useEffect(() => {
     if (selectedCategory) {
       const filtered = jobs.filter(job => job.category === selectedCategory);
@@ -147,10 +169,21 @@ export default function CandidateForm() {
     } else {
       setFilteredJobs([]);
     }
-    // Reset job selection when category changes
     setJobTitle('');
     setSelectedJob(null);
   }, [selectedCategory, jobs]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
+        setShowCountryList(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleCategorySelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
@@ -179,7 +212,6 @@ export default function CandidateForm() {
     setError(null);
     setSuccess(null);
 
-    // Updated validation to include job category and title
     if (!firstName || !lastName || !email || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !country || !selectedCategory || !jobTitle || !cvFile || !passportFile) {
       setError("Please fill in all required fields and upload both files.");
       return;
@@ -188,7 +220,6 @@ export default function CandidateForm() {
     setIsLoading(true);
 
     try {
-      // 1. Upload files to Firebase Storage
       const cvFileName = `cv_${Date.now()}_${cvFile.name}`;
       const passportFileName = `passport_${Date.now()}_${passportFile.name}`;
 
@@ -201,12 +232,11 @@ export default function CandidateForm() {
       const cvUrl = await getDownloadURL(cvUploadTask.ref);
       const passportUrl = await getDownloadURL(passportUploadTask.ref);
 
-      // 2. Add candidate data to Firestore (updated fields)
       const candidatesCollectionRef = collection(db, "candidates");
       await addDoc(candidatesCollectionRef, {
         firstName,
         lastName,
-        fullName: `${firstName} ${lastName}`, // Keep for backward compatibility
+        fullName: `${firstName} ${lastName}`,
         email,
         gender,
         countryCode,
@@ -225,7 +255,6 @@ export default function CandidateForm() {
         score: null
       });
 
-      // Reset form
       setFirstName('');
       setLastName('');
       setEmail('');
@@ -243,7 +272,6 @@ export default function CandidateForm() {
       setCvFile(null);
       setPassportFile(null);
       
-      // Reset file input fields visually
       const cvInput = document.getElementById('cv') as HTMLInputElement;
       const passportInput = document.getElementById('passport') as HTMLInputElement;
       if (cvInput) cvInput.value = '';
@@ -265,48 +293,56 @@ export default function CandidateForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-blue-900 text-white py-4 px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center">
-            <Image 
-              src="/logo-skills.png" 
-              alt="International Skills" 
-              width={200} 
-              height={60}
-              className="h-12 w-auto"
-            />
+    <div className="min-h-screen bg-slate-50 font-sans">
+      {/* Redesigned Header */}
+      <header className="bg-white shadow-sm sticky top-0 z-20">
+          <div className="bg-[#003A70] text-white text-xs py-1.5">
+              <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex justify-center md:justify-between items-center">
+                  <div className="flex items-center">
+                      <span className="text-yellow-400 mr-2 text-base">⚠️</span>
+                      <span>Découvrez les dernières opportunités!</span>
+                  </div>
+                  <div className="hidden md:flex items-center space-x-6">
+                      <a href="tel:+358452644966" className="flex items-center space-x-2 hover:text-gray-300 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                          <span>+358 452644966</span>
+                      </a>
+                      <a href="mailto:wassim@internationalskills.fi" className="flex items-center space-x-2 hover:text-gray-300 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                          <span>wassim@internationalskills.fi</span>
+                      </a>
+                  </div>
+              </div>
           </div>
-          <div className="hidden md:flex items-center space-x-6 text-sm">
-            <div className="flex items-center space-x-2">
-              <span>📞</span>
-              <span>+358 452644966</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span>✉️</span>
-              <span>wassim@internationalskills.fi</span>
-            </div>
-          </div>
-        </div>
+          <nav className="max-w-screen-xl mx-auto px-4 sm:px-6">
+              <div className="flex items-center justify-between py-4">
+                  <Image
+                      src="/logo-skills.png"
+                      alt="International Skills Labor Company"
+                      width={180}
+                      height={45}
+                      priority
+                  />
+              </div>
+          </nav>
       </header>
-
+      
       {/* Main Content */}
-      <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-4xl p-4 sm:p-8 space-y-8 bg-white rounded-lg shadow-lg">
+      <main id="form-start" className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6">
+        <div className="w-full max-w-4xl p-6 sm:p-10 space-y-8 bg-white rounded-xl shadow-2xl shadow-slate-200">
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Candidate Application</h1>
-            <p className="text-gray-600">Apply for your dream job opportunity</p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#003A70] mb-2">Candidate Application</h1>
+            <p className="text-slate-500">Apply for your dream job opportunity</p>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Personal Information Section */}
-            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Personal Information</h2>
+            <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
+              <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Personal Information</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* First Name */}
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="firstName" className="block text-sm font-semibold text-slate-600 mb-2">
                     First Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -316,7 +352,7 @@ export default function CandidateForm() {
                     required
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                     placeholder="Enter your first name"
                     disabled={isLoading}
                   />
@@ -324,7 +360,7 @@ export default function CandidateForm() {
 
                 {/* Last Name */}
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="lastName" className="block text-sm font-semibold text-slate-600 mb-2">
                     Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -334,7 +370,7 @@ export default function CandidateForm() {
                     required
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                     placeholder="Enter your last name"
                     disabled={isLoading}
                   />
@@ -342,7 +378,7 @@ export default function CandidateForm() {
 
                 {/* Email */}
                 <div className="sm:col-span-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-sm font-semibold text-slate-600 mb-2">
                     Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -352,7 +388,7 @@ export default function CandidateForm() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                     placeholder="your.email@example.com"
                     disabled={isLoading}
                   />
@@ -360,7 +396,7 @@ export default function CandidateForm() {
 
                 {/* Gender */}
                 <div>
-                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="gender" className="block text-sm font-semibold text-slate-600 mb-2">
                     Gender <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -369,7 +405,7 @@ export default function CandidateForm() {
                     required
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                     disabled={isLoading}
                   >
                     <option value="">Select Gender</option>
@@ -380,22 +416,22 @@ export default function CandidateForm() {
 
                 {/* Phone Number */}
                 <div>
-                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="phoneNumber" className="block text-sm font-semibold text-slate-600 mb-2">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex flex-col sm:flex-row">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="px-3 py-3 border border-gray-300 rounded-t-lg sm:rounded-l-lg sm:rounded-t-none shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 w-full sm:w-auto"
-                      disabled={isLoading}
-                    >
-                      {countryCodes.map((item, index) => (
-                        <option key={index} value={item.code}>
-                          {item.flag} {item.code}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="flex">
+<select
+  value={countryCode}
+  onChange={(e) => setCountryCode(e.target.value)}
+  className="px-3 py-3 border border-slate-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-slate-100"
+  disabled={isLoading}
+>
+  {countryCodes.map((item, index) => (
+    <option key={index} value={item.code}>
+      {item.country} ({item.code})
+    </option>
+  ))}
+</select>
                     <input
                       type="tel"
                       name="phoneNumber"
@@ -403,7 +439,7 @@ export default function CandidateForm() {
                       required
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="flex-1 px-4 py-3 border-t-0 sm:border-l-0 sm:border-t border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-b-none shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 w-full px-4 py-3 border-l-0 border border-slate-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                       placeholder="123 456 789"
                       disabled={isLoading}
                     />
@@ -412,7 +448,7 @@ export default function CandidateForm() {
 
                 {/* Date of Birth */}
                 <div>
-                  <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-slate-600 mb-2">
                     Date of Birth <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -422,14 +458,14 @@ export default function CandidateForm() {
                     required
                     value={dateOfBirth}
                     onChange={(e) => setDateOfBirth(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                     disabled={isLoading}
                   />
                 </div>
 
                 {/* City */}
                 <div>
-                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="city" className="block text-sm font-semibold text-slate-600 mb-2">
                     City <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -439,15 +475,15 @@ export default function CandidateForm() {
                     required
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                     placeholder="Enter your city"
                     disabled={isLoading}
                   />
                 </div>
 
                 {/* Country */}
-                <div className="relative sm:col-span-2">
-                  <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="relative sm:col-span-2" ref={countryRef}>
+                  <label htmlFor="country" className="block text-sm font-semibold text-slate-600 mb-2">
                     Country <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -455,14 +491,19 @@ export default function CandidateForm() {
                     name="countrySearch"
                     id="countrySearch"
                     value={countrySearch}
-                    onChange={(e) => setCountrySearch(e.target.value)}
-                    onFocus={() => setCountrySearch('')}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onChange={(e) => {
+                      setCountrySearch(e.target.value);
+                      setCountry(""); // Clear selection when typing
+                      setShowCountryList(true);
+                    }}
+                    onFocus={() => setShowCountryList(true)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                     placeholder="Search and select your country"
                     disabled={isLoading}
+                    autoComplete="off"
                   />
-                  {countrySearch !== '' && filteredCountries.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {showCountryList && filteredCountries.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                       {filteredCountries.map((countryOption, index) => (
                         <button
                           key={index}
@@ -470,24 +511,20 @@ export default function CandidateForm() {
                           onClick={() => {
                             setCountry(countryOption);
                             setCountrySearch(countryOption);
+                            setShowCountryList(false);
                           }}
-                          className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
                         >
                           {countryOption}
                         </button>
                       ))}
                     </div>
                   )}
-                  {country && (
-                    <div className="mt-1 text-sm text-green-600">
-                      Selected: {country}
-                    </div>
-                  )}
                 </div>
 
                 {/* Job Category */}
                 <div className="sm:col-span-2">
-                  <label htmlFor="jobCategory" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="jobCategory" className="block text-sm font-semibold text-slate-600 mb-2">
                     Job Category <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -496,7 +533,7 @@ export default function CandidateForm() {
                     required
                     value={selectedCategory}
                     onChange={handleCategorySelection}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                     disabled={isLoading}
                   >
                     <option value="">Select a category first</option>
@@ -510,7 +547,7 @@ export default function CandidateForm() {
 
                 {/* Job Title */}
                 <div className="sm:col-span-2">
-                  <label htmlFor="jobTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="jobTitle" className="block text-sm font-semibold text-slate-600 mb-2">
                     Job Position <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -519,7 +556,7 @@ export default function CandidateForm() {
                     required
                     value={jobTitle}
                     onChange={handleJobSelection}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                     disabled={isLoading || !selectedCategory}
                   >
                     <option value="">
@@ -532,10 +569,10 @@ export default function CandidateForm() {
                     ))}
                   </select>
                   {selectedJob && (
-                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h4 className="font-medium text-blue-900 mb-1">Job Description:</h4>
-                      <p className="text-sm text-blue-800">{selectedJob.description}</p>
-                      <p className="text-xs text-blue-600 mt-1">Category: {selectedJob.category}</p>
+                    <div className="mt-3 p-3 bg-slate-100 border border-slate-200 rounded-lg">
+                      <h4 className="font-semibold text-[#003A70] mb-1">Job Description:</h4>
+                      <p className="text-sm text-slate-700">{selectedJob.description}</p>
+                      <p className="text-xs text-slate-500 mt-1">Category: {selectedJob.category}</p>
                     </div>
                   )}
                 </div>
@@ -543,179 +580,109 @@ export default function CandidateForm() {
             </div>
 
             {/* Additional Information Section */}
-            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Additional Information</h2>
-              
-              {/* Dynamic Additional Info */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Links, Files & Additional Information (Optional)
-                </label>
-                <div className="space-y-3">
-                  {additionalInfo.map((info, index) => (
-                    <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-                      <select
-                        value={info.type}
-                        onChange={(e) => {
-                          const newInfo = [...additionalInfo];
-                          newInfo[index] = {...newInfo[index], type: e.target.value as 'link' | 'file' | 'text', content: '', file: undefined};
-                          setAdditionalInfo(newInfo);
-                        }}
-                        className="px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 min-w-[100px]"
-                        disabled={isLoading}
-                      >
-                        <option value="link">Link</option>
-                        <option value="file">File</option>
-                        <option value="text">Text</option>
-                      </select>
-                      
+            <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
+              <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Additional Information</h2>
+              <div className="space-y-4">
+                {additionalInfo.map((info, index) => (
+                  <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <select
+                      value={info.type}
+                      onChange={(e) => {
+                        const newInfo = [...additionalInfo];
+                        newInfo[index] = {...newInfo[index], type: e.target.value as 'link' | 'file' | 'text', content: '', file: undefined};
+                        setAdditionalInfo(newInfo);
+                      }}
+                      className="px-3 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-white min-w-[100px]"
+                      disabled={isLoading}
+                    >
+                      <option value="link">Link</option>
+                      <option value="file">File</option>
+                      <option value="text">Text</option>
+                    </select>
+                    
+                    <div className="flex-1 w-full">
                       {info.type === 'link' && (
-                        <input
-                          type="url"
-                          value={info.content}
-                          onChange={(e) => updateAdditionalInfo(index, e.target.value)}
-                          className="flex-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="https://linkedin.com/in/yourprofile or https://github.com/yourusername"
-                          disabled={isLoading}
-                        />
+                        <input type="url" value={info.content} onChange={(e) => updateAdditionalInfo(index, e.target.value)}
+                          className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                          placeholder="https://linkedin.com/in/yourprofile" disabled={isLoading} />
                       )}
-                      
                       {info.type === 'file' && (
-                        <input
-                          type="file"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              updateAdditionalInfo(index, file.name, file);
-                            }
-                          }}
-                          className="flex-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                          disabled={isLoading}
-                        />
+                        <input type="file" onChange={(e) => { const file = e.target.files?.[0]; if (file) { updateAdditionalInfo(index, file.name, file); } }}
+                          className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-[#003A70] hover:file:bg-slate-200"
+                          disabled={isLoading} />
                       )}
-                      
                       {info.type === 'text' && (
-                        <textarea
-                          value={info.content}
-                          onChange={(e) => updateAdditionalInfo(index, e.target.value)}
-                          className="flex-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter additional information, notes, or comments..."
-                          rows={2}
-                          disabled={isLoading}
-                        />
-                      )}
-                      
-                      {additionalInfo.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeAdditionalInfo(index)}
-                          className="px-3 py-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 self-center sm:self-auto"
-                          disabled={isLoading}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+                        <textarea value={info.content} onChange={(e) => updateAdditionalInfo(index, e.target.value)}
+                          className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                          placeholder="Enter additional notes..." rows={2} disabled={isLoading} />
                       )}
                     </div>
-                  ))}
-                  
-                  {/* Add buttons */}
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <button
-                      type="button"
-                      onClick={() => addAdditionalInfo('link')}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      disabled={isLoading}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                      <span>Add Link</span>
-                    </button>
                     
-                    <button
-                      type="button"
-                      onClick={() => addAdditionalInfo('file')}
-                      className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500"
-                      disabled={isLoading}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                      </svg>
-                      <span>Add File</span>
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => addAdditionalInfo('text')}
-                      className="flex items-center space-x-2 px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                      disabled={isLoading}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                      </svg>
-                      <span>Add Text</span>
-                    </button>
+                    {additionalInfo.length > 1 && (
+                      <button type="button" onClick={() => removeAdditionalInfo(index)}
+                        className="p-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 self-center sm:self-auto"
+                        disabled={isLoading}>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
+                    )}
                   </div>
+                ))}
+                
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <button type="button" onClick={() => addAdditionalInfo('link')} disabled={isLoading}
+                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-sky-100 text-sky-800 rounded-lg hover:bg-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                    <span>Add Link</span>
+                  </button>
+                  <button type="button" onClick={() => addAdditionalInfo('file')} disabled={isLoading}
+                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-emerald-100 text-emerald-800 rounded-lg hover:bg-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                    <span>Add File</span>
+                  </button>
+                  <button type="button" onClick={() => addAdditionalInfo('text')} disabled={isLoading}
+                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-violet-100 text-violet-800 rounded-lg hover:bg-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" /></svg>
+                    <span>Add Text</span>
+                  </button>
                 </div>
               </div>
             </div>
 
             {/* File Upload Section */}
-            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Required Documents</h2>
+            <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
+              <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Required Documents</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* CV Upload */}
                 <div>
-                  <label htmlFor="cv" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="cv" className="block text-sm font-semibold text-slate-600 mb-2">
                     Upload CV <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="file"
-                    name="cv"
-                    id="cv"
-                    required
-                    accept=".pdf,.doc,.docx"
-                    onChange={handleFileChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    disabled={isLoading}
-                  />
-                  <p className="mt-1 text-xs text-gray-500">PDF, DOC, DOCX only.</p>
+                  <input type="file" name="cv" id="cv" required accept=".pdf,.doc,.docx" onChange={handleFileChange}
+                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-[#003A70] hover:file:bg-slate-200"
+                    disabled={isLoading} />
+                  <p className="mt-1 text-xs text-slate-500">PDF, DOC, DOCX only.</p>
                 </div>
-
-                {/* Passport Upload */}
                 <div>
-                  <label htmlFor="passport" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="passport" className="block text-sm font-semibold text-slate-600 mb-2">
                     Upload Passport/ID <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="file"
-                    name="passport"
-                    id="passport"
-                    required
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={handleFileChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    disabled={isLoading}
-                  />
-                  <p className="mt-1 text-xs text-gray-500">PDF, JPG, PNG only.</p>
+                  <input type="file" name="passport" id="passport" required accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange}
+                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-[#003A70] hover:file:bg-slate-200"
+                    disabled={isLoading} />
+                  <p className="mt-1 text-xs text-slate-500">PDF, JPG, PNG only.</p>
                 </div>
               </div>
             </div>
 
-            {/* Status Messages */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
 
-            {/* Submit Button */}
-            <div className="text-center">
+            <div className="text-center pt-4">
               <button
                 type="submit"
-                className="w-full sm:w-auto px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full sm:w-auto px-10 py-4 bg-[#003A70] text-white font-bold tracking-wide rounded-lg shadow-lg hover:bg-[#002B54] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#003A70] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 disabled={isLoading}
               >
                 {isLoading ? 'Submitting...' : 'Submit Application'}
@@ -731,51 +698,51 @@ export default function CandidateForm() {
         onClose={() => setShowSuccessToast(false)}
       />
 
-      {/* Footer */}
-      <footer className="bg-blue-900 text-white py-8 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {/* Contact Information */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-              <div className="space-y-2 text-sm">
-                <p>📧 wassim@internationalskills.fi</p>
-                <p>📞 +358 452644966</p>
-                <p>📞 +216 29 581 180</p>
-              </div>
-            </div>
+      {/* Redesigned Footer */}
+      <footer className="bg-[#003A70] text-white">
+          <div className="max-w-screen-xl mx-auto py-16 px-4 sm:px-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                  {/* Column 1: Company Info */}
+                  <div>
+                      {/* NOTE: Assumes a white version of the logo exists for dark backgrounds */}
+                      <Image src="/logo-skills-white.png" alt="International Skills" width={180} height={45} className="mb-4" />
+                      <p className="text-sm text-slate-300">
+                          Connecting talented professionals with international opportunities.
+                      </p>
+                  </div>
+                  
+                  {/* Column 2: Contact */}
+                  <div>
+                      <h3 className="text-sm font-semibold tracking-wider uppercase text-slate-200">Contact</h3>
+                      <div className="mt-4 space-y-3 text-sm text-slate-300">
+                          <p className="flex items-center"><span className="mr-2 opacity-80">📧</span> wassim@internationalskills.fi</p>
+                          <p className="flex items-center"><span className="mr-2 opacity-80">📞</span> +358 452644966</p>
+                          <p className="flex items-center"><span className="mr-2 opacity-80">📞</span> +216 29 581 180</p>
+                      </div>
+                  </div>
 
-            {/* Social Media */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
-              <div className="space-y-2 text-sm">
-                <a href="https://www.facebook.com/profile.php?id=61571369068485" target="_blank" rel="noopener noreferrer" className="block hover:text-blue-300 transition-colors">
-                  📘 Facebook
-                </a>
-                <a href="https://www.instagram.com/internationalskillscompany?igsh=MTI4enh4ODNzOGN5Mw%3D%3D" target="_blank" rel="noopener noreferrer" className="block hover:text-blue-300 transition-colors">
-                  📷 Instagram
-                </a>
-                <a href="https://www.linkedin.com/company/international-skills-labor-company/" target="_blank" rel="noopener noreferrer" className="block hover:text-blue-300 transition-colors">
-                  💼 LinkedIn
-                </a>
+                  {/* Column 3: Suivez-nous (Follow Us) */}
+                  <div>
+                      <h3 className="text-sm font-semibold tracking-wider uppercase text-slate-200">Suivez-nous</h3>
+                      <div className="mt-4 flex space-x-5">
+                          <SocialIcon href="https://www.linkedin.com/company/international-skills-labor-company/">
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clipRule="evenodd"/></svg>
+                          </SocialIcon>
+                          <SocialIcon href="https://www.facebook.com/profile.php?id=61571369068485">
+                              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" /></svg>
+                          </SocialIcon>
+                          <SocialIcon href="https://www.instagram.com/internationalskillscompany?igsh=MTI4enh4ODNzOGN5Mw%3D%3D">
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fillRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zM4.5 12a7.5 7.5 0 1115 0 7.5 7.5 0 01-15 0z" clipRule="evenodd" /><path d="M16.95 6.5a1.25 1.25 0 100 2.5 1.25 1.25 0 000-2.5zM12 7a5 5 0 100 10 5 5 0 000-10zm0 8a3 3 0 110-6 3 3 0 010 6z" /></svg>
+                          </SocialIcon>
+                      </div>
+                  </div>
               </div>
-            </div>
-
-            {/* Company Info */}
-            <div className="sm:col-span-2 md:col-span-1">
-              <h3 className="text-lg font-semibold mb-4">International Skills</h3>
-              <p className="text-sm text-gray-300">
-                Connecting talented professionals with international opportunities.
-              </p>
-            </div>
+              <div className="mt-12 border-t border-slate-700 pt-8 text-center">
+                  <p className="text-sm text-slate-400">© 2025 Wassim Abbessi. All Rights Reserved.</p>
+              </div>
           </div>
-          
-          <div className="border-t border-blue-800 mt-8 pt-4 text-center text-sm text-gray-300">
-            <p>&copy; 2024 International Skills. All rights reserved.</p>
-          </div>
-        </div>
       </footer>
+
     </div>
   );
 }
-

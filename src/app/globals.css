@@ -19,3 +19,90 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* === Hourglass Loader Styles === */
+
+.loader-spinner {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  animation: main-rotation 2s infinite linear;
+}
+
+/* 
+  Each blade creates half of the hourglass shape
+*/
+.blade {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+}
+
+.blade.top {
+  top: 0;
+  animation: blade-breathe-top 2s infinite ease-in-out;
+}
+
+.blade.bottom {
+  bottom: 0;
+  animation: blade-breathe-bottom 2s infinite ease-in-out;
+}
+
+/*
+  Create the hourglass shape using triangular/diamond sections
+*/
+.blade::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: #003A70;
+  transform: translateX(-50%);
+}
+
+/* Top triangle (inverted) */
+.blade.top::before {
+  clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+  transform-origin: 50% 100%;
+}
+
+/* Bottom triangle */
+.blade.bottom::before {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  transform-origin: 50% 0%;
+}
+
+/* === Animations === */
+
+/* Main rotation animation */
+@keyframes main-rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Top section animation - expands and contracts */
+@keyframes blade-breathe-top {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-8px) scaleY(0.6);
+  }
+}
+
+/* Bottom section animation - expands and contracts */
+@keyframes blade-breathe-bottom {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(8px) scaleY(0.6);
+  }
+}

@@ -1,4 +1,4 @@
-import type { Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore'; // ✅ Add this import
 
 export interface Candidate {
     id: string;
@@ -8,7 +8,7 @@ export interface Candidate {
     cvUrl: string;
     passportUrl: string;
     submittedAt: Timestamp;
-    status: 'submitted' | 'rejected' | 'interview_scheduled' | string;
+    status: 'submitted' | 'rejected' | 'interview_scheduled' | 'approved' | string;
     score: number | null;
     scoreAnalysis?: string;
     lastScoredAt?: Timestamp;
@@ -18,4 +18,9 @@ export interface Candidate {
     jobTitleText?: string;
     dateOfBirth?: string;
     jobCategory?: string;
+    // Google Meet integration fields
+    calendarEventId?: string;
+    meetLink?: string;
+    meetSpaceId?: string;
+    duration?: number;
 }

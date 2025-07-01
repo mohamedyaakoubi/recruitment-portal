@@ -91,7 +91,15 @@ async function sendNotificationEmail(to: string, status: string, candidateName: 
 export async function POST(request: NextRequest) {
     try {
         const db = getFirestoreAdmin();
-        const { candidateId, newStatus, interviewTimestampISO } = await request.json();
+        const { 
+            candidateId, 
+            newStatus, 
+            interviewTimestampISO,
+            // ✅ Add Google Meet fields
+            calendarEventId,
+            meetLink,
+            duration
+        } = await request.json();
 
         if (!candidateId || !newStatus) {
             return NextResponse.json({ error: 'Missing candidateId or newStatus' }, { status: 400 });
@@ -115,7 +123,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Prepare data for update
-        const updateData: { status: string; interviewDate?: admin.firestore.Timestamp | FieldValue } = {
+        const updateData: { 
+            status: string; 
+            interviewDate?: admin.firestore.Timestamp | FieldValue;
+            calendarEventId?: string | FieldValue;
+            meetLink?: string | FieldValue;
+            duration?: number | FieldValue;
+        } = {
             status: newStatus,
         };
 
@@ -130,15 +144,23 @@ export async function POST(request: NextRequest) {
                     throw new Error('Invalid date format');
                 }
                 updateData.interviewDate = admin.firestore.Timestamp.fromDate(interviewDate);
+                
+                // ✅ Add Google Meet fields if provided
+                if (calendarEventId) updateData.calendarEventId = calendarEventId;
+                if (meetLink) updateData.meetLink = meetLink;
+                if (duration) updateData.duration = duration;
+                
             } catch (dateError) {
                 console.error("Invalid interview date format received:", interviewTimestampISO, dateError);
                 return NextResponse.json({ error: 'Invalid interview date format provided. Please use ISO format.' }, { status: 400 });
             }
         } else {
-            // If changing status *away* from scheduled, clear the interview date
+            // If changing status *away* from scheduled, clear the interview-related fields
             if (candidateData.status === 'interview_scheduled') {
-                 // Correctly use FieldValue.delete() to remove the field
-                 updateData.interviewDate = admin.firestore.FieldValue.delete(); 
+                updateData.interviewDate = admin.firestore.FieldValue.delete();
+                updateData.calendarEventId = admin.firestore.FieldValue.delete();
+                updateData.meetLink = admin.firestore.FieldValue.delete();
+                updateData.duration = admin.firestore.FieldValue.delete();
             }
         }
 
@@ -161,4 +183,3 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to update candidate status', details: errorMessage }, { status: 500 });
     }
 }
-
