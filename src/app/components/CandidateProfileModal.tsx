@@ -1,7 +1,62 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { format } from 'date-fns';
+import { FiX, FiUser, FiFileText, FiClipboard, FiLink, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiEdit, FiTrash2, FiExternalLink, FiAward, FiBriefcase, FiMapPin, FiPhone, FiMail, FiGlobe, FiImage } from 'react-icons/fi';
 
 import type { Candidate } from '@/types';
+
+// Helper to calculate age
+const calculateAge = (dateOfBirth: string) => {
+    try {
+        const birthDate = new Date(dateOfBirth);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    } catch {
+        return null;
+    }
+};
+
+// Status Badge Component
+const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
+    const statusStyles: { [key: string]: string } = {
+        submitted: 'bg-blue-100 text-blue-800',
+        interview_scheduled: 'bg-yellow-100 text-yellow-800',
+        approved: 'bg-green-100 text-green-800',
+        rejected: 'bg-red-100 text-red-800',
+    };
+    return (
+        <span className={`px-3 py-1 text-xs font-medium rounded-full ${statusStyles[status] || 'bg-gray-100 text-gray-800'}`}>
+            {status.replace('_', ' ').toUpperCase()}
+        </span>
+    );
+};
+
+// Info Card Component
+const InfoCard: React.FC<{ title: string; icon: React.ReactNode; children: React.ReactNode }> = ({ title, icon, children }) => (
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="p-4 border-b border-gray-200 flex items-center">
+            <div className="text-gray-500 mr-3">{icon}</div>
+            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+        </div>
+        <div className="p-4 space-y-3 text-sm text-gray-600">{children}</div>
+    </div>
+);
+
+// Info Row Component
+const InfoRow: React.FC<{ label: string; value?: string | null; icon?: React.ReactNode }> = ({ label, value, icon }) => {
+    if (!value) return null;
+    return (
+        <div className="flex items-start">
+            {icon && <div className="text-gray-400 mt-0.5 mr-2">{icon}</div>}
+            <span className="font-medium text-gray-900 w-32">{label}:</span>
+            <span className="flex-1">{value}</span>
+        </div>
+    );
+};
 
 interface CandidateProfileModalProps {
     isOpen: boolean;
@@ -13,381 +68,178 @@ interface CandidateProfileModalProps {
     onScheduleInterview: () => void;
 }
 
-const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({ 
-    isOpen, 
-    onClose, 
-    candidate, 
-    onStatusChange, 
+const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
+    isOpen,
+    onClose,
+    candidate,
+    onStatusChange,
     onCancelInterview,
-    statusUpdateLoading, 
-    onScheduleInterview 
+    statusUpdateLoading,
+    onScheduleInterview,
 }) => {
     if (!isOpen || !candidate) return null;
 
-    const handleReject = () => {
-        onStatusChange(candidate.id, 'rejected');
-    };
+    const handleReject = () => onStatusChange(candidate.id, 'rejected');
+    const handleApprove = () => onStatusChange(candidate.id, 'approved');
+    const age = candidate.dateOfBirth ? calculateAge(candidate.dateOfBirth) : null;
 
-    const handleApprove = () => {
-        onStatusChange(candidate.id, 'approved');
-    };
-
-    // Calculate age if date of birth is available
-    const calculateAge = (dateOfBirth: string) => {
-        const birthDate = new Date(dateOfBirth);
-        const today = new Date();
-        const age = today.getFullYear() - birthDate.getFullYear() - 
-            (today.getMonth() < birthDate.getMonth() || 
-             (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
-        return age;
-    };
-
-    // Render interview section with cancel option
     const renderInterviewSection = () => {
-        if (candidate?.status === 'interview_scheduled' && candidate?.interviewDate) {
-            const interviewDate = candidate.interviewDate.toDate();
-            const duration = candidate.duration || 30;
-            const endDate = new Date(interviewDate.getTime() + (duration * 60 * 1000));
-            
-            return (
-                <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
-                    <h4 className="text-sm font-medium text-green-800 mb-2">📅 Scheduled Interview</h4>
-                    <p className="text-sm text-green-700">
-                        <strong>Date:</strong> {format(interviewDate, 'PPP')}
-                    </p>
-                    <p className="text-sm text-green-700">
-                        <strong>Time:</strong> {format(interviewDate, 'p')} - {format(endDate, 'p')} (Finland Time)
-                    </p>
-                    <p className="text-sm text-green-700">
-                        <strong>Duration:</strong> {duration} minutes
-                    </p>
-                    {candidate.meetLink && (
-                        <p className="text-sm text-green-700 mt-2">
-                            <strong>Google Meet:</strong> 
-                            <a 
-                                href={candidate.meetLink} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 underline ml-1"
-                            >
-                                Join Meeting
-                            </a>
-                        </p>
-                    )}
-                    
-                    <div className="mt-3 flex space-x-2">
-                        <button
-                            onClick={onScheduleInterview}
-                            disabled={statusUpdateLoading}
-                            className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 disabled:opacity-50"
-                        >
-                            ✏️ Reschedule
-                        </button>
-                        <button
-                            onClick={() => onCancelInterview(candidate.id, 'Cancelled by admin')}
-                            disabled={statusUpdateLoading}
-                            className="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 disabled:opacity-50"
-                        >
-                            ❌ Cancel Interview
-                        </button>
+        if (candidate?.status !== 'interview_scheduled' || !candidate?.interviewDate) return null;
+        
+        const interviewDate = candidate.interviewDate.toDate();
+        const duration = candidate.duration || 30;
+        const endDate = new Date(interviewDate.getTime() + duration * 60 * 1000);
+
+        return (
+            <InfoCard title="Interview Details" icon={<FiCalendar size={20} />}>
+                <InfoRow label="Date" value={format(interviewDate, 'PPP')} icon={<FiClock size={14} />} />
+                <InfoRow label="Time" value={`${format(interviewDate, 'p')} - ${format(endDate, 'p')}`} icon={<FiClock size={14} />} />
+                <InfoRow label="Duration" value={`${duration} minutes`} icon={<FiClock size={14} />} />
+                {candidate.meetLink && (
+                    <div className="pt-2">
+                        <a href={candidate.meetLink} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-full justify-center">
+                            <FiExternalLink className="mr-2" /> Join Google Meet
+                        </a>
                     </div>
+                )}
+                <div className="pt-3 flex space-x-2">
+                    <button onClick={onScheduleInterview} disabled={statusUpdateLoading} className="flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 disabled:opacity-50">
+                        <FiEdit className="mr-2" /> Reschedule
+                    </button>
+                    <button onClick={() => onCancelInterview(candidate.id, 'Cancelled by admin')} disabled={statusUpdateLoading} className="flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 disabled:opacity-50">
+                        <FiTrash2 className="mr-2" /> Cancel
+                    </button>
+                </div>
+            </InfoCard>
+        );
+    };
+
+    const renderActionButtons = () => {
+        if (candidate.status === 'approved' || candidate.status === 'rejected') {
+            return (
+                <div className="text-center py-4 text-gray-600 italic">
+                    This candidate has been <strong>{candidate.status}</strong>.
                 </div>
             );
         }
-        
-        return null;
+
+        return (
+            <div className="space-y-3">
+                {candidate.status === 'submitted' && (
+                     <button onClick={onScheduleInterview} disabled={statusUpdateLoading} className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                        <FiCalendar className="mr-2" /> {statusUpdateLoading ? 'Processing...' : 'Schedule Interview'}
+                    </button>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                    <button onClick={handleApprove} disabled={statusUpdateLoading} className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors">
+                        <FiCheckCircle className="mr-2" /> {statusUpdateLoading ? '...' : 'Approve'}
+                    </button>
+                    <button onClick={handleReject} disabled={statusUpdateLoading} className="w-full flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors">
+                        <FiXCircle className="mr-2" /> {statusUpdateLoading ? '...' : 'Reject'}
+                    </button>
+                </div>
+            </div>
+        );
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4 overflow-y-auto">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-start mb-6">
-                    <h2 className="text-2xl font-semibold text-gray-900">👤 Candidate Profile</h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl focus:outline-none">&times;</button>
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
+            <div className="bg-gray-50 rounded-xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col">
+                {/* Header */}
+                <div className="p-5 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+                    <div className="flex items-center">
+                        {candidate.photoUrl ? (
+                            <img src={candidate.photoUrl} alt={candidate.fullName} className="w-12 h-12 rounded-full object-cover mr-4 border-2 border-white shadow" />
+                        ) : (
+                            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mr-4"><FiUser size={24} className="text-gray-500" /></div>
+                        )}
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">{candidate.fullName}</h2>
+                            <p className="text-sm text-gray-500">{candidate.jobTitleText}</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors rounded-full p-2">
+                        <FiX size={24} />
+                    </button>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column - Photo and Basic Info */}
-                    <div className="space-y-4">
-                        {/* ✅ Photo Section */}
-                        {candidate.photoUrl && (
-                            <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-gray-400 text-center">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">📸 Photo</h3>
-                                <div className="flex justify-center">
-                                    <img 
-                                        src={candidate.photoUrl} 
-                                        alt={`${candidate.fullName}'s photo`}
-                                        className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-lg"
-                                        onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            target.style.display = 'none';
-                                        }}
-                                    />
+                {/* Body */}
+                <div className="p-5 overflow-y-auto flex-grow">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Left Column */}
+                        <div className="lg:col-span-2 space-y-6">
+                            <InfoCard title="Personal Information" icon={<FiUser size={20} />}>
+                                <InfoRow label="Email" value={candidate.email} icon={<FiMail size={14} />} />
+                                <InfoRow label="Phone" value={candidate.phoneNumber} icon={<FiPhone size={14} />} />
+                                <InfoRow label="Location" value={`${candidate.city}, ${candidate.country}`} icon={<FiMapPin size={14} />} />
+                                <InfoRow label="Nationality" value={candidate.nationality} icon={<FiGlobe size={14} />} />
+                                {candidate.doubleNationality && <InfoRow label="2nd Nationality" value={candidate.doubleNationality} icon={<FiGlobe size={14} />} />}
+                                <InfoRow label="Date of Birth" value={candidate.dateOfBirth ? `${candidate.dateOfBirth} (${age} years)` : null} icon={<FiCalendar size={14} />} />
+                            </InfoCard>
+
+                            <InfoCard title="Application Details" icon={<FiBriefcase size={20} />}>
+                                <div className="flex items-center">
+                                    <span className="font-medium text-gray-900 w-32">Status:</span>
+                                    <StatusBadge status={candidate.status} />
                                 </div>
-                            </div>
-                        )}
+                                <InfoRow label="Category" value={candidate.jobCategory} />
+                                <InfoRow label="Submitted" value={candidate.submittedAt?.toDate().toLocaleString()} />
+                                <InfoRow label="Application ID" value={candidate.id} />
+                            </InfoCard>
 
-                        {/* Basic Information */}
-                        <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-400">
-                            <h3 className="text-lg font-semibold text-blue-800 mb-3">Basic Information</h3>
-                            <div className="space-y-2">
-                                <p className="text-sm"><strong>Full Name:</strong> {candidate.fullName}</p>
-                                <p className="text-sm"><strong>Email:</strong> {candidate.email}</p>
-                                {/* ✅ Display all personal information */}
-                                {candidate.firstName && (
-                                    <p className="text-sm"><strong>First Name:</strong> {candidate.firstName}</p>
-                                )}
-                                {candidate.lastName && (
-                                    <p className="text-sm"><strong>Last Name:</strong> {candidate.lastName}</p>
-                                )}
-                                {candidate.gender && (
-                                    <p className="text-sm"><strong>Gender:</strong> {candidate.gender.charAt(0).toUpperCase() + candidate.gender.slice(1)}</p>
-                                )}
-                                {candidate.phoneNumber && (
-                                    <p className="text-sm"><strong>Phone Number:</strong> {candidate.phoneNumber}</p>
-                                )}
-                                {candidate.countryCode && (
-                                    <p className="text-sm"><strong>Country Code:</strong> {candidate.countryCode}</p>
-                                )}
-                                {candidate.dateOfBirth && (
-                                    <>
-                                        <p className="text-sm"><strong>Date of Birth:</strong> {candidate.dateOfBirth}</p>
-                                        <p className="text-sm"><strong>Age:</strong> {calculateAge(candidate.dateOfBirth)} years old</p>
-                                    </>
-                                )}
-                                {candidate.city && (
-                                    <p className="text-sm"><strong>City:</strong> {candidate.city}</p>
-                                )}
-                                {candidate.country && (
-                                    <p className="text-sm"><strong>Country:</strong> {candidate.country}</p>
-                                )}
-                                {/* ✅ Nationality Information */}
-                                {candidate.nationality && (
-                                    <p className="text-sm"><strong>Nationality:</strong> {candidate.nationality}</p>
-                                )}
-                                {candidate.doubleNationality && (
-                                    <p className="text-sm"><strong>Second Nationality:</strong> {candidate.doubleNationality}</p>
-                                )}
-                                <p className="text-sm"><strong>Submitted:</strong> {candidate.submittedAt?.toDate().toLocaleString()}</p>
-                            </div>
-                        </div>
-
-                        {/* Job Information */}
-                        <div className="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-400">
-                            <h3 className="text-lg font-semibold text-purple-800 mb-3">Job Application</h3>
-                            <div className="space-y-2">
-                                {candidate.jobTitleText && (
-                                    <p className="text-sm"><strong>Position Applied:</strong> {candidate.jobTitleText}</p>
-                                )}
-                                {candidate.jobCategory && (
-                                    <p className="text-sm"><strong>Category:</strong> {candidate.jobCategory}</p>
-                                )}
-                                {candidate.jobTitle && (
-                                    <p className="text-sm"><strong>Job ID:</strong> {candidate.jobTitle}</p>
-                                )}
-                                <p className="text-sm">
-                                    <strong>Status:</strong> 
-                                    <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                        candidate.status === 'rejected' ? 'bg-red-100 text-red-800' : 
-                                        candidate.status === 'interview_scheduled' ? 'bg-green-100 text-green-800' : 
-                                        candidate.status === 'approved' ? 'bg-emerald-100 text-emerald-800' :
-                                        'bg-blue-100 text-blue-800'
-                                    }`}>
-                                        {candidate.status.replace('_', ' ').toUpperCase()}
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Middle Column - Websites and Documents */}
-                    <div className="space-y-4">
-                        {/* Websites */}
-                        <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-gray-400">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-3">🌐 Websites & Links</h3>
-                            {candidate.websites && candidate.websites.length > 0 ? (
-                                <ul className="space-y-1">
-                                    {candidate.websites.map((site, index) => (
-                                        <li key={index} className="text-sm">
-                                            <a 
-                                                href={site.startsWith('http') ? site : `https://${site}`} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
-                                                className="text-blue-600 hover:underline break-all"
-                                            >
-                                                {site}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="text-gray-500 italic text-sm">No websites provided.</p>
-                            )}
-                        </div>
-
-                        {/* ✅ Enhanced Documents Section */}
-                        <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
-                            <h3 className="text-lg font-semibold text-yellow-800 mb-3">📄 Documents</h3>
-                            <div className="flex flex-col gap-3">
-                                <a 
-                                    href={candidate.cvUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm text-center transition-colors"
-                                >
-                                    📄 View CV/Resume
-                                </a>
-                                <a 
-                                    href={candidate.passportUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm text-center transition-colors"
-                                >
-                                    🆔 View ID/Passport
-                                </a>
-                                {/* ✅ Photo View Button */}
-                                {candidate.photoUrl && (
-                                    <a 
-                                        href={candidate.photoUrl} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm text-center transition-colors"
-                                    >
-                                        📸 View Full Photo
+                            <InfoCard title="Documents & Links" icon={<FiFileText size={20} />}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <a href={candidate.cvUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 transition-colors">
+                                        <FiFileText className="mr-2" /> View CV/Resume
                                     </a>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* ✅ Additional Information Section */}
-                        <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-400">
-                            <h3 className="text-lg font-semibold text-orange-800 mb-3">📋 Additional Details</h3>
-                            <div className="space-y-2 text-sm">
-                                <p><strong>Application ID:</strong> {candidate.id}</p>
-                                {candidate.submittedAt && (
-                                    <p><strong>Submission Date:</strong> {candidate.submittedAt.toDate().toLocaleDateString()}</p>
-                                )}
-                                {candidate.submittedAt && (
-                                    <p><strong>Submission Time:</strong> {candidate.submittedAt.toDate().toLocaleTimeString()}</p>
-                                )}
-                                {candidate.lastScoredAt && (
-                                    <p><strong>Last Scored:</strong> {candidate.lastScoredAt.toDate().toLocaleString()}</p>
-                                )}
-                                {candidate.calendarEventId && (
-                                    <p><strong>Calendar Event ID:</strong> {candidate.calendarEventId}</p>
-                                )}
-                                {candidate.meetSpaceId && (
-                                    <p><strong>Meet Space ID:</strong> {candidate.meetSpaceId}</p>
-                                )}
-                                {candidate.duration && (
-                                    <p><strong>Interview Duration:</strong> {candidate.duration} minutes</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Interview Section */}
-                        {renderInterviewSection()}
-                    </div>
-
-                    {/* Right Column - AI Scoring and Actions */}
-                    <div className="space-y-4">
-                        {/* AI Scoring Section */}
-                        {candidate.score !== null && candidate.score !== undefined && (
-                            <div className="bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-400">
-                                <h3 className="text-lg font-semibold text-indigo-800 mb-3">🤖 AI Scoring Analysis</h3>
-                                <div className="space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                        <span className="text-sm font-medium">Score:</span>
-                                        <div className="flex-1 bg-gray-200 rounded-full h-2">
-                                            <div 
-                                                className={`h-2 rounded-full ${
-                                                    candidate.score >= 80 ? 'bg-green-500' :
-                                                    candidate.score >= 60 ? 'bg-yellow-500' :
-                                                    candidate.score >= 40 ? 'bg-orange-500' : 'bg-red-500'
-                                                }`}
-                                                style={{ width: `${candidate.score}%` }}
-                                            ></div>
-                                        </div>
-                                        <span className="text-sm font-bold">{candidate.score}/100</span>
-                                    </div>
-                                    {candidate.lastScoredAt && (
-                                        <p className="text-xs text-gray-500">
-                                            Scored on: {candidate.lastScoredAt.toDate().toLocaleString()}
-                                        </p>
+                                    <a href={candidate.passportUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 transition-colors">
+                                        <FiClipboard className="mr-2" /> View ID/Passport
+                                    </a>
+                                    {candidate.photoUrl && (
+                                        <a href={candidate.photoUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 transition-colors">
+                                            <FiImage className="mr-2" /> View Photo
+                                        </a>
                                     )}
-                                    <div>
-                                        <p className="text-sm font-medium mb-2">Analysis:</p>
-                                        <div className="bg-white p-3 rounded border text-sm whitespace-pre-wrap max-h-40 overflow-y-auto">
-                                            {candidate.scoreAnalysis || 'No analysis provided.'}
-                                        </div>
-                                    </div>
                                 </div>
-                            </div>
-                        )}
+                                {candidate.websites && candidate.websites.length > 0 && (
+                                    <div className="pt-3 space-y-2">
+                                        {candidate.websites.map((site, index) => (
+                                            <a key={index} href={site.startsWith('http') ? site : `https://${site}`} target="_blank" rel="noopener noreferrer" className="flex items-center text-blue-600 hover:underline break-all">
+                                                <FiLink size={14} className="mr-2" /> {site}
+                                            </a>
+                                        ))}
+                                    </div>
+                                )}
+                            </InfoCard>
+                        </div>
 
-                        {/* Action Buttons */}
-                        <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-gray-400">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-3">⚡ Actions</h3>
-                            <div className="space-y-3">
-                                {/* Actions based on status */}
-                                {candidate.status === 'submitted' && (
-                                    <div className="space-y-2">
-                                        <button 
-                                            onClick={onScheduleInterview}
-                                            disabled={statusUpdateLoading}
-                                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            {statusUpdateLoading ? 'Processing...' : '📅 Schedule Interview'}
-                                        </button>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button 
-                                                onClick={handleApprove}
-                                                disabled={statusUpdateLoading}
-                                                className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                {statusUpdateLoading ? '...' : '✅ Approve'}
-                                            </button>
-                                            <button 
-                                                onClick={handleReject}
-                                                disabled={statusUpdateLoading}
-                                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                {statusUpdateLoading ? '...' : '❌ Reject'}
-                                            </button>
+                        {/* Right Column */}
+                        <div className="space-y-6">
+                            {candidate.score !== null && candidate.score !== undefined && (
+                                <InfoCard title="AI Scoring Analysis" icon={<FiAward size={20} />}>
+                                    <div className="flex items-center space-x-3">
+                                        <div className="relative w-20 h-20">
+                                            <svg className="w-full h-full" viewBox="0 0 36 36">
+                                                <path className="text-gray-200" strokeWidth="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                                <path className="text-green-500" strokeWidth="3" fill="none" strokeDasharray={`${candidate.score}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                            </svg>
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <span className="text-2xl font-bold text-gray-800">{candidate.score}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{candidate.scoreAnalysis || 'No analysis provided.'}</p>
+                                            {candidate.lastScoredAt && <p className="text-xs text-gray-400 mt-2">Scored on: {candidate.lastScoredAt.toDate().toLocaleDateString()}</p>}
                                         </div>
                                     </div>
-                                )}
+                                </InfoCard>
+                            )}
+                            
+                            {renderInterviewSection()}
 
-                                {candidate.status === 'interview_scheduled' && (
-                                    <div className="space-y-2">
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button 
-                                                onClick={handleApprove}
-                                                disabled={statusUpdateLoading}
-                                                className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                {statusUpdateLoading ? '...' : '✅ Approve'}
-                                            </button>
-                                            <button 
-                                                onClick={handleReject}
-                                                disabled={statusUpdateLoading}
-                                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                {statusUpdateLoading ? '...' : '❌ Reject'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {(candidate.status === 'rejected' || candidate.status === 'approved') && (
-                                    <div className="text-center py-4">
-                                        <p className="text-gray-600 italic">
-                                            This candidate has been <strong>{candidate.status}</strong>. 
-                                            No further actions available.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
+                            <InfoCard title="Actions" icon={<FiEdit size={20} />}>
+                                {renderActionButtons()}
+                            </InfoCard>
                         </div>
                     </div>
                 </div>
