@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { FiX, FiUser, FiFileText, FiClipboard, FiLink, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiEdit, FiTrash2, FiExternalLink, FiAward, FiBriefcase, FiMapPin, FiPhone, FiMail, FiGlobe, FiImage } from 'react-icons/fi';
+import { FiX, FiUser, FiFileText, FiClipboard, FiLink, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiEdit, FiTrash2, FiExternalLink, FiAward, FiBriefcase, FiMapPin, FiPhone, FiMail, FiGlobe, FiImage, FiCode, FiKey, FiUsers } from 'react-icons/fi';
 
 import type { Candidate } from '@/types';
 
@@ -48,12 +48,12 @@ const InfoCard: React.FC<{ title: string; icon: React.ReactNode; children: React
 
 // Info Row Component
 const InfoRow: React.FC<{ label: string; value?: string | null; icon?: React.ReactNode }> = ({ label, value, icon }) => {
-    if (!value) return null;
+    if (!value && value !== null) return null;
     return (
         <div className="flex items-start">
             {icon && <div className="text-gray-400 mt-0.5 mr-2">{icon}</div>}
-            <span className="font-medium text-gray-900 w-32">{label}:</span>
-            <span className="flex-1">{value}</span>
+            <span className="font-medium text-gray-900 w-32 flex-shrink-0">{label}:</span>
+            <span className="flex-1 break-words">{value ?? 'N/A'}</span>
         </div>
     );
 };
@@ -169,9 +169,12 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
                         {/* Left Column */}
                         <div className="lg:col-span-2 space-y-6">
                             <InfoCard title="Personal Information" icon={<FiUser size={20} />}>
+                                <InfoRow label="First Name" value={candidate.firstName} />
+                                <InfoRow label="Last Name" value={candidate.lastName} />
+                                <InfoRow label="Gender" value={candidate.gender} icon={<FiUsers size={14} />} />
                                 <InfoRow label="Email" value={candidate.email} icon={<FiMail size={14} />} />
-                                <InfoRow label="Phone" value={candidate.phoneNumber} icon={<FiPhone size={14} />} />
-                                <InfoRow label="Location" value={`${candidate.city}, ${candidate.country}`} icon={<FiMapPin size={14} />} />
+                                <InfoRow label="Phone" value={candidate.phoneNumber ? `${candidate.countryCode || ''} ${candidate.phoneNumber}` : null} icon={<FiPhone size={14} />} />
+                                <InfoRow label="Location" value={candidate.city && candidate.country ? `${candidate.city}, ${candidate.country}` : null} icon={<FiMapPin size={14} />} />
                                 <InfoRow label="Nationality" value={candidate.nationality} icon={<FiGlobe size={14} />} />
                                 {candidate.doubleNationality && <InfoRow label="2nd Nationality" value={candidate.doubleNationality} icon={<FiGlobe size={14} />} />}
                                 <InfoRow label="Date of Birth" value={candidate.dateOfBirth ? `${candidate.dateOfBirth} (${age} years)` : null} icon={<FiCalendar size={14} />} />
@@ -183,12 +186,13 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
                                     <StatusBadge status={candidate.status} />
                                 </div>
                                 <InfoRow label="Category" value={candidate.jobCategory} />
+                                <InfoRow label="Job ID" value={candidate.jobTitle} />
                                 <InfoRow label="Submitted" value={candidate.submittedAt?.toDate().toLocaleString()} />
                                 <InfoRow label="Application ID" value={candidate.id} />
                             </InfoCard>
 
                             <InfoCard title="Documents & Links" icon={<FiFileText size={20} />}>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                     <a href={candidate.cvUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 transition-colors">
                                         <FiFileText className="mr-2" /> View CV/Resume
                                     </a>
@@ -210,6 +214,11 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
                                         ))}
                                     </div>
                                 )}
+                            </InfoCard>
+                            
+                            <InfoCard title="System Details" icon={<FiCode size={20} />}>
+                                <InfoRow label="Calendar Event ID" value={candidate.calendarEventId} icon={<FiKey size={14} />} />
+                                <InfoRow label="Meet Space ID" value={candidate.meetSpaceId} icon={<FiKey size={14} />} />
                             </InfoCard>
                         </div>
 
