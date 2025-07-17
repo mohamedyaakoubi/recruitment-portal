@@ -15,7 +15,6 @@ const SocialIcon = ({ href, children }: { href: string, children: React.ReactNod
   </a>
 );
 
-
 export default function CandidateForm() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -27,11 +26,16 @@ export default function CandidateForm() {
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [countrySearch, setCountrySearch] = useState('');
+  const [nationality, setNationality] = useState(''); // ✅ New field
+  const [nationalitySearch, setNationalitySearch] = useState(''); // ✅ New field
+  const [doubleNationality, setDoubleNationality] = useState(''); // ✅ New field
+  const [doubleNationalitySearch, setDoubleNationalitySearch] = useState(''); // ✅ New field
   const [jobTitle, setJobTitle] = useState('');
   const [websites, setWebsites] = useState<string[]>(['']);
   const [additionalInfo, setAdditionalInfo] = useState<{type: 'link' | 'file' | 'text', content: string, file?: File}[]>([{type: 'link', content: ''}]);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [passportFile, setPassportFile] = useState<File | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null); // ✅ New field
   const [jobs, setJobs] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -42,76 +46,73 @@ export default function CandidateForm() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showCountryList, setShowCountryList] = useState(false);
+  const [showNationalityList, setShowNationalityList] = useState(false); // ✅ New field
+  const [showDoubleNationalityList, setShowDoubleNationalityList] = useState(false); // ✅ New field
   const countryRef = useRef<HTMLDivElement>(null);
+  const nationalityRef = useRef<HTMLDivElement>(null); // ✅ New field
+  const doubleNationalityRef = useRef<HTMLDivElement>(null); // ✅ New field
 
   // Country codes list
-const countryCodes = [
-  { code: '+1', country: 'United States', flag: '🇺🇸', iso: 'US' },
-  { code: '+1', country: 'Canada', flag: '🇨🇦', iso: 'CA' },
-  { code: '+44', country: 'United Kingdom', flag: '🇬🇧', iso: 'GB' },
-  { code: '+33', country: 'France', flag: '🇫🇷', iso: 'FR' },
-  { code: '+49', country: 'Germany', flag: '🇩🇪', iso: 'DE' },
-  { code: '+39', country: 'Italy', flag: '🇮🇹', iso: 'IT' },
-  { code: '+34', country: 'Spain', flag: '🇪🇸', iso: 'ES' },
-  { code: '+31', country: 'Netherlands', flag: '🇳🇱', iso: 'NL' },
-  { code: '+46', country: 'Sweden', flag: '🇸🇪', iso: 'SE' },
-  { code: '+47', country: 'Norway', flag: '🇳🇴', iso: 'NO' },
-  { code: '+45', country: 'Denmark', flag: '🇩🇰', iso: 'DK' },
-  { code: '+358', country: 'Finland', flag: '🇫🇮', iso: 'FI' },
-  { code: '+41', country: 'Switzerland', flag: '🇨🇭', iso: 'CH' },
-  { code: '+43', country: 'Austria', flag: '🇦🇹', iso: 'AT' },
-  { code: '+32', country: 'Belgium', flag: '🇧🇪', iso: 'BE' },
-  { code: '+351', country: 'Portugal', flag: '🇵🇹', iso: 'PT' },
-  { code: '+30', country: 'Greece', flag: '🇬🇷', iso: 'GR' },
-  { code: '+48', country: 'Poland', flag: '🇵🇱', iso: 'PL' },
-  { code: '+420', country: 'Czech Republic', flag: '🇨🇿', iso: 'CZ' },
-  { code: '+36', country: 'Hungary', flag: '🇭🇺', iso: 'HU' },
-  { code: '+91', country: 'India', flag: '🇮🇳', iso: 'IN' },
-  { code: '+86', country: 'China', flag: '🇨🇳', iso: 'CN' },
-  { code: '+81', country: 'Japan', flag: '🇯🇵', iso: 'JP' },
-  { code: '+82', country: 'South Korea', flag: '🇰🇷', iso: 'KR' },
-  { code: '+61', country: 'Australia', flag: '🇦🇺', iso: 'AU' },
-  { code: '+64', country: 'New Zealand', flag: '🇳🇿', iso: 'NZ' },
-  { code: '+27', country: 'South Africa', flag: '🇿🇦', iso: 'ZA' },
-  { code: '+55', country: 'Brazil', flag: '🇧🇷', iso: 'BR' },
-  { code: '+52', country: 'Mexico', flag: '🇲🇽', iso: 'MX' },
-  { code: '+7', country: 'Russia', flag: '🇷🇺', iso: 'RU' },
-  { code: '+90', country: 'Turkey', flag: '🇹🇷', iso: 'TR' },
-  { code: '+971', country: 'UAE', flag: '🇦🇪', iso: 'AE' },
-  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦', iso: 'SA' },
-  { code: '+20', country: 'Egypt', flag: '🇪🇬', iso: 'EG' },
-  { code: '+212', country: 'Morocco', flag: '🇲🇦', iso: 'MA' },
-  { code: '+216', country: 'Tunisia', flag: '🇹🇳', iso: 'TN' },
-  { code: '+213', country: 'Algeria', flag: '🇩🇿', iso: 'DZ' }
-];
+  const countryCodes = [
+    { code: '+1', country: 'United States', flag: '🇺🇸', iso: 'US' },
+    { code: '+1', country: 'Canada', flag: '🇨🇦', iso: 'CA' },
+    { code: '+44', country: 'United Kingdom', flag: '🇬🇧', iso: 'GB' },
+    { code: '+33', country: 'France', flag: '🇫🇷', iso: 'FR' },
+    { code: '+49', country: 'Germany', flag: '🇩🇪', iso: 'DE' },
+    { code: '+39', country: 'Italy', flag: '🇮🇹', iso: 'IT' },
+    { code: '+34', country: 'Spain', flag: '🇪🇸', iso: 'ES' },
+    { code: '+31', country: 'Netherlands', flag: '🇳🇱', iso: 'NL' },
+    { code: '+46', country: 'Sweden', flag: '🇸🇪', iso: 'SE' },
+    { code: '+47', country: 'Norway', flag: '🇳🇴', iso: 'NO' },
+    { code: '+45', country: 'Denmark', flag: '🇩🇰', iso: 'DK' },
+    { code: '+358', country: 'Finland', flag: '🇫🇮', iso: 'FI' },
+    { code: '+41', country: 'Switzerland', flag: '🇨🇭', iso: 'CH' },
+    { code: '+43', country: 'Austria', flag: '🇦🇹', iso: 'AT' },
+    { code: '+32', country: 'Belgium', flag: '🇧🇪', iso: 'BE' },
+    { code: '+351', country: 'Portugal', flag: '🇵🇹', iso: 'PT' },
+    { code: '+30', country: 'Greece', flag: '🇬🇷', iso: 'GR' },
+    { code: '+48', country: 'Poland', flag: '🇵🇱', iso: 'PL' },
+    { code: '+420', country: 'Czech Republic', flag: '🇨🇿', iso: 'CZ' },
+    { code: '+36', country: 'Hungary', flag: '🇭🇺', iso: 'HU' },
+    { code: '+91', country: 'India', flag: '🇮🇳', iso: 'IN' },
+    { code: '+86', country: 'China', flag: '🇨🇳', iso: 'CN' },
+    { code: '+81', country: 'Japan', flag: '🇯🇵', iso: 'JP' },
+    { code: '+82', country: 'South Korea', flag: '🇰🇷', iso: 'KR' },
+    { code: '+61', country: 'Australia', flag: '🇦🇺', iso: 'AU' },
+    { code: '+64', country: 'New Zealand', flag: '🇳🇿', iso: 'NZ' },
+    { code: '+27', country: 'South Africa', flag: '🇿🇦', iso: 'ZA' },
+    { code: '+55', country: 'Brazil', flag: '🇧🇷', iso: 'BR' },
+    { code: '+52', country: 'Mexico', flag: '🇲🇽', iso: 'MX' },
+    { code: '+7', country: 'Russia', flag: '🇷🇺', iso: 'RU' },
+    { code: '+90', country: 'Turkey', flag: '🇹🇷', iso: 'TR' },
+    { code: '+971', country: 'UAE', flag: '🇦🇪', iso: 'AE' },
+    { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦', iso: 'SA' },
+    { code: '+20', country: 'Egypt', flag: '🇪🇬', iso: 'EG' },
+    { code: '+212', country: 'Morocco', flag: '🇲🇦', iso: 'MA' },
+    { code: '+216', country: 'Tunisia', flag: '🇹🇳', iso: 'TN' },
+    { code: '+213', country: 'Algeria', flag: '🇩🇿', iso: 'DZ' }
+  ];
 
-// Add this helper function to convert country ISO code to flag emoji
-const getFlagEmoji = (countryCode: string) => {
-  if (typeof String.fromCodePoint === "undefined") return countryCode;
-  
-  const codePoints = countryCode
-    .toUpperCase()
-    .split('')
-    .map(char => 127397 + char.charCodeAt(0));
-  
-  try {
-    return String.fromCodePoint(...codePoints);
-  } catch {
-    return countryCode;
-  }
-};
-
-  // Countries list for country field
+  // Countries list for country and nationality fields
   const countries = [
-    'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia', 'Austria', 'Bangladesh', 'Belgium', 'Brazil', 'Canada',
-    'China', 'Czech Republic', 'Denmark', 'Egypt', 'Finland', 'France', 'Germany', 'Greece', 'Hungary', 'India',
-    'Italy', 'Japan', 'Mexico', 'Morocco', 'Netherlands', 'New Zealand', 'Norway', 'Poland', 'Portugal', 'Russia',
-    'Saudi Arabia', 'South Africa', 'South Korea', 'Spain', 'Sweden', 'Switzerland', 'Tunisia', 'Turkey', 'UAE',
-    'United Kingdom', 'United States'
+    'Afghanistan', 'Albania', 'Algeria', 'American', 'Argentinian', 'Australian', 'Austrian', 'Bangladeshi', 'Belgian', 
+    'Brazilian', 'British', 'Canadian', 'Chinese', 'Czech', 'Danish', 'Egyptian', 'Finnish', 'French', 'German', 
+    'Greek', 'Hungarian', 'Indian', 'Italian', 'Japanese', 'Mexican', 'Moroccan', 'Dutch', 'New Zealander', 
+    'Norwegian', 'Polish', 'Portuguese', 'Russian', 'Saudi Arabian', 'South African', 'South Korean', 'Spanish', 
+    'Swedish', 'Swiss', 'Tunisian', 'Turkish', 'Emirati'
   ];
 
   const filteredCountries = countries.filter(c => 
     c.toLowerCase().includes(countrySearch.toLowerCase())
+  );
+
+  // ✅ Filtered lists for nationality fields
+  const filteredNationalities = countries.filter(c => 
+    c.toLowerCase().includes(nationalitySearch.toLowerCase())
+  );
+
+  const filteredDoubleNationalities = countries.filter(c => 
+    c.toLowerCase().includes(doubleNationalitySearch.toLowerCase())
   );
 
   const addAdditionalInfo = (type: 'link' | 'file' | 'text') => {
@@ -178,6 +179,12 @@ const getFlagEmoji = (countryCode: string) => {
       if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
         setShowCountryList(false);
       }
+      if (nationalityRef.current && !nationalityRef.current.contains(event.target as Node)) {
+        setShowNationalityList(false);
+      }
+      if (doubleNationalityRef.current && !doubleNationalityRef.current.contains(event.target as Node)) {
+        setShowDoubleNationalityList(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -203,6 +210,8 @@ const getFlagEmoji = (countryCode: string) => {
         setCvFile(files[0]);
       } else if (name === 'passport') {
         setPassportFile(files[0]);
+      } else if (name === 'photo') { // ✅ New field
+        setPhotoFile(files[0]);
       }
     }
   };
@@ -212,8 +221,9 @@ const getFlagEmoji = (countryCode: string) => {
     setError(null);
     setSuccess(null);
 
-    if (!firstName || !lastName || !email || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !country || !selectedCategory || !jobTitle || !cvFile || !passportFile) {
-      setError("Please fill in all required fields and upload both files.");
+    // ✅ Updated validation - removed photoFile from required fields
+    if (!firstName || !lastName || !email || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !country || !nationality || !selectedCategory || !jobTitle || !cvFile || !passportFile) {
+      setError("Please fill in all required fields and upload all required files (CV and Passport/ID).");
       return;
     }
 
@@ -222,7 +232,7 @@ const getFlagEmoji = (countryCode: string) => {
     try {
       const cvFileName = `cv_${Date.now()}_${cvFile.name}`;
       const passportFileName = `passport_${Date.now()}_${passportFile.name}`;
-
+      
       const cvStorageRef = ref(storage, `candidate_files/${cvFileName}`);
       const passportStorageRef = ref(storage, `candidate_files/${passportFileName}`);
 
@@ -231,6 +241,15 @@ const getFlagEmoji = (countryCode: string) => {
 
       const cvUrl = await getDownloadURL(cvUploadTask.ref);
       const passportUrl = await getDownloadURL(passportUploadTask.ref);
+      
+      // ✅ Handle optional photo upload
+      let photoUrl = null;
+      if (photoFile) {
+        const photoFileName = `photo_${Date.now()}_${photoFile.name}`;
+        const photoStorageRef = ref(storage, `candidate_files/${photoFileName}`);
+        const photoUploadTask = await uploadBytes(photoStorageRef, photoFile);
+        photoUrl = await getDownloadURL(photoUploadTask.ref);
+      }
 
       const candidatesCollectionRef = collection(db, "candidates");
       await addDoc(candidatesCollectionRef, {
@@ -244,17 +263,21 @@ const getFlagEmoji = (countryCode: string) => {
         dateOfBirth,
         city,
         country,
+        nationality,
+        doubleNationality: doubleNationality || null,
         jobCategory: selectedCategory,
         jobTitle,
         jobTitleText: selectedJob?.title || '',
         websites: websites.filter(w => w.trim() !== ''),
         cvUrl,
         passportUrl,
+        photoUrl, // ✅ This will be null if no photo was uploaded
         submittedAt: serverTimestamp(),
         status: 'submitted',
         score: null
       });
 
+      // ✅ Reset all form fields including photo
       setFirstName('');
       setLastName('');
       setEmail('');
@@ -265,17 +288,24 @@ const getFlagEmoji = (countryCode: string) => {
       setCity('');
       setCountry('');
       setCountrySearch('');
+      setNationality('');
+      setNationalitySearch('');
+      setDoubleNationality('');
+      setDoubleNationalitySearch('');
       setSelectedCategory('');
       setJobTitle('');
       setSelectedJob(null);
       setWebsites(['']);
       setCvFile(null);
       setPassportFile(null);
+      setPhotoFile(null);
       
       const cvInput = document.getElementById('cv') as HTMLInputElement;
       const passportInput = document.getElementById('passport') as HTMLInputElement;
+      const photoInput = document.getElementById('photo') as HTMLInputElement;
       if (cvInput) cvInput.value = '';
       if (passportInput) passportInput.value = '';
+      if (photoInput) photoInput.value = '';
 
       setSuccess("Application submitted successfully!");
       setShowSuccessToast(true);
@@ -294,7 +324,7 @@ const getFlagEmoji = (countryCode: string) => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      {/* Redesigned Header */}
+      {/* Header remains the same */}
       <header className="bg-white shadow-sm sticky top-0 z-20">
           <div className="bg-[#003A70] text-white text-xs py-1.5">
               <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex justify-center md:justify-between items-center">
@@ -420,18 +450,18 @@ const getFlagEmoji = (countryCode: string) => {
                     Phone Number <span className="text-red-500">*</span>
                   </label>
                   <div className="flex">
-<select
-  value={countryCode}
-  onChange={(e) => setCountryCode(e.target.value)}
-  className="px-3 py-3 border border-slate-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-slate-100"
-  disabled={isLoading}
->
-  {countryCodes.map((item, index) => (
-    <option key={index} value={item.code}>
-      {item.country} ({item.code})
-    </option>
-  ))}
-</select>
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="px-3 py-3 border border-slate-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-slate-100"
+                      disabled={isLoading}
+                    >
+                      {countryCodes.map((item, index) => (
+                        <option key={index} value={item.code}>
+                          {item.country} ({item.code})
+                        </option>
+                      ))}
+                    </select>
                     <input
                       type="tel"
                       name="phoneNumber"
@@ -482,7 +512,7 @@ const getFlagEmoji = (countryCode: string) => {
                 </div>
 
                 {/* Country */}
-                <div className="relative sm:col-span-2" ref={countryRef}>
+                <div className="relative" ref={countryRef}>
                   <label htmlFor="country" className="block text-sm font-semibold text-slate-600 mb-2">
                     Country <span className="text-red-500">*</span>
                   </label>
@@ -516,6 +546,89 @@ const getFlagEmoji = (countryCode: string) => {
                           className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
                         >
                           {countryOption}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ✅ Nationality (Required) */}
+                <div className="relative" ref={nationalityRef}>
+                  <label htmlFor="nationality" className="block text-sm font-semibold text-slate-600 mb-2">
+                    Nationality <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="nationalitySearch"
+                    id="nationalitySearch"
+                    required
+                    value={nationalitySearch}
+                    onChange={(e) => {
+                      setNationalitySearch(e.target.value);
+                      setNationality(""); // Clear selection when typing
+                      setShowNationalityList(true);
+                    }}
+                    onFocus={() => setShowNationalityList(true)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                    placeholder="Search and select your nationality"
+                    disabled={isLoading}
+                    autoComplete="off"
+                  />
+                  {showNationalityList && filteredNationalities.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredNationalities.map((nationalityOption, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            setNationality(nationalityOption);
+                            setNationalitySearch(nationalityOption);
+                            setShowNationalityList(false);
+                          }}
+                          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+                        >
+                          {nationalityOption}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ✅ Double Nationality (Optional) */}
+                <div className="relative" ref={doubleNationalityRef}>
+                  <label htmlFor="doubleNationality" className="block text-sm font-semibold text-slate-600 mb-2">
+                    Second Nationality <span className="text-slate-400">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="doubleNationalitySearch"
+                    id="doubleNationalitySearch"
+                    value={doubleNationalitySearch}
+                    onChange={(e) => {
+                      setDoubleNationalitySearch(e.target.value);
+                      setDoubleNationality(""); // Clear selection when typing
+                      setShowDoubleNationalityList(true);
+                    }}
+                    onFocus={() => setShowDoubleNationalityList(true)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                    placeholder="Search and select second nationality (if any)"
+                    disabled={isLoading}
+                    autoComplete="off"
+                  />
+                  {showDoubleNationalityList && filteredDoubleNationalities.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredDoubleNationalities.map((doubleNationalityOption, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            setDoubleNationality(doubleNationalityOption);
+                            setDoubleNationalitySearch(doubleNationalityOption);
+                            setShowDoubleNationalityList(false);
+                          }}
+                          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+                        >
+                          {doubleNationalityOption}
                         </button>
                       ))}
                     </div>
@@ -579,7 +692,7 @@ const getFlagEmoji = (countryCode: string) => {
               </div>
             </div>
 
-            {/* Additional Information Section */}
+            {/* Additional Information Section - keep existing */}
             <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
               <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Additional Information</h2>
               <div className="space-y-4">
@@ -647,11 +760,11 @@ const getFlagEmoji = (countryCode: string) => {
                 </div>
               </div>
             </div>
-
-            {/* File Upload Section */}
+            
+            {/* ✅ Updated File Upload Section */}
             <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
               <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Required Documents</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
                   <label htmlFor="cv" className="block text-sm font-semibold text-slate-600 mb-2">
                     Upload CV <span className="text-red-500">*</span>
@@ -669,6 +782,16 @@ const getFlagEmoji = (countryCode: string) => {
                     className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-[#003A70] hover:file:bg-slate-200"
                     disabled={isLoading} />
                   <p className="mt-1 text-xs text-slate-500">PDF, JPG, PNG only.</p>
+                </div>
+                {/* ✅ Updated Photo Upload Field - Now Optional */}
+                <div>
+                  <label htmlFor="photo" className="block text-sm font-semibold text-slate-600 mb-2">
+                    Upload Photo <span className="text-slate-400">(Optional)</span>
+                  </label>
+                  <input type="file" name="photo" id="photo" accept=".jpg,.jpeg,.png" onChange={handleFileChange}
+                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-[#003A70] hover:file:bg-slate-200"
+                    disabled={isLoading} />
+                  <p className="mt-1 text-xs text-slate-500">JPG, PNG only. Professional photo preferred.</p>
                 </div>
               </div>
             </div>
@@ -698,20 +821,17 @@ const getFlagEmoji = (countryCode: string) => {
         onClose={() => setShowSuccessToast(false)}
       />
 
-      {/* Redesigned Footer */}
+      {/* Footer remains the same */}
       <footer className="bg-[#003A70] text-white">
           <div className="max-w-screen-xl mx-auto py-16 px-4 sm:px-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                  {/* Column 1: Company Info */}
                   <div>
-                      {/* NOTE: Assumes a white version of the logo exists for dark backgrounds */}
                       <Image src="/logo-skills-white.png" alt="International Skills" width={180} height={45} className="mb-4" />
                       <p className="text-sm text-slate-300">
                           Connecting talented professionals with international opportunities.
                       </p>
                   </div>
                   
-                  {/* Column 2: Contact */}
                   <div>
                       <h3 className="text-sm font-semibold tracking-wider uppercase text-slate-200">Contact</h3>
                       <div className="mt-4 space-y-3 text-sm text-slate-300">
@@ -721,7 +841,6 @@ const getFlagEmoji = (countryCode: string) => {
                       </div>
                   </div>
 
-                  {/* Column 3: Suivez-nous (Follow Us) */}
                   <div>
                       <h3 className="text-sm font-semibold tracking-wider uppercase text-slate-200">Suivez-nous</h3>
                       <div className="mt-4 flex space-x-5">
@@ -742,7 +861,6 @@ const getFlagEmoji = (countryCode: string) => {
               </div>
           </div>
       </footer>
-
     </div>
   );
 }

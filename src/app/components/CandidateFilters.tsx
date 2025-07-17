@@ -8,6 +8,7 @@ interface CandidateFiltersProps {
   filterName: string;
   filterCity: string;
   filterCountry: string;
+  filterNationality: string; // ✅ Keep this
   filterJobTitle: string;
   filterCategory: string;
   filterAgeMin: string;
@@ -16,6 +17,7 @@ interface CandidateFiltersProps {
   onFilterNameChange: (name: string) => void;
   onFilterCityChange: (city: string) => void;
   onFilterCountryChange: (country: string) => void;
+  onFilterNationalityChange: (nationality: string) => void; // ✅ Keep this
   onFilterJobTitleChange: (jobTitle: string) => void;
   onFilterCategoryChange: (category: string) => void;
   onFilterAgeMinChange: (ageMin: string) => void;
@@ -29,6 +31,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   filterName,
   filterCity,
   filterCountry,
+  filterNationality, // ✅ Add this to destructuring
   filterJobTitle,
   filterCategory,
   filterAgeMin,
@@ -37,6 +40,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   onFilterNameChange,
   onFilterCityChange,
   onFilterCountryChange,
+  onFilterNationalityChange, // ✅ Add this to destructuring
   onFilterJobTitleChange,
   onFilterCategoryChange,
   onFilterAgeMinChange,
@@ -48,24 +52,28 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   const [countrySearch, setCountrySearch] = useState('');
   const [jobTitleSearch, setJobTitleSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
+  const [nationalitySearch, setNationalitySearch] = useState('');
 
   // Dropdown visibility states
   const [showCityList, setShowCityList] = useState(false);
   const [showCountryList, setShowCountryList] = useState(false);
   const [showJobTitleList, setShowJobTitleList] = useState(false);
   const [showCategoryList, setShowCategoryList] = useState(false);
+  const [showNationalityList, setShowNationalityList] = useState(false);
 
   // Refs for click outside detection
   const cityRef = useRef<HTMLDivElement>(null);
   const countryRef = useRef<HTMLDivElement>(null);
   const jobTitleRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
+  const nationalityRef = useRef<HTMLDivElement>(null);
 
   // Extract unique values from candidates
   const uniqueCities = Array.from(new Set(candidates.map(c => c.city).filter((c): c is string => !!c))).sort();
   const uniqueCountries = Array.from(new Set(candidates.map(c => c.country).filter((c): c is string => !!c))).sort();
   const uniqueJobTitles = Array.from(new Set(candidates.map(c => c.jobTitleText).filter((c): c is string => !!c))).sort();
   const uniqueCategories = Array.from(new Set(candidates.map(c => c.jobCategory).filter((c): c is string => !!c))).sort();
+  const uniqueNationalities = Array.from(new Set(candidates.map(c => c.nationality).filter((n): n is string => !!n))).sort();
 
   // Filtered options based on search
   const filteredCities = uniqueCities.filter(city => 
@@ -79,6 +87,9 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   );
   const filteredCategories = uniqueCategories.filter(category => 
     category.toLowerCase().includes(categorySearch.toLowerCase())
+  );
+  const filteredNationalities = uniqueNationalities.filter(nationality => 
+    nationality.toLowerCase().includes(nationalitySearch.toLowerCase())
   );
 
   // Click outside handlers
@@ -95,6 +106,9 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
       }
       if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
         setShowCategoryList(false);
+      }
+      if (nationalityRef.current && !nationalityRef.current.contains(event.target as Node)) {
+        setShowNationalityList(false);
       }
     };
 
@@ -120,12 +134,17 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   useEffect(() => {
     setCategorySearch(filterCategory);
   }, [filterCategory]);
+ 
+  useEffect(() => {
+    setNationalitySearch(filterNationality);
+  }, [filterNationality]);
 
   const handleClearAllFilters = () => {
     setCitySearch('');
     setCountrySearch('');
     setJobTitleSearch('');
     setCategorySearch('');
+    setNationalitySearch(''); // ✅ Clear nationality search
     onClearAllFilters();
   };
 
@@ -134,7 +153,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Filters:</h3>
       
       {/* Main Filter Inputs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
         {/* Name Filter */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Name</label>
@@ -225,6 +244,45 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
           )}
         </div>
         
+        {/* ✅ Nationality Filter with Dropdown */}
+        <div className="relative" ref={nationalityRef}>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Nationality</label>
+          <input
+            type="text"
+            placeholder="Search and select nationality..."
+            value={nationalitySearch}
+            onChange={(e) => {
+              setNationalitySearch(e.target.value);
+              onFilterNationalityChange(''); // Clear selection when typing
+              setShowNationalityList(true);
+            }}
+            onFocus={() => setShowNationalityList(true)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoComplete="off"
+          />
+          {showNationalityList && filteredNationalities.length > 0 && (
+            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {filteredNationalities.map((nationality, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => {
+                    onFilterNationalityChange(nationality);
+                    setNationalitySearch(nationality);
+                    setShowNationalityList(false);
+                  }}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none flex justify-between items-center"
+                >
+                  <span>{nationality}</span>
+                  <span className="text-xs text-gray-500">
+                    ({candidates.filter(c => c.nationality === nationality).length})
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        
         {/* Category Filter with Dropdown */}
         <div className="relative" ref={categoryRef}>
           <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Category</label>
@@ -263,7 +321,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
             </div>
           )}
         </div>
-        
+
         {/* Job Title Filter with Dropdown */}
         <div className="relative" ref={jobTitleRef}>
           <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Job Title</label>
@@ -412,6 +470,36 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Nationalities Quick Filters */}
+        {candidates.length > 0 && uniqueNationalities.length > 0 && (
+          <div>
+            <span className="text-sm font-medium text-gray-600 mr-3">Nationalities:</span>
+            <div className="inline-flex flex-wrap gap-2">
+              {uniqueNationalities.slice(0, 5).map(nationality => (
+                <button
+                  key={nationality}
+                  onClick={() => {
+                    if (filterNationality === nationality) {
+                      onFilterNationalityChange('');
+                      setNationalitySearch('');
+                    } else {
+                      onFilterNationalityChange(nationality);
+                      setNationalitySearch(nationality);
+                    }
+                  }}
+                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                    filterNationality === nationality 
+                      ? 'bg-pink-600 text-white border-pink-600' 
+                      : 'bg-white text-pink-600 border-pink-300 hover:bg-pink-50'
+                  }`}
+                >
+                  {nationality} ({candidates.filter(c => c.nationality === nationality).length})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Popular Cities Quick Filters */}
         {candidates.length > 0 && (

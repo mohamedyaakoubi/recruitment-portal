@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const exportFormat = searchParams.get('format') || 'json';
     const filterStatus = searchParams.get('status') || 'all';
     const filterName = searchParams.get('name') || '';
+    const filterNationality = searchParams.get('nationality') || ''; // ✅ New filter
 
     const db = getFirestoreAdmin();
     let query: any = db.collection("candidates");
@@ -31,6 +32,8 @@ export async function GET(request: NextRequest) {
         dateOfBirth: data.dateOfBirth || '',
         city: data.city || '',
         country: data.country || '',
+        nationality: data.nationality || '', // ✅ Include nationality
+        doubleNationality: data.doubleNationality || '', // ✅ Include double nationality
         jobTitle: data.jobTitleText || '',
         websites: Array.isArray(data.websites) ? data.websites.join(', ') : '',
         status: data.status || '',
@@ -39,7 +42,8 @@ export async function GET(request: NextRequest) {
         submittedAt: data.submittedAt ? format(data.submittedAt.toDate(), 'yyyy-MM-dd HH:mm:ss') : '',
         interviewDate: data.interviewDate ? format(data.interviewDate.toDate(), 'yyyy-MM-dd HH:mm:ss') : '',
         cvUrl: data.cvUrl || '',
-        passportUrl: data.passportUrl || ''
+        passportUrl: data.passportUrl || '',
+        photoUrl: data.photoUrl || '' // ✅ Include photo URL
       };
     });
 
@@ -47,6 +51,13 @@ export async function GET(request: NextRequest) {
     if (filterName) {
       candidates = candidates.filter((candidate: any) => 
         candidate.fullName.toLowerCase().includes(filterName.toLowerCase())
+      );
+    }
+
+    // ✅ Apply nationality filter
+    if (filterNationality) {
+      candidates = candidates.filter((candidate: any) => 
+        candidate.nationality.toLowerCase().includes(filterNationality.toLowerCase())
       );
     }
 
@@ -61,7 +72,6 @@ export async function GET(request: NextRequest) {
         });
 
       case 'xlsx':
-        // For XLSX, we'll return JSON with a special header to indicate client-side processing
         return NextResponse.json({ 
           data: candidates,
           format: 'xlsx',
@@ -89,6 +99,7 @@ function generateCSV(candidates: any[]): string {
     return 'No candidates found';
   }
 
+  // ✅ Updated headers to include new fields
   const headers = [
     'Full Name',
     'Email',
@@ -97,6 +108,8 @@ function generateCSV(candidates: any[]): string {
     'Date of Birth',
     'City',
     'Country',
+    'Nationality',
+    'Second Nationality',
     'Job Title',
     'Websites',
     'Status',
@@ -105,7 +118,8 @@ function generateCSV(candidates: any[]): string {
     'Submitted At',
     'Interview Date',
     'CV URL',
-    'Passport URL'
+    'Passport URL',
+    'Photo URL'
   ];
 
   const csvRows = [
@@ -118,6 +132,8 @@ function generateCSV(candidates: any[]): string {
       escapeCSV(candidate.dateOfBirth),
       escapeCSV(candidate.city),
       escapeCSV(candidate.country),
+      escapeCSV(candidate.nationality),
+      escapeCSV(candidate.doubleNationality),
       escapeCSV(candidate.jobTitle),
       escapeCSV(candidate.websites),
       escapeCSV(candidate.status),
@@ -126,7 +142,8 @@ function generateCSV(candidates: any[]): string {
       escapeCSV(candidate.submittedAt),
       escapeCSV(candidate.interviewDate),
       escapeCSV(candidate.cvUrl),
-      escapeCSV(candidate.passportUrl)
+      escapeCSV(candidate.passportUrl),
+      escapeCSV(candidate.photoUrl)
     ].join(','))
   ];
 
@@ -143,4 +160,3 @@ function escapeCSV(value: string): string {
   }
   return stringValue;
 }
-
