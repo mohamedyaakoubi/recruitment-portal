@@ -51,6 +51,9 @@ export default function CandidateForm() {
   const countryRef = useRef<HTMLDivElement>(null);
   const nationalityRef = useRef<HTMLDivElement>(null); // ✅ New field
   const doubleNationalityRef = useRef<HTMLDivElement>(null); // ✅ New field
+  const [showCountryCodeList, setShowCountryCodeList] = useState(false); // ✅ New state
+  const [countryCodeSearch, setCountryCodeSearch] = useState(''); // ✅ New state
+  const countryCodeRef = useRef<HTMLDivElement>(null); // ✅ New ref
 
   // ✅ Complete Country codes list with all countries
   const countryCodes = [
@@ -412,10 +415,36 @@ export default function CandidateForm() {
     };
   }, []);
 
+
+    useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
+        setShowCountryList(false);
+      }
+      if (nationalityRef.current && !nationalityRef.current.contains(event.target as Node)) {
+        setShowNationalityList(false);
+      }
+      if (doubleNationalityRef.current && !doubleNationalityRef.current.contains(event.target as Node)) {
+        setShowDoubleNationalityList(false);
+      }
+      if (countryCodeRef.current && !countryCodeRef.current.contains(event.target as Node)) {
+        setShowCountryCodeList(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleCategorySelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
   };
-
+  const filteredCountryCodes = countryCodes.filter(item => 
+    item.country.toLowerCase().includes(countryCodeSearch.toLowerCase()) ||
+    item.code.includes(countryCodeSearch) ||
+    item.flag.includes(countryCodeSearch)
+  );
   const handleJobSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedJobId = e.target.value;
     setJobTitle(selectedJobId);
@@ -663,25 +692,68 @@ export default function CandidateForm() {
                     <option value="female">Female</option>
                   </select>
                 </div>
-
-                {/* Phone Number */}
+  {/* Phone Number */}
                 <div>
                   <label htmlFor="phoneNumber" className="block text-sm font-semibold text-slate-600 mb-2">
                     Phone Number <span className="text-red-500">*</span>
                   </label>
                   <div className="flex">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="px-3 py-3 border border-slate-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-slate-100"
-                      disabled={isLoading}
-                    >
-                      {countryCodes.map((item, index) => (
-                        <option key={index} value={item.code}>
-                          {item.country} ({item.code})
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative" ref={countryCodeRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowCountryCodeList(!showCountryCodeList);
+                          setCountryCodeSearch('');
+                        }}
+                        className="w-32 px-3 py-3 border border-slate-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-slate-100 text-sm flex items-center justify-between"
+                        disabled={isLoading}
+                      >
+                        <span>
+                          {countryCodes.find(item => item.code === countryCode)?.flag} {countryCode}
+                        </span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      
+                      {showCountryCodeList && (
+                        <div className="absolute z-20 w-80 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg">
+                          <div className="p-2 border-b border-slate-200">
+                            <input
+                              type="text"
+                              value={countryCodeSearch}
+                              onChange={(e) => setCountryCodeSearch(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                              placeholder="Search country..."
+                              autoFocus
+                            />
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            {filteredCountryCodes.map((item, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => {
+                                  setCountryCode(item.code);
+                                  setShowCountryCodeList(false);
+                                  setCountryCodeSearch('');
+                                }}
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 focus:bg-slate-100 focus:outline-none flex items-center space-x-3"
+                              >
+                                <span className="text-lg">{item.flag}</span>
+                                <span className="font-medium">{item.code}</span>
+                                <span className="text-slate-600 truncate">{item.country}</span>
+                              </button>
+                            ))}
+                            {filteredCountryCodes.length === 0 && (
+                              <div className="px-3 py-2 text-sm text-slate-500">
+                                No countries found
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <input
                       type="tel"
                       name="phoneNumber"
@@ -689,28 +761,11 @@ export default function CandidateForm() {
                       required
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="flex-1 w-full px-4 py-3 border-l-0 border border-slate-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                      className="flex-1 px-4 py-3 border-l-0 border border-slate-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
                       placeholder="123 456 789"
                       disabled={isLoading}
                     />
                   </div>
-                </div>
-
-                {/* Date of Birth */}
-                <div>
-                  <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Date of Birth <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="dateOfBirth"
-                    id="dateOfBirth"
-                    required
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    disabled={isLoading}
-                  />
                 </div>
 
                 {/* City */}
