@@ -6,15 +6,15 @@ import { getStorage } from 'firebase/storage';
 // Optional: Import Analytics if needed, though not strictly required for core functionality
 // import { getAnalytics } from "firebase/analytics";
 
-// Your web app's Firebase configuration
+// Your web app's Firebase configuration using environment variables
 const firebaseConfig = {
-  apiKey: 'REDACTED_GOOGLE_API_KEY',
-  authDomain: 'international-skills.firebaseapp.com',
-  projectId: 'international-skills',
-  storageBucket: 'international-skills.firebasestorage.app', // Fix this line
-  messagingSenderId: '1093075040692',
-  appId: '1:1093075040692:web:a7feb048441dc000279ae1',
-  measurementId: 'G-54NZWDZVBH',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID!,
 };
 
 // Initialize Firebase
