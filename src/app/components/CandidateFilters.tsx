@@ -8,18 +8,20 @@ interface CandidateFiltersProps {
   filterName: string;
   filterCity: string;
   filterCountry: string;
-  filterNationality: string; // ✅ Keep this
+  filterNationality: string;
   filterJobTitle: string;
   filterCategory: string;
+  filterSpecialty: string; // ✅ Add specialty filter
   filterAgeMin: string;
   filterAgeMax: string;
   onFilterStatusChange: (status: string) => void;
   onFilterNameChange: (name: string) => void;
   onFilterCityChange: (city: string) => void;
   onFilterCountryChange: (country: string) => void;
-  onFilterNationalityChange: (nationality: string) => void; // ✅ Keep this
+  onFilterNationalityChange: (nationality: string) => void;
   onFilterJobTitleChange: (jobTitle: string) => void;
   onFilterCategoryChange: (category: string) => void;
+  onFilterSpecialtyChange: (specialty: string) => void; // ✅ Add specialty handler
   onFilterAgeMinChange: (ageMin: string) => void;
   onFilterAgeMaxChange: (ageMax: string) => void;
   onClearAllFilters: () => void;
@@ -31,28 +33,32 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   filterName,
   filterCity,
   filterCountry,
-  filterNationality, // ✅ Add this to destructuring
+  filterNationality,
   filterJobTitle,
   filterCategory,
+  filterSpecialty, // ✅ Add to destructuring
   filterAgeMin,
   filterAgeMax,
   onFilterStatusChange,
   onFilterNameChange,
   onFilterCityChange,
   onFilterCountryChange,
-  onFilterNationalityChange, // ✅ Add this to destructuring
+  onFilterNationalityChange,
   onFilterJobTitleChange,
   onFilterCategoryChange,
+  onFilterSpecialtyChange, // ✅ Add to destructuring
   onFilterAgeMinChange,
   onFilterAgeMaxChange,
   onClearAllFilters
 }) => {
+
   // Search states for interactive dropdowns
   const [citySearch, setCitySearch] = useState('');
   const [countrySearch, setCountrySearch] = useState('');
   const [jobTitleSearch, setJobTitleSearch] = useState('');
   const [categorySearch, setCategorySearch] = useState('');
   const [nationalitySearch, setNationalitySearch] = useState('');
+  const [specialtySearch, setSpecialtySearch] = useState(''); // ✅ Add specialty search
 
   // Dropdown visibility states
   const [showCityList, setShowCityList] = useState(false);
@@ -60,6 +66,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   const [showJobTitleList, setShowJobTitleList] = useState(false);
   const [showCategoryList, setShowCategoryList] = useState(false);
   const [showNationalityList, setShowNationalityList] = useState(false);
+  const [showSpecialtyList, setShowSpecialtyList] = useState(false); // ✅ Add specialty list state
 
   // Refs for click outside detection
   const cityRef = useRef<HTMLDivElement>(null);
@@ -67,6 +74,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   const jobTitleRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
   const nationalityRef = useRef<HTMLDivElement>(null);
+  const specialtyRef = useRef<HTMLDivElement>(null); // ✅ Add specialty ref
 
   // Extract unique values from candidates
   const uniqueCities = Array.from(new Set(candidates.map(c => c.city).filter((c): c is string => !!c))).sort();
@@ -74,6 +82,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   const uniqueJobTitles = Array.from(new Set(candidates.map(c => c.jobTitleText).filter((c): c is string => !!c))).sort();
   const uniqueCategories = Array.from(new Set(candidates.map(c => c.jobCategory).filter((c): c is string => !!c))).sort();
   const uniqueNationalities = Array.from(new Set(candidates.map(c => c.nationality).filter((n): n is string => !!n))).sort();
+  const uniqueSpecialties = Array.from(new Set(candidates.map(c => c.specialty).filter((s): s is string => !!s))).sort(); // ✅ Add unique specialties
 
   // Filtered options based on search
   const filteredCities = uniqueCities.filter(city => 
@@ -91,8 +100,11 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   const filteredNationalities = uniqueNationalities.filter(nationality => 
     nationality.toLowerCase().includes(nationalitySearch.toLowerCase())
   );
+  const filteredSpecialties = uniqueSpecialties.filter(specialty => 
+    specialty.toLowerCase().includes(specialtySearch.toLowerCase())
+  ); // ✅ Add filtered specialties
 
-  // Click outside handlers
+  // ✅ Update click outside handlers to include specialty
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (cityRef.current && !cityRef.current.contains(event.target as Node)) {
@@ -110,6 +122,9 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
       if (nationalityRef.current && !nationalityRef.current.contains(event.target as Node)) {
         setShowNationalityList(false);
       }
+      if (specialtyRef.current && !specialtyRef.current.contains(event.target as Node)) {
+        setShowSpecialtyList(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -117,6 +132,11 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+    // ✅ Update search states when filters change externally to include specialty
+  useEffect(() => {
+    setSpecialtySearch(filterSpecialty);
+  }, [filterSpecialty]);
 
   // Update search states when filters change externally
   useEffect(() => {
@@ -139,12 +159,15 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
     setNationalitySearch(filterNationality);
   }, [filterNationality]);
 
+
+  // ✅ Update clear all filters to include specialty
   const handleClearAllFilters = () => {
     setCitySearch('');
     setCountrySearch('');
     setJobTitleSearch('');
     setCategorySearch('');
-    setNationalitySearch(''); // ✅ Clear nationality search
+    setNationalitySearch('');
+    setSpecialtySearch(''); // ✅ Clear specialty search
     onClearAllFilters();
   };
 
@@ -322,6 +345,45 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
           )}
         </div>
 
+        {/* ✅ New Specialty Filter with Dropdown */}
+        <div className="relative" ref={specialtyRef}>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Specialty</label>
+          <input
+            type="text"
+            placeholder="Search and select specialty..."
+            value={specialtySearch}
+            onChange={(e) => {
+              setSpecialtySearch(e.target.value);
+              onFilterSpecialtyChange('');
+              setShowSpecialtyList(true);
+            }}
+            onFocus={() => setShowSpecialtyList(true)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoComplete="off"
+          />
+          {showSpecialtyList && filteredSpecialties.length > 0 && (
+            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {filteredSpecialties.map((specialty, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => {
+                    onFilterSpecialtyChange(specialty);
+                    setSpecialtySearch(specialty);
+                    setShowSpecialtyList(false);
+                  }}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none flex justify-between items-center"
+                >
+                  <span>{specialty}</span>
+                  <span className="text-xs text-gray-500">
+                    ({candidates.filter(c => c.specialty === specialty).length})
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Job Title Filter with Dropdown */}
         <div className="relative" ref={jobTitleRef}>
           <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Job Title</label>
@@ -471,6 +533,36 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
           </div>
         </div>
 
+   {/* ✅ Specialties Quick Filters */}
+        {candidates.length > 0 && uniqueSpecialties.length > 0 && (
+          <div>
+            <span className="text-sm font-medium text-gray-600 mr-3">Popular Specialties:</span>
+            <div className="inline-flex flex-wrap gap-2">
+              {uniqueSpecialties.slice(0, 8).map(specialty => (
+                <button
+                  key={specialty}
+                  onClick={() => {
+                    if (filterSpecialty === specialty) {
+                      onFilterSpecialtyChange('');
+                      setSpecialtySearch('');
+                    } else {
+                      onFilterSpecialtyChange(specialty);
+                      setSpecialtySearch(specialty);
+                    }
+                  }}
+                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                    filterSpecialty === specialty 
+                      ? 'bg-emerald-600 text-white border-emerald-600' 
+                      : 'bg-white text-emerald-600 border-emerald-300 hover:bg-emerald-50'
+                  }`}
+                >
+                  {specialty} ({candidates.filter(c => c.specialty === specialty).length})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        
         {/* Nationalities Quick Filters */}
         {candidates.length > 0 && uniqueNationalities.length > 0 && (
           <div>

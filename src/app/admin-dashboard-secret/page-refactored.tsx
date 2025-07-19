@@ -93,12 +93,12 @@ function DashboardContent() {
     const [filterName, setFilterName] = useState<string>('');
     const [filterCity, setFilterCity] = useState<string>('');
     const [filterCountry, setFilterCountry] = useState<string>('');
-    const [filterNationality, setFilterNationality] = useState<string>(''); // ✅ Add this line
+    const [filterNationality, setFilterNationality] = useState<string>('');
     const [filterJobTitle, setFilterJobTitle] = useState<string>('');
     const [filterCategory, setFilterCategory] = useState<string>('');
+    const [filterSpecialty, setFilterSpecialty] = useState<string>(''); // ✅ Add specialty filter state
     const [filterAgeMin, setFilterAgeMin] = useState<string>('');
     const [filterAgeMax, setFilterAgeMax] = useState<string>('');
-    
     
     // Calendar filter states
     const [calendarFilter, setCalendarFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
@@ -219,19 +219,19 @@ function DashboardContent() {
         return { total, rejected, scheduled, submitted, approved };
     }, [candidates]);
 
-    // Filtered candidates
+    // ✅ Updated filtered candidates to include specialty filter
     const filteredCandidates = useMemo(() => {
         return candidates.filter(candidate => {
             const statusMatch = filterStatus === 'all' || candidate.status === filterStatus;
             const nameMatch = filterName === '' || candidate.fullName.toLowerCase().includes(filterName.toLowerCase());
             const cityMatch = filterCity === '' || (candidate.city && candidate.city.toLowerCase().includes(filterCity.toLowerCase()));
             const countryMatch = filterCountry === '' || (candidate.country && candidate.country.toLowerCase().includes(filterCountry.toLowerCase()));
-            const nationalityMatch = filterNationality === '' || (candidate.nationality && candidate.nationality.toLowerCase().includes(filterNationality.toLowerCase())); // ✅ Add this line
+            const nationalityMatch = filterNationality === '' || (candidate.nationality && candidate.nationality.toLowerCase().includes(filterNationality.toLowerCase()));
             const jobTitleMatch = filterJobTitle === '' || (candidate.jobTitleText && candidate.jobTitleText.toLowerCase().includes(filterJobTitle.toLowerCase()));
             const categoryMatch = filterCategory === '' || (candidate.jobCategory && candidate.jobCategory.toLowerCase().includes(filterCategory.toLowerCase()));
+            const specialtyMatch = filterSpecialty === '' || (candidate.specialty && candidate.specialty.toLowerCase().includes(filterSpecialty.toLowerCase())); // ✅ Add specialty match
 
-            
-    // Age filtering
+            // Age filtering
             let ageMatch = true;
             if (candidate.dateOfBirth && (filterAgeMin || filterAgeMax)) {
                 const birthDate = new Date(candidate.dateOfBirth);
@@ -253,9 +253,9 @@ function DashboardContent() {
                 tabMatch = candidate.status === 'rejected';
             }
             
-            return statusMatch && nameMatch && cityMatch && countryMatch && nationalityMatch && jobTitleMatch && categoryMatch && ageMatch && tabMatch;
+            return statusMatch && nameMatch && cityMatch && countryMatch && nationalityMatch && jobTitleMatch && categoryMatch && specialtyMatch && ageMatch && tabMatch;
         });
-    }, [candidates, filterStatus, filterName, filterCity, filterCountry, filterNationality, filterJobTitle, filterCategory, filterAgeMin, filterAgeMax, activeTab]);
+    }, [candidates, filterStatus, filterName, filterCity, filterCountry, filterNationality, filterJobTitle, filterCategory, filterSpecialty, filterAgeMin, filterAgeMax, activeTab]);
 
     // Chart data
     const statusChartData = useMemo(() => getStatusChartData(candidates), [candidates]);
@@ -291,15 +291,16 @@ function DashboardContent() {
         setIsJobManagementOpen(false);
     };
 
-    // Filter handlers
+    // ✅ Updated clear all filters to include specialty
     const clearAllFilters = () => {
         setFilterStatus('all');
         setFilterName('');
         setFilterCity('');
         setFilterCountry('');
-        setFilterNationality(''); // ✅ Add this line
+        setFilterNationality('');
         setFilterJobTitle('');
         setFilterCategory('');
+        setFilterSpecialty(''); // ✅ Add specialty clear
         setFilterAgeMin('');
         setFilterAgeMax('');
     };
@@ -568,18 +569,20 @@ function DashboardContent() {
                 filterName={filterName}
                 filterCity={filterCity}
                 filterCountry={filterCountry}
-                filterNationality={filterNationality} // ✅ Add nationality filter
+                filterNationality={filterNationality}
                 filterJobTitle={filterJobTitle}
                 filterCategory={filterCategory}
+                filterSpecialty={filterSpecialty} // ✅ Add specialty filter
                 filterAgeMin={filterAgeMin}
                 filterAgeMax={filterAgeMax}
                 onFilterStatusChange={setFilterStatus}
                 onFilterNameChange={setFilterName}
                 onFilterCityChange={setFilterCity}
                 onFilterCountryChange={setFilterCountry}
-                onFilterNationalityChange={setFilterNationality} // ✅ Add nationality handler
+                onFilterNationalityChange={setFilterNationality}
                 onFilterJobTitleChange={setFilterJobTitle}
                 onFilterCategoryChange={setFilterCategory}
+                onFilterSpecialtyChange={setFilterSpecialty} // ✅ Add specialty handler
                 onFilterAgeMinChange={setFilterAgeMin}
                 onFilterAgeMaxChange={setFilterAgeMax}
                 onClearAllFilters={clearAllFilters}
@@ -596,23 +599,23 @@ function DashboardContent() {
                         { label: 'Rejected', value: 'rejected' },
                     ]}
                 >
-         <CandidateTable
-  candidates={filteredCandidates}
-  statusUpdateLoading={statusUpdateLoading}
-  onViewCandidate={openProfileModal}
-  onScoreCandidate={openScoringModal}
-  onStatusChange={handleStatusChange}
-  filters={{ 
-    status: filterStatus, 
-    name: filterName, 
-    city: filterCity, 
-    country: filterCountry, 
-    jobTitle: filterJobTitle, 
-    category: filterCategory, 
-    ageMin: filterAgeMin, 
-    ageMax: filterAgeMax 
-  }}
-/>
+                    <CandidateTable
+                        candidates={filteredCandidates}
+                        statusUpdateLoading={statusUpdateLoading}
+                        onViewCandidate={openProfileModal}
+                        onScoreCandidate={openScoringModal}
+                        onStatusChange={handleStatusChange}
+                        filters={{ 
+                            status: filterStatus, 
+                            name: filterName, 
+                            city: filterCity, 
+                            country: filterCountry, 
+                            jobTitle: filterJobTitle, 
+                            category: filterCategory, 
+                            ageMin: filterAgeMin, 
+                            ageMax: filterAgeMax 
+                        }}
+                    />
                 </Tabs>
             </div>
 

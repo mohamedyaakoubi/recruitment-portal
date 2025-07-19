@@ -97,7 +97,8 @@ function DashboardContent() {
     const [filterCategory, setFilterCategory] = useState<string>('');
     const [filterAgeMin, setFilterAgeMin] = useState<string>('');
     const [filterAgeMax, setFilterAgeMax] = useState<string>('');
-    
+    const [filterSpecialty, setFilterSpecialty] = useState<string>('');
+
     // Calendar filter states
     const [calendarFilter, setCalendarFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
     
@@ -225,9 +226,10 @@ function DashboardContent() {
             const nameMatch = filterName === '' || candidate.fullName.toLowerCase().includes(filterName.toLowerCase());
             const cityMatch = filterCity === '' || (candidate.city && candidate.city.toLowerCase().includes(filterCity.toLowerCase()));
             const countryMatch = filterCountry === '' || (candidate.country && candidate.country.toLowerCase().includes(filterCountry.toLowerCase()));
-            const nationalityMatch = filterNationality === '' || (candidate.nationality && candidate.nationality.toLowerCase().includes(filterNationality.toLowerCase())); // ✅ Add this line
+            const nationalityMatch = filterNationality === '' || (candidate.nationality && candidate.nationality.toLowerCase().includes(filterNationality.toLowerCase()));
             const jobTitleMatch = filterJobTitle === '' || (candidate.jobTitleText && candidate.jobTitleText.toLowerCase().includes(filterJobTitle.toLowerCase()));
             const categoryMatch = filterCategory === '' || (candidate.jobCategory && candidate.jobCategory.toLowerCase().includes(filterCategory.toLowerCase()));
+            const specialtyMatch = filterSpecialty === '' || (candidate.specialty && candidate.specialty.toLowerCase().includes(filterSpecialty.toLowerCase())); // ✅ Add specialty match
             
             // Age filtering
             let ageMatch = true;
@@ -289,15 +291,16 @@ function DashboardContent() {
         setIsJobManagementOpen(false);
     };
 
-    // Filter handlers - updated to include nationality
+    // ✅ Updated clear all filters to include specialty
     const clearAllFilters = () => {
         setFilterStatus('all');
         setFilterName('');
         setFilterCity('');
         setFilterCountry('');
-        setFilterNationality(''); // ✅ Add this line
+        setFilterNationality('');
         setFilterJobTitle('');
         setFilterCategory('');
+        setFilterSpecialty(''); // ✅ Add this line
         setFilterAgeMin('');
         setFilterAgeMax('');
     };
@@ -561,24 +564,26 @@ function DashboardContent() {
                 scoreDistributionData={scoreDistributionData}
             />
 
-            <CandidateFilters
+              <CandidateFilters
                 candidates={candidates}
                 filterStatus={filterStatus}
                 filterName={filterName}
                 filterCity={filterCity}
                 filterCountry={filterCountry}
-                filterNationality={filterNationality} // ✅ Add nationality filter
+                filterNationality={filterNationality}
                 filterJobTitle={filterJobTitle}
                 filterCategory={filterCategory}
+                filterSpecialty={filterSpecialty} // ✅ Add specialty filter
                 filterAgeMin={filterAgeMin}
                 filterAgeMax={filterAgeMax}
                 onFilterStatusChange={setFilterStatus}
                 onFilterNameChange={setFilterName}
                 onFilterCityChange={setFilterCity}
                 onFilterCountryChange={setFilterCountry}
-                onFilterNationalityChange={setFilterNationality} // ✅ Add nationality handler
+                onFilterNationalityChange={setFilterNationality}
                 onFilterJobTitleChange={setFilterJobTitle}
                 onFilterCategoryChange={setFilterCategory}
+                onFilterSpecialtyChange={setFilterSpecialty} // ✅ Add specialty handler
                 onFilterAgeMinChange={setFilterAgeMin}
                 onFilterAgeMaxChange={setFilterAgeMax}
                 onClearAllFilters={clearAllFilters}

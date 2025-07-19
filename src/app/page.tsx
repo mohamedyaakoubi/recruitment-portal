@@ -5,6 +5,7 @@ import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Image from 'next/image';
+import { getSpecialtiesForCategory } from '@/lib/job-specialties';
 
 import SuccessToast from './components/SuccessToast';
 
@@ -14,6 +15,7 @@ const SocialIcon = ({ href, children }: { href: string, children: React.ReactNod
     {children}
   </a>
 );
+
 
 export default function CandidateForm() {
   const [firstName, setFirstName] = useState('');
@@ -26,16 +28,18 @@ export default function CandidateForm() {
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [countrySearch, setCountrySearch] = useState('');
-  const [nationality, setNationality] = useState(''); // ✅ New field
-  const [nationalitySearch, setNationalitySearch] = useState(''); // ✅ New field
-  const [doubleNationality, setDoubleNationality] = useState(''); // ✅ New field
-  const [doubleNationalitySearch, setDoubleNationalitySearch] = useState(''); // ✅ New field
+  const [nationality, setNationality] = useState('');
+  const [nationalitySearch, setNationalitySearch] = useState('');
+  const [doubleNationality, setDoubleNationality] = useState('');
+  const [doubleNationalitySearch, setDoubleNationalitySearch] = useState('');
   const [jobTitle, setJobTitle] = useState('');
+  const [specialty, setSpecialty] = useState(''); // ✅ New specialty field
+  const [specialtySearch, setSpecialtySearch] = useState(''); // ✅ New specialty search
   const [websites, setWebsites] = useState<string[]>(['']);
   const [additionalInfo, setAdditionalInfo] = useState<{type: 'link' | 'file' | 'text', content: string, file?: File}[]>([{type: 'link', content: ''}]);
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [passportFile, setPassportFile] = useState<File | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null); // ✅ New field
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [jobs, setJobs] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -46,14 +50,17 @@ export default function CandidateForm() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showCountryList, setShowCountryList] = useState(false);
-  const [showNationalityList, setShowNationalityList] = useState(false); // ✅ New field
-  const [showDoubleNationalityList, setShowDoubleNationalityList] = useState(false); // ✅ New field
+  const [showNationalityList, setShowNationalityList] = useState(false);
+  const [showDoubleNationalityList, setShowDoubleNationalityList] = useState(false);
+  const [showSpecialtyList, setShowSpecialtyList] = useState(false); // ✅ New specialty list state
   const countryRef = useRef<HTMLDivElement>(null);
-  const nationalityRef = useRef<HTMLDivElement>(null); // ✅ New field
-  const doubleNationalityRef = useRef<HTMLDivElement>(null); // ✅ New field
-  const [showCountryCodeList, setShowCountryCodeList] = useState(false); // ✅ New state
-  const [countryCodeSearch, setCountryCodeSearch] = useState(''); // ✅ New state
-  const countryCodeRef = useRef<HTMLDivElement>(null); // ✅ New ref
+  const nationalityRef = useRef<HTMLDivElement>(null);
+  const doubleNationalityRef = useRef<HTMLDivElement>(null);
+  const specialtyRef = useRef<HTMLDivElement>(null); // ✅ New specialty ref
+  const [showCountryCodeList, setShowCountryCodeList] = useState(false);
+  const [countryCodeSearch, setCountryCodeSearch] = useState('');
+  const countryCodeRef = useRef<HTMLDivElement>(null);
+
 
   // ✅ Complete Country codes list with all countries
   const countryCodes = [
@@ -303,28 +310,38 @@ export default function CandidateForm() {
 
   // ✅ Complete Countries and Nationalities list for all purposes
   const countries = [
-    'Afghan', 'Albanian', 'Algerian', 'American', 'Andorran', 'Angolan', 'Antiguans', 'Argentinean', 'Armenian', 'Australian',
-    'Austrian', 'Azerbaijani', 'Bahamian', 'Bahraini', 'Bangladeshi', 'Barbadian', 'Barbudans', 'Batswana', 'Belarusian', 'Belgian',
-    'Belizean', 'Beninese', 'Bhutanese', 'Bolivian', 'Bosnian', 'Brazilian', 'British', 'Bruneian', 'Bulgarian', 'Burkinabe',
-    'Burmese', 'Burundian', 'Cambodian', 'Cameroonian', 'Canadian', 'Cape Verdean', 'Central African', 'Chadian', 'Chilean', 'Chinese',
-    'Colombian', 'Comoran', 'Congolese', 'Costa Rican', 'Croatian', 'Cuban', 'Cypriot', 'Czech', 'Danish', 'Djibouti',
-    'Dominican', 'Dutch', 'East Timorese', 'Ecuadorean', 'Egyptian', 'Emirian', 'Equatorial Guinean', 'Eritrean', 'Estonian', 'Ethiopian',
-    'Fijian', 'Filipino', 'Finnish', 'French', 'Gabonese', 'Gambian', 'Georgian', 'German', 'Ghanaian', 'Greek',
-    'Grenadian', 'Guatemalan', 'Guinea-Bissauan', 'Guinean', 'Guyanese', 'Haitian', 'Herzegovinian', 'Honduran', 'Hungarian', 'I-Kiribati',
-    'Icelandic', 'Indian', 'Indonesian', 'Iranian', 'Iraqi', 'Irish', 'Israeli', 'Italian', 'Ivorian', 'Jamaican',
-    'Japanese', 'Jordanian', 'Kazakhstani', 'Kenyan', 'Kittian and Nevisian', 'Kuwaiti', 'Kyrgyz', 'Laotian', 'Latvian', 'Lebanese',
-    'Liberian', 'Libyan', 'Liechtensteiner', 'Lithuanian', 'Luxembourger', 'Macedonian', 'Malagasy', 'Malawian', 'Malaysian', 'Maldivan',
-    'Malian', 'Maltese', 'Marshallese', 'Mauritanian', 'Mauritian', 'Mexican', 'Micronesian', 'Moldovan', 'Monacan', 'Mongolian',
-    'Moroccan', 'Mosotho', 'Motswana', 'Mozambican', 'Namibian', 'Nauruan', 'Nepalese', 'New Zealander', 'Ni-Vanuatu', 'Nicaraguan',
-    'Nigerian', 'Nigerien', 'North Korean', 'Northern Irish', 'Norwegian', 'Omani', 'Pakistani', 'Palauan', 'Palestinian', 'Panamanian',
-    'Papua New Guinean', 'Paraguayan', 'Peruvian', 'Polish', 'Portuguese', 'Qatari', 'Romanian', 'Russian', 'Rwandan', 'Saint Lucian',
-    'Salvadoran', 'Samoan', 'San Marinese', 'Sao Tomean', 'Saudi', 'Scottish', 'Senegalese', 'Serbian', 'Seychellois', 'Sierra Leonean',
-    'Singaporean', 'Slovakian', 'Slovenian', 'Solomon Islander', 'Somali', 'South African', 'South Korean', 'Spanish', 'Sri Lankan', 'Sudanese',
-    'Surinamer', 'Swazi', 'Swedish', 'Swiss', 'Syrian', 'Taiwanese', 'Tajik', 'Tanzanian', 'Thai', 'Togolese',
-    'Tongan', 'Trinidadian or Tobagonian', 'Tunisian', 'Turkish', 'Tuvaluan', 'Ugandan', 'Ukrainian', 'Uruguayan', 'Uzbekistani', 'Venezuelan',
-    'Vietnamese', 'Welsh', 'Yemenite', 'Zambian', 'Zimbabwean'
-  ];
+    'Afghanistan', 'Albania', 'Algeria', 'American Samoa', 'Andorra', 'Angola', 'Anguilla', 'Antarctica', 'Antigua and Barbuda', 'Argentina',
+    'Armenia', 'Aruba', 'Australia', 'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus',
+    'Belgium', 'Belize', 'Benin', 'Bermuda', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'British Indian Ocean Territory',
+    'British Virgin Islands', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Cayman Islands',
+    'Central African Republic', 'Chad', 'Chile', 'China', 'Christmas Island', 'Cocos Islands', 'Colombia', 'Comoros', 'Congo', 'Congo (DRC)',
+    'Cook Islands', 'Costa Rica', 'Côte d\'Ivoire', 'Croatia', 'Cuba', 'Curaçao', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti',
+    'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Ethiopia',
+    'Falkland Islands', 'Faroe Islands', 'Fiji', 'Finland', 'France', 'French Guiana', 'French Polynesia', 'Gabon', 'Gambia', 'Georgia',
+    'Germany', 'Ghana', 'Gibraltar', 'Greece', 'Greenland', 'Grenada', 'Guadeloupe', 'Guam', 'Guatemala', 'Guernsey',
+    'Guinea', 'Guinea-Bissau', 'Guyana', 'Haiti', 'Honduras', 'Hong Kong', 'Hungary', 'Iceland', 'India', 'Indonesia',
+    'Iran', 'Iraq', 'Ireland', 'Isle of Man', 'Israel', 'Italy', 'Jamaica', 'Japan', 'Jersey', 'Jordan',
+    'Kazakhstan', 'Kenya', 'Kiribati', 'Kosovo', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho',
+    'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Macau', 'Macedonia', 'Madagascar', 'Malawi', 'Malaysia',
+    'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Martinique', 'Mauritania', 'Mauritius', 'Mayotte', 'Mexico', 'Micronesia',
+    'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Montserrat', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru',
+    'Nepal', 'Netherlands', 'New Caledonia', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'Niue', 'Norfolk Island', 'North Korea',
+    'Northern Mariana Islands', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru',
+    'Philippines', 'Poland', 'Portugal', 'Puerto Rico', 'Qatar', 'Réunion', 'Romania', 'Russia', 'Rwanda', 'Saint Barthélemy',
+    'Saint Helena', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Martin', 'Saint Pierre and Miquelon', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'São Tomé and Príncipe', 'Saudi Arabia', 'Scotland', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone',
+  'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'Spain', 'Sri Lanka', 'Sudan',
+  'Suriname', 'Eswatini', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo',
+  'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Tuvalu', 'Uganda', 'Ukraine', 'Uruguay', 'Uzbekistan', 'Venezuela',
+  'Vietnam', 'Wales', 'Yemen', 'Zambia', 'Zimbabwe'
+];
 
+  // ✅ Get available specialties based on selected category
+  const availableSpecialties = selectedCategory ? getSpecialtiesForCategory(selectedCategory as any) : [];
+  
+  // ✅ Filter specialties based on search
+  const filteredSpecialties = availableSpecialties.filter(spec => 
+    spec.toLowerCase().includes(specialtySearch.toLowerCase())
+  );
   const filteredCountries = countries.filter(c => 
     c.toLowerCase().includes(countrySearch.toLowerCase())
   );
@@ -370,6 +387,21 @@ export default function CandidateForm() {
     setWebsites(newWebsites);
   };
 
+    // ✅ Reset specialty when category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      const filtered = jobs.filter(job => job.category === selectedCategory);
+      setFilteredJobs(filtered);
+      // Reset specialty when category changes
+      setSpecialty('');
+      setSpecialtySearch('');
+    } else {
+      setFilteredJobs([]);
+    }
+    setJobTitle('');
+    setSelectedJob(null);
+  }, [selectedCategory, jobs]);
+
   useEffect(() => {
     const loadJobs = async () => {
       try {
@@ -407,6 +439,12 @@ export default function CandidateForm() {
       }
       if (doubleNationalityRef.current && !doubleNationalityRef.current.contains(event.target as Node)) {
         setShowDoubleNationalityList(false);
+      }
+      if (specialtyRef.current && !specialtyRef.current.contains(event.target as Node)) {
+        setShowSpecialtyList(false);
+      }
+      if (countryCodeRef.current && !countryCodeRef.current.contains(event.target as Node)) {
+        setShowCountryCodeList(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -470,9 +508,14 @@ export default function CandidateForm() {
     setError(null);
     setSuccess(null);
 
-    // ✅ Updated validation - removed photoFile from required fields
-    if (!firstName || !lastName || !email || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !country || !nationality || !selectedCategory || !jobTitle || !cvFile || !passportFile) {
-      setError("Please fill in all required fields and upload all required files (CV and Passport/ID).");
+
+    const finalCountry = country || countrySearch;
+    const finalNationality = nationality || nationalitySearch;
+    const finalSpecialty = specialty || specialtySearch;
+
+    // ✅ Updated validation to include specialty
+    if (!firstName || !lastName || !email || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !finalCountry || !finalNationality || !selectedCategory || !finalSpecialty || !jobTitle || !cvFile || !passportFile) {
+      setError("Please fill in all required fields including specialty and upload all required files (CV and Passport/ID).");
       return;
     }
 
@@ -491,7 +534,6 @@ export default function CandidateForm() {
       const cvUrl = await getDownloadURL(cvUploadTask.ref);
       const passportUrl = await getDownloadURL(passportUploadTask.ref);
       
-      // ✅ Handle optional photo upload
       let photoUrl = null;
       if (photoFile) {
         const photoFileName = `photo_${Date.now()}_${photoFile.name}`;
@@ -499,6 +541,9 @@ export default function CandidateForm() {
         const photoUploadTask = await uploadBytes(photoStorageRef, photoFile);
         photoUrl = await getDownloadURL(photoUploadTask.ref);
       }
+
+
+      const finalDoubleNationality = doubleNationality || doubleNationalitySearch || null;
 
       const candidatesCollectionRef = collection(db, "candidates");
       await addDoc(candidatesCollectionRef, {
@@ -511,22 +556,23 @@ export default function CandidateForm() {
         phoneNumber: `${countryCode} ${phoneNumber}`,
         dateOfBirth,
         city,
-        country,
-        nationality,
-        doubleNationality: doubleNationality || null,
+        country: finalCountry,
+        nationality: finalNationality,
+        doubleNationality: finalDoubleNationality,
         jobCategory: selectedCategory,
+        specialty: finalSpecialty, // ✅ Add specialty to database
         jobTitle,
         jobTitleText: selectedJob?.title || '',
         websites: websites.filter(w => w.trim() !== ''),
         cvUrl,
         passportUrl,
-        photoUrl, // ✅ This will be null if no photo was uploaded
+        photoUrl,
         submittedAt: serverTimestamp(),
         status: 'submitted',
         score: null
       });
 
-      // ✅ Reset all form fields including photo
+    // ✅ Reset all form fields including specialty
       setFirstName('');
       setLastName('');
       setEmail('');
@@ -542,6 +588,8 @@ export default function CandidateForm() {
       setDoubleNationality('');
       setDoubleNationalitySearch('');
       setSelectedCategory('');
+      setSpecialty('');
+      setSpecialtySearch('');
       setJobTitle('');
       setSelectedJob(null);
       setWebsites(['']);
@@ -549,12 +597,14 @@ export default function CandidateForm() {
       setPassportFile(null);
       setPhotoFile(null);
       
-      const cvInput = document.getElementById('cv') as HTMLInputElement;
+    
+    const cvInput = document.getElementById('cv') as HTMLInputElement;
       const passportInput = document.getElementById('passport') as HTMLInputElement;
       const photoInput = document.getElementById('photo') as HTMLInputElement;
       if (cvInput) cvInput.value = '';
       if (passportInput) passportInput.value = '';
       if (photoInput) photoInput.value = '';
+
 
       setSuccess("Application submitted successfully!");
       setShowSuccessToast(true);
@@ -570,6 +620,7 @@ export default function CandidateForm() {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
@@ -692,6 +743,22 @@ export default function CandidateForm() {
                     <option value="female">Female</option>
                   </select>
                 </div>
+                                {/* Date of Birth - Add this field */}
+                <div>
+                  <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-slate-600 mb-2">
+                    Date of Birth <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="dateOfBirth"
+                    id="dateOfBirth"
+                    required
+                    value={dateOfBirth}
+                    onChange={(e) => setDateOfBirth(e.target.value)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                    disabled={isLoading}
+                  />
+                </div>
   {/* Phone Number */}
                 <div>
                   <label htmlFor="phoneNumber" className="block text-sm font-semibold text-slate-600 mb-2">
@@ -786,88 +853,100 @@ export default function CandidateForm() {
                   />
                 </div>
 
-                {/* Country */}
-                <div className="relative" ref={countryRef}>
-                  <label htmlFor="country" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Country <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="countrySearch"
-                    id="countrySearch"
-                    value={countrySearch}
-                    onChange={(e) => {
-                      setCountrySearch(e.target.value);
-                      setCountry(""); // Clear selection when typing
-                      setShowCountryList(true);
-                    }}
-                    onFocus={() => setShowCountryList(true)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    placeholder="Search and select your country"
-                    disabled={isLoading}
-                    autoComplete="off"
-                  />
-                  {showCountryList && filteredCountries.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {filteredCountries.map((countryOption, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => {
-                            setCountry(countryOption);
-                            setCountrySearch(countryOption);
-                            setShowCountryList(false);
-                          }}
-                          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-                        >
-                          {countryOption}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+{/* Country */}
+<div className="relative" ref={countryRef}>
+  <label htmlFor="country" className="block text-sm font-semibold text-slate-600 mb-2">
+    Country <span className="text-red-500">*</span>
+  </label>
+  <input
+    type="text"
+    name="countrySearch"
+    id="countrySearch"
+    value={countrySearch}
+    onChange={(e) => {
+      const value = e.target.value;
+      setCountrySearch(value);
+      // ✅ Auto-set country if exact match exists
+      if (countries.includes(value)) {
+        setCountry(value);
+      } else {
+        setCountry("");
+      }
+      setShowCountryList(true);
+    }}
+    onFocus={() => setShowCountryList(true)}
+    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+    placeholder="Search and select your country"
+    disabled={isLoading}
+    autoComplete="off"
+  />
+  {showCountryList && filteredCountries.length > 0 && (
+    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+      {filteredCountries.map((countryOption, index) => (
+        <button
+          key={index}
+          type="button"
+          onClick={() => {
+            setCountry(countryOption);
+            setCountrySearch(countryOption);
+            setShowCountryList(false);
+          }}
+          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+        >
+          {countryOption}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
 
-                {/* ✅ Nationality (Required) */}
-                <div className="relative" ref={nationalityRef}>
-                  <label htmlFor="nationality" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Nationality <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="nationalitySearch"
-                    id="nationalitySearch"
-                    required
-                    value={nationalitySearch}
-                    onChange={(e) => {
-                      setNationalitySearch(e.target.value);
-                      setNationality(""); // Clear selection when typing
-                      setShowNationalityList(true);
-                    }}
-                    onFocus={() => setShowNationalityList(true)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    placeholder="Search and select your nationality"
-                    disabled={isLoading}
-                    autoComplete="off"
-                  />
-                  {showNationalityList && filteredNationalities.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {filteredNationalities.map((nationalityOption, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => {
-                            setNationality(nationalityOption);
-                            setNationalitySearch(nationalityOption);
-                            setShowNationalityList(false);
-                          }}
-                          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-                        >
-                          {nationalityOption}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              {/* ✅ Nationality */}
+<div className="relative" ref={nationalityRef}>
+  <label htmlFor="nationality" className="block text-sm font-semibold text-slate-600 mb-2">
+    Nationality <span className="text-red-500">*</span>
+  </label>
+  <input
+    type="text"
+    name="nationalitySearch"
+    id="nationalitySearch"
+    required
+    value={nationalitySearch}
+    onChange={(e) => {
+      const value = e.target.value;
+      setNationalitySearch(value);
+      // ✅ Auto-set nationality if exact match exists
+      if (countries.includes(value)) {
+        setNationality(value);
+      } else {
+        setNationality("");
+      }
+      setShowNationalityList(true);
+    }}
+    onFocus={() => setShowNationalityList(true)}
+    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+    placeholder="Search and select your nationality"
+    disabled={isLoading}
+    autoComplete="off"
+  />
+  {showNationalityList && filteredNationalities.length > 0 && (
+    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+      {filteredNationalities.map((nationalityOption, index) => (
+        <button
+          key={index}
+          type="button"
+          onClick={() => {
+            setNationality(nationalityOption);
+            setNationalitySearch(nationalityOption);
+            setShowNationalityList(false);
+          }}
+          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+        >
+          {nationalityOption}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
 
                 {/* ✅ Double Nationality (Optional) */}
                 <div className="relative" ref={doubleNationalityRef}>
@@ -931,6 +1010,57 @@ export default function CandidateForm() {
                       </option>
                     ))}
                   </select>
+                </div>
+                {/* ✅ New Specialty Field */}
+                <div className="sm:col-span-2 relative" ref={specialtyRef}>
+                  <label htmlFor="specialty" className="block text-sm font-semibold text-slate-600 mb-2">
+                    Specialty <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="specialtySearch"
+                    id="specialtySearch"
+                    required
+                    value={specialtySearch}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSpecialtySearch(value);
+                      if (availableSpecialties.includes(value)) {
+                        setSpecialty(value);
+                      } else {
+                        setSpecialty("");
+                      }
+                      setShowSpecialtyList(true);
+                    }}
+                    onFocus={() => setShowSpecialtyList(true)}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                    placeholder={selectedCategory ? "Search and select your specialty" : "Please select a category first"}
+                    disabled={isLoading || !selectedCategory}
+                    autoComplete="off"
+                  />
+                  {showSpecialtyList && filteredSpecialties.length > 0 && selectedCategory && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredSpecialties.map((specialtyOption, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            setSpecialty(specialtyOption);
+                            setSpecialtySearch(specialtyOption);
+                            setShowSpecialtyList(false);
+                          }}
+                          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+                        >
+                          {specialtyOption}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {selectedCategory && (
+                    <p className="mt-1 text-xs text-slate-500">
+                      Choose your specialty within {selectedCategory}
+                    </p>
+                  )}
                 </div>
 
                 {/* Job Title */}
