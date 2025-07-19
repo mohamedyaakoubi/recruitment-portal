@@ -1,11 +1,6 @@
 // src/app/components/Tabs.tsx
 import React from 'react';
-
-interface TabProps {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}
+import { TabProps, TabsProps } from '@/types';
 
 const Tab: React.FC<TabProps> = ({ label, active, onClick }) => {
   return (
@@ -21,13 +16,6 @@ const Tab: React.FC<TabProps> = ({ label, active, onClick }) => {
     </button>
   );
 };
-
-interface TabsProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-  tabs: { label: string; value: string; }[];
-  children: React.ReactNode;
-}
 
 const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange, tabs, children }) => {
   return (

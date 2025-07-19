@@ -1,142 +1,65 @@
+// src/app/api/jobs/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirestoreAdmin } from '@/lib/firebase-admin';
-import { JOB_CATEGORIES } from '@/lib/job-categories';
-import admin from 'firebase-admin';
+import { getJobs, createJob, updateJob, deleteJob } from '@/services/jobs';
 
 export async function GET(request: NextRequest) {
   try {
-    const db = getFirestoreAdmin();
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('activeOnly') === 'true';
-    
-    let query = db.collection("jobs").orderBy("category").orderBy("title");
-    
-    // If activeOnly is requested (for candidate form), filter by isActive = true
-    if (activeOnly) {
-      query = query.where("isActive", "==", true);
-    }
-    
-    const jobsSnapshot = await query.get();
-    
-    const jobs = jobsSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        specialties: data.specialties || [] // ✅ Ensure specialties is always an array
-      };
-    });
-
-    return NextResponse.json({ jobs, categories: JOB_CATEGORIES });
+    const { jobs, categories } = await getJobs(activeOnly);
+    return NextResponse.json({ jobs, categories });
   } catch (error) {
     console.error("Error fetching jobs:", error);
-    return NextResponse.json({ error: 'Failed to fetch jobs' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch jobs';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const db = getFirestoreAdmin();
-    const { title, description, category, specialties } = await request.json();
-
-    if (!title || !description || !category || !specialties || !Array.isArray(specialties) || specialties.length === 0) {
-      return NextResponse.json({ error: 'Missing title, description, category, or specialties' }, { status: 400 });
-    }
-
-    if (!JOB_CATEGORIES.includes(category)) {
-      return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
-    }
-
-    // ✅ Filter out empty specialties
-    const validSpecialties = specialties.filter(spec => spec && spec.trim() !== '');
-    if (validSpecialties.length === 0) {
-      return NextResponse.json({ error: 'At least one specialty is required' }, { status: 400 });
-    }
-
-    const jobRef = await db.collection("jobs").add({
-      title,
-      description,
-      category,
-      specialties: validSpecialties, // ✅ Add specialties array
-      createdAt: admin.firestore.Timestamp.now(),
-      isActive: true
-    });
-
+    const jobData = await request.json();
+    const { jobId } = await createJob(jobData);
     return NextResponse.json({ 
       success: true, 
-      jobId: jobRef.id,
+      jobId,
       message: 'Job created successfully'
     });
   } catch (error) {
     console.error("Error creating job:", error);
-    return NextResponse.json({ error: 'Failed to create job' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create job';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const db = getFirestoreAdmin();
-    const { jobId, title, description, category, specialties, isActive } = await request.json();
-
-    if (!jobId) {
-      return NextResponse.json({ error: 'Missing jobId' }, { status: 400 });
-    }
-
-    if (category && !JOB_CATEGORIES.includes(category)) {
-      return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
-    }
-
-    const updateData: any = {
-      updatedAt: admin.firestore.Timestamp.now()
-    };
-
-    if (title !== undefined) updateData.title = title;
-    if (description !== undefined) updateData.description = description;
-    if (category !== undefined) updateData.category = category;
-    if (isActive !== undefined) updateData.isActive = isActive;
-    
-    // ✅ Handle specialties update
-    if (specialties !== undefined) {
-      if (!Array.isArray(specialties)) {
-        return NextResponse.json({ error: 'Specialties must be an array' }, { status: 400 });
-      }
-      const validSpecialties = specialties.filter(spec => spec && spec.trim() !== '');
-      if (validSpecialties.length === 0) {
-        return NextResponse.json({ error: 'At least one specialty is required' }, { status: 400 });
-      }
-      updateData.specialties = validSpecialties;
-    }
-
-    await db.collection("jobs").doc(jobId).update(updateData);
-
+    const { jobId, ...jobData } = await request.json();
+    await updateJob(jobId, jobData);
     return NextResponse.json({ 
       success: true, 
       message: 'Job updated successfully'
     });
   } catch (error) {
     console.error("Error updating job:", error);
-    return NextResponse.json({ error: 'Failed to update job' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update job';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const db = getFirestoreAdmin();
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get('jobId');
-
-    if (!jobId) {
-      return NextResponse.json({ error: 'Missing jobId' }, { status: 400 });
+    if (jobId) {
+      await deleteJob(jobId);
     }
-
-    await db.collection("jobs").doc(jobId).delete();
-
     return NextResponse.json({ 
       success: true, 
       message: 'Job deleted successfully'
     });
   } catch (error) {
     console.error("Error deleting job:", error);
-    return NextResponse.json({ error: 'Failed to delete job' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete job';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

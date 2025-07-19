@@ -1,37 +1,7 @@
 // src/components/ScoringModal.tsx
 import React, { useState, useEffect } from 'react';
 import { Timestamp } from 'firebase/firestore';
-
-interface Candidate {
-    id: string;
-    fullName: string;
-    email: string;
-    websites: string[];
-    cvUrl: string;
-    passportUrl: string;
-    submittedAt: Timestamp;
-    status: 'submitted' | 'rejected' | 'interview_scheduled' | string;
-    score: number | null;
-    scoreAnalysis?: string;
-    lastScoredAt?: Timestamp;
-    interviewDate?: Timestamp;
-}
-
-interface Job {
-    id: string;
-    title: string;
-    description: string;
-    isActive: boolean;
-}
-
-interface ScoringModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    candidate: Candidate | null;
-    onSubmit: (jobId: string, jobTitle: string, jobDescription: string) => Promise<void>;
-    isLoading: boolean;
-    error: string | null;
-}
+import { Candidate, Job, ScoringModalProps } from '@/types';
 
 const ScoringModal: React.FC<ScoringModalProps> = ({ isOpen, onClose, candidate, onSubmit, isLoading, error }) => {
     const [jobs, setJobs] = useState<Job[]>([]);

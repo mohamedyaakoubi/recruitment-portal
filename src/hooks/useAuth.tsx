@@ -9,14 +9,7 @@ import {
   signInWithEmailAndPassword, 
   User 
 } from "firebase/auth";
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  error: string | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-}
+import { AuthContextType } from '@/types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

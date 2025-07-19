@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
-interface SuccessToastProps {
-  message: string;
-  isVisible: boolean;
-  onClose: () => void;
-}
+import { SuccessToastProps } from '@/types';
 
 const SuccessToast: React.FC<SuccessToastProps> = ({ message, isVisible, onClose }) => {
   const [isAnimating, setIsAnimating] = useState(false);

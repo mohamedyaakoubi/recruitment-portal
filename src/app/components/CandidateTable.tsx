@@ -3,28 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Timestamp } from 'firebase/firestore';
 import * as XLSX from 'xlsx';
 
-import type { Candidate } from '@/types';
-
-interface CandidateTableProps {
-  candidates: Candidate[];
-  statusUpdateLoading: Record<string, boolean>;
-  onViewCandidate: (candidate: Candidate) => void;
-  onScoreCandidate: (candidate: Candidate) => void;
-  onStatusChange: (candidateId: string, newStatus: string) => void;
-  filters: {
-    status: string;
-    name: string;
-    city: string;
-    country: string;
-    jobTitle: string;
-    category: string;
-    ageMin: string;
-    ageMax: string;
-  };
-}
-
-type SortField = 'firstName' | 'lastName' | 'email' | 'age' | 'city' | 'country' | 'submittedAt' | 'status' | 'score';
-type SortDirection = 'asc' | 'desc';
+import type { Candidate, CandidateTableProps, SortDirection, SortField } from '@/types';
 
 const CandidateTable: React.FC<CandidateTableProps> = ({
   candidates,

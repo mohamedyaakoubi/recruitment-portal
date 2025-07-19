@@ -1,16 +1,6 @@
 // src/app/components/ConfirmationModal.tsx
 import React from 'react';
-
-interface ConfirmationModalProps {
-  isOpen: boolean;
-  title: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-  type?: 'danger' | 'warning' | 'info';
-}
+import { ConfirmationModalProps } from '@/types';
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isOpen,

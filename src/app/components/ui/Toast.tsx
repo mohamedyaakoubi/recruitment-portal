@@ -1,13 +1,6 @@
 // src/app/components/Toast.tsx
 import React, { useEffect, useState } from 'react';
-
-interface ToastProps {
-  message: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  isVisible: boolean;
-  onClose: () => void;
-  duration?: number;
-}
+import { ToastProps } from '@/types';
 
 const Toast: React.FC<ToastProps> = ({ 
   message, 

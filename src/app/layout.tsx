@@ -4,7 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth"; // Import AuthProvider
 import { useState, useEffect } from "react";
-import Loader from "./components/Loader";
+import Loader from "./components/ui/Loader";
 
 const inter = Inter({ subsets: ["latin"] });
 

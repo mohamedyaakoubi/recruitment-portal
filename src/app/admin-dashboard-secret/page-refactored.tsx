@@ -21,25 +21,18 @@ import DashboardCharts from '../components/DashboardCharts';
 import CandidateFilters from '../components/CandidateFilters';
 import CandidateTable from '../components/CandidateTable';
 import ScoringModal from '../components/ScoringModal';
-import Tabs from '../components/Tabs';
+import Tabs from '../components/ui/Tabs';
 import CandidateProfileModal from '../components/CandidateProfileModal';
 import JobManagement from '../components/JobManagement';
-import Toast from '../components/Toast';
-import ConfirmationModal from '../components/ConfirmationModal';
+import Toast from '../components/ui/Toast';
+import ConfirmationModal from '../components/ui/ConfirmationModal';
 import InterviewSchedulingModal from '../components/InterviewSchedulingModal';
 
 // Calendar Setup
 const locales = { 'en-US': enUS };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
 
-import type { Candidate } from '@/types';
-
-// Types
-interface InterviewEvent extends CalendarEvent {
-    resource: Candidate;
-    isCompleted: boolean;
-    eventType: 'scheduled' | 'completed';
-}
+import type { Candidate, InterviewEvent } from '@/types';
 
 // Chart Data Preparation
 const getStatusChartData = (candidates: Candidate[]) => {

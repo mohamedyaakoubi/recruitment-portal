@@ -1,21 +1,6 @@
 // src/app/components/StatsCards.tsx
 import React from 'react';
-
-interface Stats {
-  total: number;
-  submitted: number;
-  scheduled: number;
-  rejected: number;
-}
-
-interface Candidate {
-  score: number | null;
-}
-
-interface StatsCardsProps {
-  stats: Stats;
-  candidates: Candidate[];
-}
+import { Candidate, Stats, StatsCardsProps } from '@/types';
 
 const StatsCards: React.FC<StatsCardsProps> = ({ stats, candidates }) => {
   const averageScore = candidates.length > 0 
