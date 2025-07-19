@@ -1,4 +1,3 @@
-// src/app/components/JobManagement.tsx
 import React, { useState, useEffect } from 'react';
 import { JOB_CATEGORIES, JobCategory } from '@/lib/job-categories';
 
@@ -7,6 +6,7 @@ interface Job {
   title: string;
   description: string;
   category: JobCategory;
+  specialties: string[]; // ✅ Add specialties array
   isActive: boolean;
   createdAt?: any;
   updatedAt?: any;
@@ -29,11 +29,18 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: '' as JobCategory | ''
+    category: '' as JobCategory | '',
+    specialties: [''] // ✅ Add specialties to form data
   });
 
-  // Filter states
+  // Filter and UI states
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'title' | 'category' | 'createdAt' | 'isActive'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  // Loading states for individual operations
+  const [operationLoading, setOperationLoading] = useState<Record<string, boolean>>({});
 
   // Fetch jobs
   const fetchJobs = async () => {
@@ -60,30 +67,71 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       fetchJobs();
+      resetForm();
+      setError(null);
+      setSuccess(null);
     }
   }, [isOpen]);
 
-  // Handle form submission
+  // Auto-clear success/error messages
+  useEffect(() => {
+    if (success || error) {
+      const timer = setTimeout(() => {
+        setSuccess(null);
+        setError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success, error]);
+
+  // ✅ Specialty management functions
+  const addSpecialty = () => {
+    setFormData(prev => ({
+      ...prev,
+      specialties: [...prev.specialties, '']
+    }));
+  };
+
+  const removeSpecialty = (index: number) => {
+    if (formData.specialties.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        specialties: prev.specialties.filter((_, i) => i !== index)
+      }));
+    }
+  };
+
+  const updateSpecialty = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      specialties: prev.specialties.map((spec, i) => i === index ? value : spec)
+    }));
+  };
+
+  // Handle form submission (Create/Update)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title.trim() || !formData.description.trim() || !formData.category) {
-      setError('Please fill in all fields');
+    // ✅ Filter out empty specialties
+    const validSpecialties = formData.specialties.filter(spec => spec.trim() !== '');
+    
+    if (!formData.title.trim() || !formData.description.trim() || !formData.category || validSpecialties.length === 0) {
+      setError('Please fill in all fields and add at least one specialty');
       return;
     }
 
-    setLoading(true);
+    const operationKey = editingJobId || 'create';
+    setOperationLoading(prev => ({ ...prev, [operationKey]: true }));
     setError(null);
     setSuccess(null);
 
     try {
-      const url = editingJobId ? '/api/jobs' : '/api/jobs';
       const method = editingJobId ? 'PUT' : 'POST';
       const body = editingJobId 
-        ? { jobId: editingJobId, ...formData }
-        : formData;
+        ? { jobId: editingJobId, ...formData, specialties: validSpecialties }
+        : { ...formData, specialties: validSpecialties };
 
-      const response = await fetch(url, {
+      const response = await fetch('/api/jobs', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -92,27 +140,27 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save job');
+        throw new Error(data.error || `Failed to ${editingJobId ? 'update' : 'create'} job`);
       }
 
       setSuccess(editingJobId ? 'Job updated successfully!' : 'Job created successfully!');
       resetForm();
-      fetchJobs(); // Refresh the list
+      await fetchJobs();
     } catch (err) {
       console.error('Error saving job:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save job');
+      setError(err instanceof Error ? err.message : `Failed to ${editingJobId ? 'update' : 'create'} job`);
     } finally {
-      setLoading(false);
+      setOperationLoading(prev => ({ ...prev, [operationKey]: false }));
     }
   };
 
-  // Handle job deletion
-  const handleDelete = async (jobId: string) => {
-    if (!confirm('Are you sure you want to delete this job?')) {
+  // Handle job deletion with confirmation
+  const handleDelete = async (jobId: string, jobTitle: string) => {
+    if (!confirm(`Are you sure you want to permanently delete "${jobTitle}"?\n\nThis action cannot be undone and will affect any applications for this job.`)) {
       return;
     }
 
-    setLoading(true);
+    setOperationLoading(prev => ({ ...prev, [`delete_${jobId}`]: true }));
     setError(null);
     setSuccess(null);
 
@@ -127,81 +175,156 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
         throw new Error(data.error || 'Failed to delete job');
       }
 
-      setSuccess('Job deleted successfully!');
-      fetchJobs(); // Refresh the list
+      setSuccess(`Job "${jobTitle}" deleted successfully!`);
+      await fetchJobs();
     } catch (err) {
       console.error('Error deleting job:', err);
       setError(err instanceof Error ? err.message : 'Failed to delete job');
     } finally {
-      setLoading(false);
+      setOperationLoading(prev => ({ ...prev, [`delete_${jobId}`]: false }));
     }
   };
 
-  // Handle job status toggle
-  const handleToggleStatus = async (jobId: string, currentStatus: boolean) => {
-    setLoading(true);
+  // Handle job status toggle (Activate/Deactivate)
+  const handleToggleStatus = async (jobId: string, currentStatus: boolean, jobTitle: string) => {
+    const action = currentStatus ? 'deactivate' : 'activate';
+    const message = currentStatus 
+      ? `Deactivate "${jobTitle}"?\n\nThis will hide the job from candidates but preserve existing applications.`
+      : `Activate "${jobTitle}"?\n\nThis will make the job visible to candidates again.`;
+
+    if (!confirm(message)) {
+      return;
+    }
+
+    setOperationLoading(prev => ({ ...prev, [`toggle_${jobId}`]: true }));
     setError(null);
     setSuccess(null);
 
     try {
+      const job = jobs.find(j => j.id === jobId);
+      if (!job) throw new Error('Job not found');
+
       const response = await fetch('/api/jobs', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId, isActive: !currentStatus }),
+        body: JSON.stringify({ 
+          jobId, 
+          isActive: !currentStatus,
+          title: job.title,
+          description: job.description,
+          category: job.category,
+          specialties: job.specialties || [] // ✅ Include specialties
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to update job status');
+        throw new Error(data.error || `Failed to ${action} job`);
       }
 
-      setSuccess('Job status updated successfully!');
-      fetchJobs(); // Refresh the list
+      setSuccess(`Job "${jobTitle}" ${action}d successfully!`);
+      await fetchJobs();
     } catch (err) {
-      console.error('Error updating job status:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update job status');
+      console.error(`Error ${action}ing job:`, err);
+      setError(err instanceof Error ? err.message : `Failed to ${action} job`);
     } finally {
-      setLoading(false);
+      setOperationLoading(prev => ({ ...prev, [`toggle_${jobId}`]: false }));
     }
   };
 
-  // Handle edit
+  // Handle edit - populate form with job data
   const handleEdit = (job: Job) => {
     setFormData({
       title: job.title,
       description: job.description,
-      category: job.category
+      category: job.category,
+      specialties: job.specialties && job.specialties.length > 0 ? job.specialties : [''] // ✅ Load specialties
     });
     setEditingJobId(job.id);
     setIsAddingJob(true);
-  };
-
-  // Reset form
-  const resetForm = () => {
-    setFormData({ title: '', description: '', category: '' });
-    setEditingJobId(null);
-    setIsAddingJob(false);
     setError(null);
     setSuccess(null);
   };
 
-  // Filter jobs by category
-  const filteredJobs = selectedCategory === 'all' 
-    ? jobs 
-    : jobs.filter(job => job.category === selectedCategory);
+  // Reset form to initial state
+  const resetForm = () => {
+    setFormData({ 
+      title: '', 
+      description: '', 
+      category: '',
+      specialties: [''] // ✅ Reset specialties
+    });
+    setEditingJobId(null);
+    setIsAddingJob(false);
+  };
 
-  // Group jobs by category
-  const jobsByCategory = JOB_CATEGORIES.reduce((acc, category) => {
-    acc[category] = jobs.filter(job => job.category === category);
-    return acc;
-  }, {} as Record<JobCategory, Job[]>);
+  // Filter and sort jobs
+  const filteredAndSortedJobs = React.useMemo(() => {
+    let filtered = jobs;
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(job => job.category === selectedCategory);
+    }
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(job => 
+        job.title.toLowerCase().includes(search) ||
+        job.description.toLowerCase().includes(search) ||
+        job.category.toLowerCase().includes(search) ||
+        (job.specialties && job.specialties.some(spec => spec.toLowerCase().includes(search))) // ✅ Search in specialties
+      );
+    }
+
+    // Sort jobs
+    filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'category':
+          aValue = a.category.toLowerCase();
+          bValue = b.category.toLowerCase();
+          break;
+        case 'isActive':
+          aValue = a.isActive ? 1 : 0;
+          bValue = b.isActive ? 1 : 0;
+          break;
+        case 'createdAt':
+        default:
+          aValue = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          bValue = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          break;
+      }
+
+      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [jobs, selectedCategory, searchTerm, sortBy, sortOrder]);
+
+  // Group jobs by category for the filter dropdown
+  const jobsByCategory = React.useMemo(() => {
+    return JOB_CATEGORIES.reduce((acc, category) => {
+      acc[category] = jobs.filter(job => job.category === category);
+      return acc;
+    }, {} as Record<JobCategory, Job[]>);
+  }, [jobs]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999] p-4 overflow-y-auto">
       <div className="bg-white p-6 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto relative">
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">Job Management</h2>
           <button 
@@ -215,24 +338,49 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
         {/* Status Messages */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <p className="text-red-800">{error}</p>
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-red-800">{error}</p>
+              </div>
+            </div>
           </div>
         )}
         
         {success && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-            <p className="text-green-800">{success}</p>
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-green-800">{success}</p>
+              </div>
+            </div>
           </div>
         )}
 
         {/* Add New Job Button */}
         <div className="mb-6">
           <button
-            onClick={() => setIsAddingJob(true)}
+            onClick={() => {
+              setIsAddingJob(true);
+              setError(null);
+              setSuccess(null);
+            }}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center space-x-2"
           >
-            Add New Job
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            <span>Add New Job</span>
           </button>
         </div>
 
@@ -245,7 +393,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category *
+                  Category <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.category}
@@ -262,7 +410,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Job Title *
+                  Job Title <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -276,7 +424,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Job Description *
+                  Job Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={formData.description}
@@ -287,19 +435,64 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                   required
                 />
               </div>
+
+              {/* ✅ New Specialties Section */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Specialties <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {formData.specialties.map((specialty, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={specialty}
+                        onChange={(e) => updateSpecialty(index, e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder={`Specialty ${index + 1}`}
+                        required
+                      />
+                      {formData.specialties.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeSpecialty(index)}
+                          className="px-2 py-2 text-red-600 hover:text-red-800 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addSpecialty}
+                    className="flex items-center space-x-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>Add Another Specialty</span>
+                  </button>
+                </div>
+              </div>
               
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  disabled={operationLoading[editingJobId || 'create']}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  {loading ? 'Saving...' : (editingJobId ? 'Update Job' : 'Create Job')}
+                  {operationLoading[editingJobId || 'create'] 
+                    ? 'Saving...' 
+                    : (editingJobId ? 'Update Job' : 'Create Job')
+                  }
                 </button>
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -308,55 +501,114 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Category Filter */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Filter by Category:
-          </label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Categories</option>
-            {JOB_CATEGORIES.map(category => (
-              <option key={category} value={category}>
-                {category} ({jobsByCategory[category]?.length || 0})
-              </option>
-            ))}
-          </select>
+        {/* Filters and Search */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Search */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Search Jobs</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Search by title, description, category, or specialty..."
+            />
+          </div>
+
+          {/* Category Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Category</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Categories ({jobs.length})</option>
+              {JOB_CATEGORIES.map(category => (
+                <option key={category} value={category}>
+                  {category} ({jobsByCategory[category]?.length || 0})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Sort */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sort by</label>
+            <div className="flex space-x-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="createdAt">Date Created</option>
+                <option value="title">Title</option>
+                <option value="category">Category</option>
+                <option value="isActive">Status</option>
+              </select>
+              <button
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {sortOrder === 'asc' ? '↑' : '↓'}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Jobs List */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">
-            Existing Jobs {selectedCategory !== 'all' && `- ${selectedCategory}`}
+            {selectedCategory !== 'all' 
+              ? `${selectedCategory} Jobs (${filteredAndSortedJobs.length})`
+              : `All Jobs (${filteredAndSortedJobs.length})`
+            }
           </h3>
           
           {loading && !isAddingJob && (
-            <div className="text-center py-4">
-              <p className="text-gray-600">Loading jobs...</p>
+            <div className="text-center py-8">
+              <div className="inline-flex items-center space-x-2">
+                <svg className="animate-spin h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span className="text-gray-600">Loading jobs...</span>
+              </div>
             </div>
           )}
           
-          {!loading && filteredJobs.length === 0 && (
+          {!loading && filteredAndSortedJobs.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-gray-600">
-                {selectedCategory === 'all' 
-                  ? 'No jobs found. Create your first job!' 
-                  : `No jobs found in ${selectedCategory} category.`
+              <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2h8zM8 14v4a2 2 0 002 2h4a2 2 0 002-2v-4" />
+              </svg>
+              <p className="text-gray-600 text-lg font-medium">
+                {searchTerm || selectedCategory !== 'all' 
+                  ? 'No jobs match your current filters'
+                  : 'No jobs found. Create your first job!'
                 }
               </p>
+              {(searchTerm || selectedCategory !== 'all') && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedCategory('all');
+                  }}
+                  className="mt-2 text-blue-600 hover:text-blue-800"
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
           )}
           
-          {filteredJobs.map((job) => (
-            <div key={job.id} className="border border-gray-200 rounded-lg p-4">
+          {filteredAndSortedJobs.map((job) => (
+            <div key={job.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-semibold text-lg">{job.title}</h4>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
+                    <span className={`px-2 py-1 text-xs rounded-full font-medium ${
                       job.isActive 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
@@ -365,30 +617,56 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                     </span>
                   </div>
                   <p className="text-sm text-blue-600 font-medium mb-2">{job.category}</p>
-                  <p className="text-gray-700">{job.description}</p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-2">{job.description}</p>
+                  
+                  {/* ✅ Display Specialties */}
+                  {job.specialties && job.specialties.length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-xs font-medium text-gray-600 mb-1">Specialties:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {job.specialties.map((specialty, index) => (
+                          <span key={index} className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
+                            {specialty}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {job.createdAt && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Created: {job.createdAt.toDate?.().toLocaleDateString() || 'Unknown'}
+                    </p>
+                  )}
                 </div>
-                <div className="flex gap-2 ml-4">
+                <div className="flex flex-col gap-2 ml-4">
                   <button
                     onClick={() => handleEdit(job)}
-                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                    disabled={operationLoading[`edit_${job.id}`]}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:opacity-50 transition-colors"
                   >
                     Edit
                   </button>
                   <button
-                    onClick={() => handleToggleStatus(job.id, job.isActive)}
-                    className={`px-3 py-1 text-white text-sm rounded ${
+                    onClick={() => handleToggleStatus(job.id, job.isActive, job.title)}
+                    disabled={operationLoading[`toggle_${job.id}`]}
+                    className={`px-3 py-1 text-white text-sm rounded transition-colors disabled:opacity-50 ${
                       job.isActive 
                         ? 'bg-orange-500 hover:bg-orange-600' 
                         : 'bg-green-500 hover:bg-green-600'
                     }`}
                   >
-                    {job.isActive ? 'Deactivate' : 'Activate'}
+                    {operationLoading[`toggle_${job.id}`] 
+                      ? '...' 
+                      : (job.isActive ? 'Deactivate' : 'Activate')
+                    }
                   </button>
                   <button
-                    onClick={() => handleDelete(job.id)}
-                    className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+                    onClick={() => handleDelete(job.id, job.title)}
+                    disabled={operationLoading[`delete_${job.id}`]}
+                    className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 disabled:opacity-50 transition-colors"
                   >
-                    Delete
+                    {operationLoading[`delete_${job.id}`] ? '...' : 'Delete'}
                   </button>
                 </div>
               </div>

@@ -1,18 +1,31 @@
-// src/app/api/jobs/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import { JOB_CATEGORIES } from '@/lib/job-categories';
 import admin from 'firebase-admin';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const db = getFirestoreAdmin();
-    const jobsSnapshot = await db.collection("jobs").orderBy("category").orderBy("title").get();
+    const { searchParams } = new URL(request.url);
+    const activeOnly = searchParams.get('activeOnly') === 'true';
     
-    const jobs = jobsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    let query = db.collection("jobs").orderBy("category").orderBy("title");
+    
+    // If activeOnly is requested (for candidate form), filter by isActive = true
+    if (activeOnly) {
+      query = query.where("isActive", "==", true);
+    }
+    
+    const jobsSnapshot = await query.get();
+    
+    const jobs = jobsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        specialties: data.specialties || [] // ✅ Ensure specialties is always an array
+      };
+    });
 
     return NextResponse.json({ jobs, categories: JOB_CATEGORIES });
   } catch (error) {
@@ -24,20 +37,27 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const db = getFirestoreAdmin();
-    const { title, description, category } = await request.json();
+    const { title, description, category, specialties } = await request.json();
 
-    if (!title || !description || !category) {
-      return NextResponse.json({ error: 'Missing title, description, or category' }, { status: 400 });
+    if (!title || !description || !category || !specialties || !Array.isArray(specialties) || specialties.length === 0) {
+      return NextResponse.json({ error: 'Missing title, description, category, or specialties' }, { status: 400 });
     }
 
     if (!JOB_CATEGORIES.includes(category)) {
       return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
     }
 
+    // ✅ Filter out empty specialties
+    const validSpecialties = specialties.filter(spec => spec && spec.trim() !== '');
+    if (validSpecialties.length === 0) {
+      return NextResponse.json({ error: 'At least one specialty is required' }, { status: 400 });
+    }
+
     const jobRef = await db.collection("jobs").add({
       title,
       description,
       category,
+      specialties: validSpecialties, // ✅ Add specialties array
       createdAt: admin.firestore.Timestamp.now(),
       isActive: true
     });
@@ -56,7 +76,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const db = getFirestoreAdmin();
-    const { jobId, title, description, category, isActive } = await request.json();
+    const { jobId, title, description, category, specialties, isActive } = await request.json();
 
     if (!jobId) {
       return NextResponse.json({ error: 'Missing jobId' }, { status: 400 });
@@ -74,6 +94,18 @@ export async function PUT(request: NextRequest) {
     if (description !== undefined) updateData.description = description;
     if (category !== undefined) updateData.category = category;
     if (isActive !== undefined) updateData.isActive = isActive;
+    
+    // ✅ Handle specialties update
+    if (specialties !== undefined) {
+      if (!Array.isArray(specialties)) {
+        return NextResponse.json({ error: 'Specialties must be an array' }, { status: 400 });
+      }
+      const validSpecialties = specialties.filter(spec => spec && spec.trim() !== '');
+      if (validSpecialties.length === 0) {
+        return NextResponse.json({ error: 'At least one specialty is required' }, { status: 400 });
+      }
+      updateData.specialties = validSpecialties;
+    }
 
     await db.collection("jobs").doc(jobId).update(updateData);
 
@@ -108,4 +140,3 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to delete job' }, { status: 500 });
   }
 }
-

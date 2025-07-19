@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, FormEvent, useEffect, useRef } from 'react';
-import { db, storage } from '@/lib/firebase';
+import React, { useState, useEffect, useRef, FormEvent } from 'react';
+import Image from 'next/image';
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import Image from 'next/image';
-import { getSpecialtiesForCategory } from '@/lib/job-specialties';
+import { db, storage } from '@/lib/firebase';
+import { JOB_CATEGORIES } from '@/lib/job-categories';
 
 import SuccessToast from './components/SuccessToast';
 
@@ -33,8 +33,8 @@ export default function CandidateForm() {
   const [doubleNationality, setDoubleNationality] = useState('');
   const [doubleNationalitySearch, setDoubleNationalitySearch] = useState('');
   const [jobTitle, setJobTitle] = useState('');
-  const [specialty, setSpecialty] = useState(''); // ✅ New specialty field
-  const [specialtySearch, setSpecialtySearch] = useState(''); // ✅ New specialty search
+  const [specialty, setSpecialty] = useState(''); // ✅ Keep specialty field
+  const [specialtySearch, setSpecialtySearch] = useState('');
   const [websites, setWebsites] = useState<string[]>(['']);
   const [additionalInfo, setAdditionalInfo] = useState<{type: 'link' | 'file' | 'text', content: string, file?: File}[]>([{type: 'link', content: ''}]);
   const [cvFile, setCvFile] = useState<File | null>(null);
@@ -45,6 +45,7 @@ export default function CandidateForm() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [filteredJobs, setFilteredJobs] = useState<any[]>([]);
   const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]); // ✅ Load from selected job
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -52,14 +53,15 @@ export default function CandidateForm() {
   const [showCountryList, setShowCountryList] = useState(false);
   const [showNationalityList, setShowNationalityList] = useState(false);
   const [showDoubleNationalityList, setShowDoubleNationalityList] = useState(false);
-  const [showSpecialtyList, setShowSpecialtyList] = useState(false); // ✅ New specialty list state
+  const [showSpecialtyList, setShowSpecialtyList] = useState(false);
   const countryRef = useRef<HTMLDivElement>(null);
   const nationalityRef = useRef<HTMLDivElement>(null);
   const doubleNationalityRef = useRef<HTMLDivElement>(null);
-  const specialtyRef = useRef<HTMLDivElement>(null); // ✅ New specialty ref
+  const specialtyRef = useRef<HTMLDivElement>(null);
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
   const [countryCodeSearch, setCountryCodeSearch] = useState('');
   const countryCodeRef = useRef<HTMLDivElement>(null);
+
 
 
   // ✅ Complete Country codes list with all countries
@@ -335,8 +337,6 @@ export default function CandidateForm() {
   'Vietnam', 'Wales', 'Yemen', 'Zambia', 'Zimbabwe'
 ];
 
-  // ✅ Get available specialties based on selected category
-  const availableSpecialties = selectedCategory ? getSpecialtiesForCategory(selectedCategory as any) : [];
   
   // ✅ Filter specialties based on search
   const filteredSpecialties = availableSpecialties.filter(spec => 
@@ -387,47 +387,54 @@ export default function CandidateForm() {
     setWebsites(newWebsites);
   };
 
-    // ✅ Reset specialty when category changes
+  // ✅ Reset specialty when category changes
+useEffect(() => {
+  if (selectedCategory) {
+    const filtered = jobs.filter(job => job.category === selectedCategory);
+    setFilteredJobs(filtered);
+    // Reset specialty when category changes
+    setSpecialty('');
+    setSpecialtySearch('');
+    setAvailableSpecialties([]);
+  } else {
+    setFilteredJobs([]);
+  }
+  setJobTitle('');
+  setSelectedJob(null);
+}, [selectedCategory, jobs]);
+
+useEffect(() => {
+  const loadJobs = async () => {
+    try {
+      // ✅ Add activeOnly=true parameter to only fetch active jobs for candidates
+      const response = await fetch('/api/jobs?activeOnly=true');
+      const data = await response.json();
+      if (response.ok) {
+        setJobs(data.jobs || []);
+        setCategories(data.categories || []);
+        // ✅ Add this debug log to check if jobs are loaded
+        console.log('Loaded jobs:', data.jobs);
+      } else {
+        console.error('Failed to load jobs:', data.error);
+      }
+    } catch (error) {
+      console.error('Error loading jobs:', error);
+    }
+  };
+  loadJobs();
+}, []);
+
+  // ✅ Update available specialties when job is selected
   useEffect(() => {
-    if (selectedCategory) {
-      const filtered = jobs.filter(job => job.category === selectedCategory);
-      setFilteredJobs(filtered);
-      // Reset specialty when category changes
+    if (selectedJob && selectedJob.specialties) {
+      setAvailableSpecialties(selectedJob.specialties);
+      // Reset specialty selection
       setSpecialty('');
       setSpecialtySearch('');
     } else {
-      setFilteredJobs([]);
+      setAvailableSpecialties([]);
     }
-    setJobTitle('');
-    setSelectedJob(null);
-  }, [selectedCategory, jobs]);
-
-  useEffect(() => {
-    const loadJobs = async () => {
-      try {
-        const response = await fetch('/api/jobs');
-        const data = await response.json();
-        if (response.ok) {
-          setJobs(data.jobs || []);
-          setCategories(data.categories || []);
-        }
-      } catch (error) {
-        console.error('Error loading jobs:', error);
-      }
-    };
-    loadJobs();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCategory) {
-      const filtered = jobs.filter(job => job.category === selectedCategory);
-      setFilteredJobs(filtered);
-    } else {
-      setFilteredJobs([]);
-    }
-    setJobTitle('');
-    setSelectedJob(null);
-  }, [selectedCategory, jobs]);
+  }, [selectedJob]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -478,17 +485,20 @@ export default function CandidateForm() {
   const handleCategorySelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
   };
+
   const filteredCountryCodes = countryCodes.filter(item => 
     item.country.toLowerCase().includes(countryCodeSearch.toLowerCase()) ||
     item.code.includes(countryCodeSearch) ||
     item.flag.includes(countryCodeSearch)
   );
+
   const handleJobSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedJobId = e.target.value;
     setJobTitle(selectedJobId);
     const job = filteredJobs.find(j => j.id === selectedJobId);
     setSelectedJob(job || null);
   };
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, files } = e.target;
@@ -503,19 +513,24 @@ export default function CandidateForm() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-
 
     const finalCountry = country || countrySearch;
     const finalNationality = nationality || nationalitySearch;
     const finalSpecialty = specialty || specialtySearch;
 
-    // ✅ Updated validation to include specialty
-    if (!firstName || !lastName || !email || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !finalCountry || !finalNationality || !selectedCategory || !finalSpecialty || !jobTitle || !cvFile || !passportFile) {
+    // ✅ Updated validation to require job selection first
+    if (!firstName || !lastName || !email || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !finalCountry || !finalNationality || !selectedCategory || !jobTitle || !finalSpecialty || !cvFile || !passportFile) {
       setError("Please fill in all required fields including specialty and upload all required files (CV and Passport/ID).");
+      return;
+    }
+
+    // ✅ Validate that specialty is from available options
+    if (!availableSpecialties.includes(finalSpecialty)) {
+      setError("Please select a valid specialty from the available options for the selected job.");
       return;
     }
 
@@ -542,7 +557,6 @@ export default function CandidateForm() {
         photoUrl = await getDownloadURL(photoUploadTask.ref);
       }
 
-
       const finalDoubleNationality = doubleNationality || doubleNationalitySearch || null;
 
       const candidatesCollectionRef = collection(db, "candidates");
@@ -560,7 +574,7 @@ export default function CandidateForm() {
         nationality: finalNationality,
         doubleNationality: finalDoubleNationality,
         jobCategory: selectedCategory,
-        specialty: finalSpecialty, // ✅ Add specialty to database
+        specialty: finalSpecialty, // ✅ Save selected specialty
         jobTitle,
         jobTitleText: selectedJob?.title || '',
         websites: websites.filter(w => w.trim() !== ''),
@@ -572,7 +586,7 @@ export default function CandidateForm() {
         score: null
       });
 
-    // ✅ Reset all form fields including specialty
+      // ✅ Reset all form fields including specialty
       setFirstName('');
       setLastName('');
       setEmail('');
@@ -592,19 +606,18 @@ export default function CandidateForm() {
       setSpecialtySearch('');
       setJobTitle('');
       setSelectedJob(null);
+      setAvailableSpecialties([]);
       setWebsites(['']);
       setCvFile(null);
       setPassportFile(null);
       setPhotoFile(null);
       
-    
-    const cvInput = document.getElementById('cv') as HTMLInputElement;
+      const cvInput = document.getElementById('cv') as HTMLInputElement;
       const passportInput = document.getElementById('passport') as HTMLInputElement;
       const photoInput = document.getElementById('photo') as HTMLInputElement;
       if (cvInput) cvInput.value = '';
       if (passportInput) passportInput.value = '';
       if (photoInput) photoInput.value = '';
-
 
       setSuccess("Application submitted successfully!");
       setShowSuccessToast(true);
@@ -989,29 +1002,73 @@ export default function CandidateForm() {
                   )}
                 </div>
 
-                {/* Job Category */}
-                <div className="sm:col-span-2">
-                  <label htmlFor="jobCategory" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Job Category <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="jobCategory"
-                    id="jobCategory"
-                    required
-                    value={selectedCategory}
-                    onChange={handleCategorySelection}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    disabled={isLoading}
-                  >
-                    <option value="">Select a category first</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {/* ✅ New Specialty Field */}
+{/* Job Category */}
+<div className="sm:col-span-2">
+  <label htmlFor="jobCategory" className="block text-sm font-semibold text-slate-600 mb-2">
+    Job Category <span className="text-red-500">*</span>
+  </label>
+  <select
+    name="jobCategory"
+    id="jobCategory"
+    required
+    value={selectedCategory}
+    onChange={handleCategorySelection}
+    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+    disabled={isLoading}
+  >
+    <option value="">Select a category first</option>
+    {JOB_CATEGORIES.map((category) => (
+      <option key={category} value={category}>
+        {category}
+      </option>
+    ))}
+  </select>
+</div>
+
+{/* Job Title */}
+<div className="sm:col-span-2">
+  <label htmlFor="jobTitle" className="block text-sm font-semibold text-slate-600 mb-2">
+    Job Position <span className="text-red-500">*</span>
+  </label>
+  <select
+    name="jobTitle"
+    id="jobTitle"
+    required
+    value={jobTitle}
+    onChange={handleJobSelection}
+    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+    disabled={isLoading || !selectedCategory}
+  >
+    <option value="">
+      {selectedCategory ? 'Select a job position' : 'Please select a category first'}
+    </option>
+    {filteredJobs.map((job) => (
+      <option key={job.id} value={job.id}>
+        {job.title}
+      </option>
+    ))}
+  </select>
+  {/* ✅ Add debug info */}
+  {selectedCategory && (
+    <div className="mt-2 text-xs text-gray-500">
+      Debug: Found {filteredJobs.length} jobs for category "{selectedCategory}"
+      {filteredJobs.length > 0 && (
+        <div className="mt-1">
+          Jobs: {filteredJobs.map(job => job.title).join(', ')}
+        </div>
+      )}
+    </div>
+  )}
+  {selectedJob && (
+    <div className="mt-3 p-3 bg-slate-100 border border-slate-200 rounded-lg">
+      <h4 className="font-semibold text-[#003A70] mb-1">Job Description:</h4>
+      <p className="text-sm text-slate-700">{selectedJob.description}</p>
+      <p className="text-xs text-slate-500 mt-1">Category: {selectedJob.category}</p>
+    </div>
+  )}
+</div>
+
+                {/* ✅ Updated Specialty Field - Now loads from selected job */}
                 <div className="sm:col-span-2 relative" ref={specialtyRef}>
                   <label htmlFor="specialty" className="block text-sm font-semibold text-slate-600 mb-2">
                     Specialty <span className="text-red-500">*</span>
@@ -1028,69 +1085,49 @@ export default function CandidateForm() {
                       if (availableSpecialties.includes(value)) {
                         setSpecialty(value);
                       } else {
-                        setSpecialty("");
+                        setSpecialty('');
                       }
                       setShowSpecialtyList(true);
                     }}
                     onFocus={() => setShowSpecialtyList(true)}
                     className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    placeholder={selectedCategory ? "Search and select your specialty" : "Please select a category first"}
-                    disabled={isLoading || !selectedCategory}
+                    placeholder={selectedJob ? "Search and select your specialty" : "Please select a job position first"}
+                    disabled={isLoading || !selectedJob}
                     autoComplete="off"
                   />
-                  {showSpecialtyList && filteredSpecialties.length > 0 && selectedCategory && (
+                  {showSpecialtyList && filteredSpecialties.length > 0 && selectedJob && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {filteredSpecialties.map((specialtyOption, index) => (
+                      {filteredSpecialties.map((spec, index) => (
                         <button
                           key={index}
                           type="button"
                           onClick={() => {
-                            setSpecialty(specialtyOption);
-                            setSpecialtySearch(specialtyOption);
+                            setSpecialty(spec);
+                            setSpecialtySearch(spec);
                             setShowSpecialtyList(false);
                           }}
                           className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
                         >
-                          {specialtyOption}
+                          {spec}
                         </button>
                       ))}
                     </div>
                   )}
-                  {selectedCategory && (
-                    <p className="mt-1 text-xs text-slate-500">
-                      Choose your specialty within {selectedCategory}
-                    </p>
+                  {selectedJob && availableSpecialties.length > 0 && (
+                    <div className="mt-2 p-3 bg-green-50 rounded-lg">
+                      <p className="text-sm text-green-800 font-medium">Available Specialties:</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {availableSpecialties.map((spec, index) => (
+                          <span key={index} className="px-2 py-1 text-xs bg-green-200 text-green-800 rounded-full">
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                </div>
-
-                {/* Job Title */}
-                <div className="sm:col-span-2">
-                  <label htmlFor="jobTitle" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Job Position <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="jobTitle"
-                    id="jobTitle"
-                    required
-                    value={jobTitle}
-                    onChange={handleJobSelection}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    disabled={isLoading || !selectedCategory}
-                  >
-                    <option value="">
-                      {selectedCategory ? 'Select a job position' : 'Please select a category first'}
-                    </option>
-                    {filteredJobs.map((job) => (
-                      <option key={job.id} value={job.id}>
-                        {job.title}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedJob && (
-                    <div className="mt-3 p-3 bg-slate-100 border border-slate-200 rounded-lg">
-                      <h4 className="font-semibold text-[#003A70] mb-1">Job Description:</h4>
-                      <p className="text-sm text-slate-700">{selectedJob.description}</p>
-                      <p className="text-xs text-slate-500 mt-1">Category: {selectedJob.category}</p>
+                  {selectedJob && availableSpecialties.length === 0 && (
+                    <div className="mt-2 p-3 bg-yellow-50 rounded-lg">
+                      <p className="text-sm text-yellow-800">No specialties defined for this job position. Please contact admin.</p>
                     </div>
                   )}
                 </div>

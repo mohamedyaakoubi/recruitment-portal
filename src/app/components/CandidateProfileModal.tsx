@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { FiX, FiUser, FiFileText, FiClipboard, FiLink, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiEdit, FiTrash2, FiExternalLink, FiAward, FiBriefcase, FiMapPin, FiPhone, FiMail, FiGlobe, FiImage, FiCode, FiKey, FiUsers } from 'react-icons/fi';
+import { FiX, FiUser, FiFileText, FiClipboard, FiLink, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiEdit, FiTrash2, FiExternalLink, FiAward, FiBriefcase, FiMapPin, FiPhone, FiMail, FiGlobe, FiImage, FiCode, FiKey, FiUsers, FiTarget } from 'react-icons/fi';
 
 import type { Candidate } from '@/types';
 
@@ -186,6 +186,7 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
                                     <StatusBadge status={candidate.status} />
                                 </div>
                                 <InfoRow label="Category" value={candidate.jobCategory} />
+                                <InfoRow label="Specialty" value={candidate.specialty} icon={<FiTarget size={14} />} />
                                 <InfoRow label="Job ID" value={candidate.jobTitle} />
                                 <InfoRow label="Submitted" value={candidate.submittedAt?.toDate().toLocaleString()} />
                                 <InfoRow label="Application ID" value={candidate.id} />
