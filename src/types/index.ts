@@ -3,31 +3,31 @@ import { Timestamp } from 'firebase/firestore';
 export interface Candidate {
     id: string;
     fullName: string;
-    firstName?: string; // ✅ Added
-    lastName?: string; // ✅ Added
+    firstName?: string;
+    lastName?: string;
     email: string;
-    gender?: string; // ✅ Added
-    phoneNumber?: string; // ✅ Added
-    countryCode?: string; // ✅ Added
+    gender?: string;
+    phoneNumber?: string;
+    countryCode?: string;
     dateOfBirth?: string;
     city?: string;
     country?: string;
     nationality?: string;
     doubleNationality?: string;
-    jobTitle?: string; // ✅ Added (this is the job ID)
-    jobTitleText?: string; // This is the human-readable job title
+    jobTitle?: string;
+    jobTitleText?: string;
     jobCategory?: string;
+    specialty?: string; // ✅ Add specialty field
     websites: string[];
     cvUrl: string;
     passportUrl: string;
-    photoUrl?: string; // ✅ Made optional since photo upload is optional
+    photoUrl?: string;
     submittedAt: Timestamp;
     status: 'submitted' | 'rejected' | 'interview_scheduled' | 'approved' | string;
     score: number | null;
     scoreAnalysis?: string;
     lastScoredAt?: Timestamp;
     interviewDate?: Timestamp;
-    // Google Meet integration fields
     calendarEventId?: string;
     meetLink?: string;
     meetSpaceId?: string;
