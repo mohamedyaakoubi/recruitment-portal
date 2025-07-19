@@ -1,31 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-import type { Candidate } from '@/types';
-
-interface CandidateFiltersProps {
-  candidates: Candidate[];
-  filterStatus: string;
-  filterName: string;
-  filterCity: string;
-  filterCountry: string;
-  filterNationality: string;
-  filterJobTitle: string;
-  filterCategory: string;
-  filterSpecialty: string; // ✅ Add specialty filter
-  filterAgeMin: string;
-  filterAgeMax: string;
-  onFilterStatusChange: (status: string) => void;
-  onFilterNameChange: (name: string) => void;
-  onFilterCityChange: (city: string) => void;
-  onFilterCountryChange: (country: string) => void;
-  onFilterNationalityChange: (nationality: string) => void;
-  onFilterJobTitleChange: (jobTitle: string) => void;
-  onFilterCategoryChange: (category: string) => void;
-  onFilterSpecialtyChange: (specialty: string) => void; // ✅ Add specialty handler
-  onFilterAgeMinChange: (ageMin: string) => void;
-  onFilterAgeMaxChange: (ageMax: string) => void;
-  onClearAllFilters: () => void;
-}
+import type { Candidate, CandidateFiltersProps } from '@/types';
 
 const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   candidates,

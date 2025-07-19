@@ -1,21 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { JOB_CATEGORIES, JobCategory } from '@/lib/job-categories';
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  category: JobCategory;
-  specialties: string[]; // ✅ Add specialties array
-  isActive: boolean;
-  createdAt?: any;
-  updatedAt?: any;
-}
-
-interface JobManagementProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+import { Job, JobManagementProps } from '@/types';
 
 const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
   const [jobs, setJobs] = useState<Job[]>([]);

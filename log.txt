@@ -1,0 +1,3 @@
+Cannot find name 'error'. Did you mean 'Error'?ts(2552)
+lib.es5.d.ts(1087, 13): 'Error' is declared here.
+any

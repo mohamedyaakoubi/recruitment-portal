@@ -2,7 +2,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { FiX, FiUser, FiFileText, FiClipboard, FiLink, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiEdit, FiTrash2, FiExternalLink, FiAward, FiBriefcase, FiMapPin, FiPhone, FiMail, FiGlobe, FiImage, FiCode, FiKey, FiUsers, FiTarget } from 'react-icons/fi';
 
-import type { Candidate } from '@/types';
+import type { Candidate, CandidateProfileModalProps } from '@/types';
 
 // Helper to calculate age
 const calculateAge = (dateOfBirth: string) => {
@@ -58,15 +58,7 @@ const InfoRow: React.FC<{ label: string; value?: string | null; icon?: React.Rea
     );
 };
 
-interface CandidateProfileModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    candidate: Candidate | null;
-    onStatusChange: (candidateId: string, newStatus: string, interviewTimestampISO?: string) => Promise<void>;
-    onCancelInterview: (candidateId: string, reason?: string) => Promise<void>;
-    statusUpdateLoading: boolean;
-    onScheduleInterview: () => void;
-}
+
 
 const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
     isOpen,

@@ -1,11 +1,6 @@
 // src/app/components/DashboardHeader.tsx
 import React from 'react';
-
-interface DashboardHeaderProps {
-  userEmail: string;
-  onManageJobsClick: () => void;
-  onSignOut: () => void;
-}
+import { DashboardHeaderProps } from '@/types';
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   userEmail,
