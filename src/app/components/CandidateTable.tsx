@@ -27,57 +27,88 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
   };
 
   const handleExport = async (format: 'csv' | 'xlsx' | 'json') => {
-    setIsExporting(true);
-    try {
-      const params = new URLSearchParams({
-        format,
-        status: filters.status,
-        name: filters.name,
-        city: filters.city,
-        country: filters.country,
-        jobTitle: filters.jobTitle,
-        category: filters.category,
-        ageMin: filters.ageMin,
-        ageMax: filters.ageMax,
-      });
-      const response = await fetch(`/api/export-candidates?${params.toString()}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to export candidates');
-      }
+  setIsExporting(true);
+  try {
+    // 🔥 UPDATED: Include all filter parameters
+    const params = new URLSearchParams({
+      format,
+      status: filters.status,
+      name: filters.name,
+      city: filters.city,
+      country: filters.country,
+      nationality: filters.nationality, // 🔥 FIX: Now this property exists
+      jobTitle: filters.jobTitle,
+      category: filters.category,
+      specialty: filters.specialty, // 🔥 ADD: Include specialty filter
+      ageMin: filters.ageMin,
+      ageMax: filters.ageMax,
+    });
 
-      if (format === 'xlsx') {
-        const { data, filename } = await response.json();
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Candidates');
-        XLSX.writeFile(workbook, filename);
-      } else {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        const contentDisposition = response.headers.get('content-disposition');
-        let filename = 'candidates';
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
-          if (filenameMatch && filenameMatch.length > 1) {
-            filename = filenameMatch[1];
-          }
-        }
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-      }
-    } catch (error) {
-      console.error('Export failed:', error);
-      // You might want to show a toast notification here
-    } finally {
-      setIsExporting(false);
+    console.log('🔄 Exporting with params:', Object.fromEntries(params));
+    
+    const response = await fetch(`/api/export-candidates?${params.toString()}`);
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.details || 'Failed to export candidates');
     }
-  };
+
+    if (format === 'xlsx') {
+      const { data, filename, count } = await response.json();
+      console.log(`📊 Creating XLSX file for ${count} candidates`);
+      
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Candidates');
+      
+      // 🔥 ENHANCED: Add metadata sheet with all applied filters
+      const metadataSheet = XLSX.utils.json_to_sheet([{
+        'Export Date': new Date().toLocaleString(),
+        'Total Records': count,
+        'Applied Filters': Object.entries(filters)
+          .filter(([_, value]) => value && value !== 'all' && value !== '')
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ') || 'None',
+        'Status Filter': filters.status !== 'all' ? filters.status : 'All statuses',
+        'Name Filter': filters.name || 'No name filter',
+        'Location Filters': [filters.city, filters.country, filters.nationality].filter(f => f).join(', ') || 'No location filters',
+        'Job Filters': [filters.category, filters.specialty, filters.jobTitle].filter(f => f).join(', ') || 'No job filters',
+        'Age Range': filters.ageMin || filters.ageMax ? `${filters.ageMin || '0'} - ${filters.ageMax || '∞'}` : 'No age filter'
+      }]);
+      XLSX.utils.book_append_sheet(workbook, metadataSheet, 'Export Info');
+      
+      XLSX.writeFile(workbook, filename);
+    } else {
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `candidates_${format}_${new Date().toISOString().split('T')[0]}`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+        if (filenameMatch && filenameMatch.length > 1) {
+          filename = filenameMatch[1];
+        }
+      }
+      
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      
+      console.log(`✅ ${format.toUpperCase()} export completed: ${filename}`);
+    }
+  } catch (error) {
+    console.error('❌ Export failed:', error);
+    // You might want to show a toast notification here
+    alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  } finally {
+    setIsExporting(false);
+  }
+};
 
   const splitName = (fullName: string) => {
     const parts = fullName.trim().split(' ');

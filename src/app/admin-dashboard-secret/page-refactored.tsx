@@ -592,23 +592,25 @@ function DashboardContent() {
                         { label: 'Rejected', value: 'rejected' },
                     ]}
                 >
-                    <CandidateTable
-                        candidates={filteredCandidates}
-                        statusUpdateLoading={statusUpdateLoading}
-                        onViewCandidate={openProfileModal}
-                        onScoreCandidate={openScoringModal}
-                        onStatusChange={handleStatusChange}
-                        filters={{ 
-                            status: filterStatus, 
-                            name: filterName, 
-                            city: filterCity, 
-                            country: filterCountry, 
-                            jobTitle: filterJobTitle, 
-                            category: filterCategory, 
-                            ageMin: filterAgeMin, 
-                            ageMax: filterAgeMax 
-                        }}
-                    />
+      <CandidateTable
+  candidates={filteredCandidates}
+  statusUpdateLoading={statusUpdateLoading}
+  onViewCandidate={openProfileModal}
+  onScoreCandidate={openScoringModal}
+  onStatusChange={handleStatusChange}
+  filters={{ 
+    status: filterStatus, 
+    name: filterName, 
+    city: filterCity, 
+    country: filterCountry, 
+    nationality: filterNationality, // 🔥 ADD: Missing nationality filter
+    jobTitle: filterJobTitle, 
+    category: filterCategory, 
+    specialty: filterSpecialty, // 🔥 ADD: Missing specialty filter
+    ageMin: filterAgeMin, 
+    ageMax: filterAgeMax 
+  }}
+/>
                 </Tabs>
             </div>
 
