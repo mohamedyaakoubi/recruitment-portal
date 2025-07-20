@@ -13,11 +13,11 @@ export interface Candidate {
     phoneNumber?: string;
     countryCode?: string;
     dateOfBirth?: string;
-    age?: number; // 🔥 NEW: Add age field
+    age?: number;
     city?: string;
     country?: string;
     nationality?: string;
-    doubleNationality?: string;
+    doubleNationality?: string; // 🔥 CLARIFIED: Keep as optional string (undefined, not null)
     jobTitle?: string;
     jobTitleText?: string;
     jobCategory?: string;
@@ -64,15 +64,16 @@ export interface CandidateTableProps {
   onViewCandidate: (candidate: Candidate) => void;
   onScoreCandidate: (candidate: Candidate) => void;
   onStatusChange: (candidateId: string, newStatus: string) => void;
+  onEditCandidate?: (candidate: Candidate) => void; // 🔥 ADD: Missing onEditCandidate prop
   filters: {
     status: string;
     name: string;
     city: string;
     country: string;
-    nationality: string; // 🔥 ADD: Missing nationality filter
+    nationality: string;
     jobTitle: string;
     category: string;
-    specialty: string; // 🔥 ADD: Missing specialty filter
+    specialty: string;
     ageMin: string;
     ageMax: string;
   };
@@ -89,6 +90,7 @@ export interface CandidateProfileModalProps {
     onCancelInterview: (candidateId: string, reason?: string) => Promise<void>;
     statusUpdateLoading: boolean;
     onScheduleInterview: () => void;
+    onEditCandidate?: (candidateId: string, updatedData: Partial<Candidate>) => Promise<void>; // 🔥 NEW
 }
 
 export interface JobManagementProps {
