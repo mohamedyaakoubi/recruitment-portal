@@ -6,14 +6,23 @@ import type { Candidate, CandidateProfileModalProps } from '@/types';
 
 // Helper to calculate age
 const calculateAge = (dateOfBirth: string) => {
+    if (!dateOfBirth) return null;
+    
     try {
         const birthDate = new Date(dateOfBirth);
         const today = new Date();
+        
+        // Check if date is valid
+        if (isNaN(birthDate.getTime())) return null;
+        
         let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        // If birth month hasn't occurred this year, or it's the birth month but the day hasn't occurred
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
             age--;
         }
+        
         return age;
     } catch {
         return null;

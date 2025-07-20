@@ -1,14 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef, FormEvent } from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from '@/lib/firebase';
-import { JOB_CATEGORIES } from '@/lib/job-categories';
-import { countryCodes, countries } from '@/lib/formData';
-
-import SuccessToast from './components/ui/SuccessToast';
+import { useRouter } from 'next/navigation';
 
 // Helper component for social media icons in the footer
 const SocialIcon = ({ href, children }: { href: string, children: React.ReactNode }) => (
@@ -17,353 +11,88 @@ const SocialIcon = ({ href, children }: { href: string, children: React.ReactNod
   </a>
 );
 
-
-export default function CandidateForm() {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+export default function LandingPage() {
   const [email, setEmail] = useState('');
-  const [gender, setGender] = useState('');
-  const [countryCode, setCountryCode] = useState('+358');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [city, setCity] = useState('');
-  const [country, setCountry] = useState('');
-  const [countrySearch, setCountrySearch] = useState('');
-  const [nationality, setNationality] = useState('');
-  const [nationalitySearch, setNationalitySearch] = useState('');
-  const [doubleNationality, setDoubleNationality] = useState('');
-  const [doubleNationalitySearch, setDoubleNationalitySearch] = useState('');
-  const [jobTitle, setJobTitle] = useState('');
-  const [specialty, setSpecialty] = useState(''); // ✅ Keep specialty field
-  const [specialtySearch, setSpecialtySearch] = useState('');
-  const [websites, setWebsites] = useState<string[]>(['']);
-  const [additionalInfo, setAdditionalInfo] = useState<{type: 'link' | 'file' | 'text', content: string, file?: File}[]>([{type: 'link', content: ''}]);
-  const [cvFile, setCvFile] = useState<File | null>(null);
-  const [passportFile, setPassportFile] = useState<File | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [jobs, setJobs] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [filteredJobs, setFilteredJobs] = useState<any[]>([]);
-  const [selectedJob, setSelectedJob] = useState<any>(null);
-  const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]); // ✅ Load from selected job
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [showCountryList, setShowCountryList] = useState(false);
-  const [showNationalityList, setShowNationalityList] = useState(false);
-  const [showDoubleNationalityList, setShowDoubleNationalityList] = useState(false);
-  const [showSpecialtyList, setShowSpecialtyList] = useState(false);
-  const countryRef = useRef<HTMLDivElement>(null);
-  const nationalityRef = useRef<HTMLDivElement>(null);
-  const doubleNationalityRef = useRef<HTMLDivElement>(null);
-  const specialtyRef = useRef<HTMLDivElement>(null);
-  const [showCountryCodeList, setShowCountryCodeList] = useState(false);
-  const [countryCodeSearch, setCountryCodeSearch] = useState('');
-  const countryCodeRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
-  
-  // ✅ Filter specialties based on search
-  const filteredSpecialties = availableSpecialties.filter(spec => 
-    spec.toLowerCase().includes(specialtySearch.toLowerCase())
-  );
-  const filteredCountries = countries.filter(c => 
-    c.toLowerCase().includes(countrySearch.toLowerCase())
-  );
-
-  // ✅ Filtered lists for nationality fields
-  const filteredNationalities = countries.filter(c => 
-    c.toLowerCase().includes(nationalitySearch.toLowerCase())
-  );
-
-  const filteredDoubleNationalities = countries.filter(c => 
-    c.toLowerCase().includes(doubleNationalitySearch.toLowerCase())
-  );
-
-  const addAdditionalInfo = (type: 'link' | 'file' | 'text') => {
-    setAdditionalInfo([...additionalInfo, {type, content: ''}]);
-  };
-
-  const removeAdditionalInfo = (index: number) => {
-    if (additionalInfo.length > 1) {
-      setAdditionalInfo(additionalInfo.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateAdditionalInfo = (index: number, content: string, file?: File) => {
-    const newInfo = [...additionalInfo];
-    newInfo[index] = {...newInfo[index], content, file};
-    setAdditionalInfo(newInfo);
-  };
-
-  const addWebsite = () => {
-    setWebsites([...websites, '']);
-  };
-
-  const removeWebsite = (index: number) => {
-    if (websites.length > 1) {
-      setWebsites(websites.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateWebsite = (index: number, value: string) => {
-    const newWebsites = [...websites];
-    newWebsites[index] = value;
-    setWebsites(newWebsites);
-  };
-
-  // ✅ Reset specialty when category changes
-useEffect(() => {
-  if (selectedCategory) {
-    const filtered = jobs.filter(job => job.category === selectedCategory);
-    setFilteredJobs(filtered);
-    // Reset specialty when category changes
-    setSpecialty('');
-    setSpecialtySearch('');
-    setAvailableSpecialties([]);
-  } else {
-    setFilteredJobs([]);
-  }
-  setJobTitle('');
-  setSelectedJob(null);
-}, [selectedCategory, jobs]);
-
-useEffect(() => {
-  const loadJobs = async () => {
-    try {
-      // ✅ Add activeOnly=true parameter to only fetch active jobs for candidates
-      const response = await fetch('/api/jobs?activeOnly=true');
-      const data = await response.json();
-      if (response.ok) {
-        setJobs(data.jobs || []);
-        setCategories(data.categories || []);
-        // ✅ Add this debug log to check if jobs are loaded
-        console.log('Loaded jobs:', data.jobs);
-      } else {
-        console.error('Failed to load jobs:', data.error);
-      }
-    } catch (error) {
-      console.error('Error loading jobs:', error);
-    }
-  };
-  loadJobs();
-}, []);
-
-  // ✅ Update available specialties when job is selected
-  useEffect(() => {
-    if (selectedJob && selectedJob.specialties) {
-      setAvailableSpecialties(selectedJob.specialties);
-      // Reset specialty selection
-      setSpecialty('');
-      setSpecialtySearch('');
-    } else {
-      setAvailableSpecialties([]);
-    }
-  }, [selectedJob]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
-        setShowCountryList(false);
-      }
-      if (nationalityRef.current && !nationalityRef.current.contains(event.target as Node)) {
-        setShowNationalityList(false);
-      }
-      if (doubleNationalityRef.current && !doubleNationalityRef.current.contains(event.target as Node)) {
-        setShowDoubleNationalityList(false);
-      }
-      if (specialtyRef.current && !specialtyRef.current.contains(event.target as Node)) {
-        setShowSpecialtyList(false);
-      }
-      if (countryCodeRef.current && !countryCodeRef.current.contains(event.target as Node)) {
-        setShowCountryCodeList(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-
-    useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
-        setShowCountryList(false);
-      }
-      if (nationalityRef.current && !nationalityRef.current.contains(event.target as Node)) {
-        setShowNationalityList(false);
-      }
-      if (doubleNationalityRef.current && !doubleNationalityRef.current.contains(event.target as Node)) {
-        setShowDoubleNationalityList(false);
-      }
-      if (countryCodeRef.current && !countryCodeRef.current.contains(event.target as Node)) {
-        setShowCountryCodeList(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleCategorySelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCategory(e.target.value);
-  };
-
-  const filteredCountryCodes = countryCodes.filter(item => 
-    item.country.toLowerCase().includes(countryCodeSearch.toLowerCase()) ||
-    item.code.includes(countryCodeSearch) ||
-    item.flag.includes(countryCodeSearch)
-  );
-
-  const handleJobSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedJobId = e.target.value;
-    setJobTitle(selectedJobId);
-    const job = filteredJobs.find(j => j.id === selectedJobId);
-    setSelectedJob(job || null);
-  };
-
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, files } = e.target;
-    if (files && files.length > 0) {
-      if (name === 'cv') {
-        setCvFile(files[0]);
-      } else if (name === 'passport') {
-        setPassportFile(files[0]);
-      } else if (name === 'photo') { // ✅ New field
-        setPhotoFile(files[0]);
-      }
-    }
-  };
-
-   const handleSubmit = async (e: FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
 
-    const finalCountry = country || countrySearch;
-    const finalNationality = nationality || nationalitySearch;
-    const finalSpecialty = specialty || specialtySearch;
-
-    // ✅ Updated validation to require job selection first
-    if (!firstName || !lastName || !email || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !finalCountry || !finalNationality || !selectedCategory || !jobTitle || !finalSpecialty || !cvFile || !passportFile) {
-      setError("Please fill in all required fields including specialty and upload all required files (CV and Passport/ID).");
+    if (!email.trim()) {
+      setError('Please enter your email address');
       return;
     }
 
-    // ✅ Validate that specialty is from available options
-    if (!availableSpecialties.includes(finalSpecialty)) {
-      setError("Please select a valid specialty from the available options for the selected job.");
+    // Basic email validation first
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const cvFileName = `cv_${Date.now()}_${cvFile.name}`;
-      const passportFileName = `passport_${Date.now()}_${passportFile.name}`;
-      
-      const cvStorageRef = ref(storage, `candidate_files/${cvFileName}`);
-      const passportStorageRef = ref(storage, `candidate_files/${passportFileName}`);
+      const normalizedEmail = email.toLowerCase().trim();
 
-      const cvUploadTask = await uploadBytes(cvStorageRef, cvFile);
-      const passportUploadTask = await uploadBytes(passportStorageRef, passportFile);
-
-      const cvUrl = await getDownloadURL(cvUploadTask.ref);
-      const passportUrl = await getDownloadURL(passportUploadTask.ref);
-      
-      let photoUrl = null;
-      if (photoFile) {
-        const photoFileName = `photo_${Date.now()}_${photoFile.name}`;
-        const photoStorageRef = ref(storage, `candidate_files/${photoFileName}`);
-        const photoUploadTask = await uploadBytes(photoStorageRef, photoFile);
-        photoUrl = await getDownloadURL(photoUploadTask.ref);
-      }
-
-      const finalDoubleNationality = doubleNationality || doubleNationalitySearch || null;
-
-      const candidatesCollectionRef = collection(db, "candidates");
-      await addDoc(candidatesCollectionRef, {
-        firstName,
-        lastName,
-        fullName: `${firstName} ${lastName}`,
-        email,
-        gender,
-        countryCode,
-        phoneNumber: `${countryCode} ${phoneNumber}`,
-        dateOfBirth,
-        city,
-        country: finalCountry,
-        nationality: finalNationality,
-        doubleNationality: finalDoubleNationality,
-        jobCategory: selectedCategory,
-        specialty: finalSpecialty, // ✅ Save selected specialty
-        jobTitle,
-        jobTitleText: selectedJob?.title || '',
-        websites: websites.filter(w => w.trim() !== ''),
-        cvUrl,
-        passportUrl,
-        photoUrl,
-        submittedAt: serverTimestamp(),
-        status: 'submitted',
-        score: null
+      // 🔥 STEP 1: Check database first (FREE - no API cost)
+      console.log('Step 1: Checking database for existing candidate...');
+      const checkResponse = await fetch('/api/check-candidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail }),
       });
 
-      // ✅ Reset all form fields including specialty
-      setFirstName('');
-      setLastName('');
-      setEmail('');
-      setGender('');
-      setCountryCode('+358');
-      setPhoneNumber('');
-      setDateOfBirth('');
-      setCity('');
-      setCountry('');
-      setCountrySearch('');
-      setNationality('');
-      setNationalitySearch('');
-      setDoubleNationality('');
-      setDoubleNationalitySearch('');
-      setSelectedCategory('');
-      setSpecialty('');
-      setSpecialtySearch('');
-      setJobTitle('');
-      setSelectedJob(null);
-      setAvailableSpecialties([]);
-      setWebsites(['']);
-      setCvFile(null);
-      setPassportFile(null);
-      setPhotoFile(null);
+      const checkResult = await checkResponse.json();
       
-      const cvInput = document.getElementById('cv') as HTMLInputElement;
-      const passportInput = document.getElementById('passport') as HTMLInputElement;
-      const photoInput = document.getElementById('photo') as HTMLInputElement;
-      if (cvInput) cvInput.value = '';
-      if (passportInput) passportInput.value = '';
-      if (photoInput) photoInput.value = '';
+      if (!checkResponse.ok) {
+        throw new Error(checkResult.error || 'Failed to check candidate status');
+      }
 
-      setSuccess("Application submitted successfully!");
-      setShowSuccessToast(true);
+      // If candidate exists in database, skip email verification
+      if (checkResult.exists && checkResult.count > 0) {
+        console.log('✅ Existing candidate found in database - redirecting to choices');
+        router.push(`/candidate-choices?email=${encodeURIComponent(normalizedEmail)}`);
+        return;
+      }
+
+      // 🔥 STEP 2: Only verify email if candidate doesn't exist (COSTS MONEY)
+      console.log('Step 2: New email - verifying with external API...');
+      const verifyResponse = await fetch('/api/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      const verifyResult = await verifyResponse.json();
+      
+      if (!verifyResponse.ok) {
+        throw new Error(verifyResult.error || 'Email verification failed');
+      }
+
+      if (!verifyResult.isValid) {
+        setError('Please enter a valid email address that exists');
+        return;
+      }
+
+      // 🔥 STEP 3: Email is valid and new - redirect to form
+      console.log('✅ Email verified - redirecting to application form');
+      router.push(`/candidate-form?email=${encodeURIComponent(normalizedEmail)}`);
 
     } catch (err) {
-      console.error("Error submitting application:", err);
-      if (err instanceof Error) {
-          setError(`Submission failed: ${err.message || 'Unknown error'}`);
-      } else {
-          setError('Submission failed: An unknown error occurred');
-      }
+      console.error('Email submission error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
-
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      {/* Header remains the same */}
+      {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-20">
           <div className="bg-[#003A70] text-white text-xs py-1.5">
               <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex justify-center md:justify-between items-center">
@@ -396,58 +125,35 @@ useEffect(() => {
           </nav>
       </header>
       
-      {/* Main Content */}
-      <main id="form-start" className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6">
-        <div className="w-full max-w-4xl p-6 sm:p-10 space-y-8 bg-white rounded-xl shadow-2xl shadow-slate-200">
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#003A70] mb-2">Candidate Application</h1>
-            <p className="text-slate-500">Apply for your dream job opportunity</p>
+      {/* Hero Section */}
+      <main className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6">
+        <div className="w-full max-w-2xl text-center space-y-8">
+          {/* Hero Content */}
+          <div className="space-y-6">
+            <h1 className="text-4xl sm:text-6xl font-extrabold text-[#003A70] leading-tight">
+              Your Career Journey 
+              <span className="block text-3xl sm:text-5xl text-slate-600 font-semibold mt-2">
+                Starts Here
+              </span>
+            </h1>
+            
+            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              Connect with international opportunities and take the next step in your professional journey. 
+              Join thousands of professionals who have found their dream careers through our platform.
+            </p>
           </div>
-          
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Personal Information Section */}
-            <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
-              <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Personal Information</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {/* First Name */}
-                <div>
-                  <label htmlFor="firstName" className="block text-sm font-semibold text-slate-600 mb-2">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    id="firstName"
-                    required
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    placeholder="Enter your first name"
-                    disabled={isLoading}
-                  />
-                </div>
 
-                {/* Last Name */}
-                <div>
-                  <label htmlFor="lastName" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    id="lastName"
-                    required
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    placeholder="Enter your last name"
-                    disabled={isLoading}
-                  />
-                </div>
+          {/* Email Form */}
+          <div className="bg-white p-8 sm:p-10 rounded-2xl shadow-2xl shadow-slate-200 border border-slate-100">
+            <div className="space-y-6">
+              <div className="text-center space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-bold text-[#003A70]">Get Started</h2>
+                <p className="text-slate-500">Enter your email to begin your application or access your dashboard</p>
+              </div>
 
-                {/* Email */}
-                <div className="sm:col-span-2">
-                  <label htmlFor="email" className="block text-sm font-semibold text-slate-600 mb-2">
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-semibold text-slate-600 mb-3">
                     Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -457,539 +163,78 @@ useEffect(() => {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                    className="w-full px-6 py-4 text-lg border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] transition-colors"
                     placeholder="your.email@example.com"
                     disabled={isLoading}
                   />
                 </div>
 
-                {/* Gender */}
-                <div>
-                  <label htmlFor="gender" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Gender <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="gender"
-                    id="gender"
-                    required
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    disabled={isLoading}
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </div>
-                                {/* Date of Birth - Add this field */}
-                <div>
-                  <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Date of Birth <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="dateOfBirth"
-                    id="dateOfBirth"
-                    required
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    disabled={isLoading}
-                  />
-                </div>
-  {/* Phone Number */}
-                <div>
-                  <label htmlFor="phoneNumber" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex">
-                    <div className="relative" ref={countryCodeRef}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowCountryCodeList(!showCountryCodeList);
-                          setCountryCodeSearch('');
-                        }}
-                        className="w-32 px-3 py-3 border border-slate-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-slate-100 text-sm flex items-center justify-between"
-                        disabled={isLoading}
-                      >
-                        <span>
-                          {countryCodes.find(item => item.code === countryCode)?.flag} {countryCode}
-                        </span>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      
-                      {showCountryCodeList && (
-                        <div className="absolute z-20 w-80 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg">
-                          <div className="p-2 border-b border-slate-200">
-                            <input
-                              type="text"
-                              value={countryCodeSearch}
-                              onChange={(e) => setCountryCodeSearch(e.target.value)}
-                              className="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                              placeholder="Search country..."
-                              autoFocus
-                            />
-                          </div>
-                          <div className="max-h-60 overflow-y-auto">
-                            {filteredCountryCodes.map((item, index) => (
-                              <button
-                                key={index}
-                                type="button"
-                                onClick={() => {
-                                  setCountryCode(item.code);
-                                  setShowCountryCodeList(false);
-                                  setCountryCodeSearch('');
-                                }}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 focus:bg-slate-100 focus:outline-none flex items-center space-x-3"
-                              >
-                                <span className="text-lg">{item.flag}</span>
-                                <span className="font-medium">{item.code}</span>
-                                <span className="text-slate-600 truncate">{item.country}</span>
-                              </button>
-                            ))}
-                            {filteredCountryCodes.length === 0 && (
-                              <div className="px-3 py-2 text-sm text-slate-500">
-                                No countries found
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <input
-                      type="tel"
-                      name="phoneNumber"
-                      id="phoneNumber"
-                      required
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="flex-1 px-4 py-3 border-l-0 border border-slate-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                      placeholder="123 456 789"
-                      disabled={isLoading}
-                    />
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-sm text-red-600">{error}</p>
                   </div>
-                </div>
+                )}
 
-                {/* City */}
-                <div>
-                  <label htmlFor="city" className="block text-sm font-semibold text-slate-600 mb-2">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    id="city"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    placeholder="Enter your city"
-                    disabled={isLoading}
-                  />
-                </div>
-
-{/* Country */}
-<div className="relative" ref={countryRef}>
-  <label htmlFor="country" className="block text-sm font-semibold text-slate-600 mb-2">
-    Country <span className="text-red-500">*</span>
-  </label>
-  <input
-    type="text"
-    name="countrySearch"
-    id="countrySearch"
-    value={countrySearch}
-    onChange={(e) => {
-      const value = e.target.value;
-      setCountrySearch(value);
-      // ✅ Auto-set country if exact match exists
-      if (countries.includes(value)) {
-        setCountry(value);
-      } else {
-        setCountry("");
-      }
-      setShowCountryList(true);
-    }}
-    onFocus={() => setShowCountryList(true)}
-    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-    placeholder="Search and select your country"
-    disabled={isLoading}
-    autoComplete="off"
-  />
-  {showCountryList && filteredCountries.length > 0 && (
-    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-      {filteredCountries.map((countryOption, index) => (
-        <button
-          key={index}
-          type="button"
-          onClick={() => {
-            setCountry(countryOption);
-            setCountrySearch(countryOption);
-            setShowCountryList(false);
-          }}
-          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-        >
-          {countryOption}
-        </button>
-      ))}
-    </div>
-  )}
-</div>
-
-              {/* ✅ Nationality */}
-<div className="relative" ref={nationalityRef}>
-  <label htmlFor="nationality" className="block text-sm font-semibold text-slate-600 mb-2">
-    Nationality <span className="text-red-500">*</span>
-  </label>
-  <input
-    type="text"
-    name="nationalitySearch"
-    id="nationalitySearch"
-    required
-    value={nationalitySearch}
-    onChange={(e) => {
-      const value = e.target.value;
-      setNationalitySearch(value);
-      // ✅ Auto-set nationality if exact match exists
-      if (countries.includes(value)) {
-        setNationality(value);
-      } else {
-        setNationality("");
-      }
-      setShowNationalityList(true);
-    }}
-    onFocus={() => setShowNationalityList(true)}
-    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-    placeholder="Search and select your nationality"
-    disabled={isLoading}
-    autoComplete="off"
-  />
-  {showNationalityList && filteredNationalities.length > 0 && (
-    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-      {filteredNationalities.map((nationalityOption, index) => (
-        <button
-          key={index}
-          type="button"
-          onClick={() => {
-            setNationality(nationalityOption);
-            setNationalitySearch(nationalityOption);
-            setShowNationalityList(false);
-          }}
-          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-        >
-          {nationalityOption}
-        </button>
-      ))}
-    </div>
-  )}
-</div>
-
-                {/* ✅ Double Nationality (Optional) */}
-                <div className="relative" ref={doubleNationalityRef}>
-                  <label htmlFor="doubleNationality" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Second Nationality <span className="text-slate-400">(Optional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="doubleNationalitySearch"
-                    id="doubleNationalitySearch"
-                    value={doubleNationalitySearch}
-                    onChange={(e) => {
-                      setDoubleNationalitySearch(e.target.value);
-                      setDoubleNationality(""); // Clear selection when typing
-                      setShowDoubleNationalityList(true);
-                    }}
-                    onFocus={() => setShowDoubleNationalityList(true)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    placeholder="Search and select second nationality (if any)"
-                    disabled={isLoading}
-                    autoComplete="off"
-                  />
-                  {showDoubleNationalityList && filteredDoubleNationalities.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {filteredDoubleNationalities.map((doubleNationalityOption, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => {
-                            setDoubleNationality(doubleNationalityOption);
-                            setDoubleNationalitySearch(doubleNationalityOption);
-                            setShowDoubleNationalityList(false);
-                          }}
-                          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-                        >
-                          {doubleNationalityOption}
-                        </button>
-                      ))}
+                <button
+                  type="submit"
+                  className="w-full px-8 py-4 bg-[#003A70] text-white font-bold text-lg tracking-wide rounded-xl shadow-lg hover:bg-[#002B54] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#003A70] disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Checking...</span>
                     </div>
+                  ) : (
+                    'Continue'
                   )}
-                </div>
+                </button>
+              </form>
 
-{/* Job Category */}
-<div className="sm:col-span-2">
-  <label htmlFor="jobCategory" className="block text-sm font-semibold text-slate-600 mb-2">
-    Job Category <span className="text-red-500">*</span>
-  </label>
-  <select
-    name="jobCategory"
-    id="jobCategory"
-    required
-    value={selectedCategory}
-    onChange={handleCategorySelection}
-    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-    disabled={isLoading}
-  >
-    <option value="">Select a category first</option>
-    {JOB_CATEGORIES.map((category) => (
-      <option key={category} value={category}>
-        {category}
-      </option>
-    ))}
-  </select>
-</div>
-
-{/* Job Title */}
-<div className="sm:col-span-2">
-  <label htmlFor="jobTitle" className="block text-sm font-semibold text-slate-600 mb-2">
-    Job Position <span className="text-red-500">*</span>
-  </label>
-  <select
-    name="jobTitle"
-    id="jobTitle"
-    required
-    value={jobTitle}
-    onChange={handleJobSelection}
-    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-    disabled={isLoading || !selectedCategory}
-  >
-    <option value="">
-      {selectedCategory ? 'Select a job position' : 'Please select a category first'}
-    </option>
-    {filteredJobs.map((job) => (
-      <option key={job.id} value={job.id}>
-        {job.title}
-      </option>
-    ))}
-  </select>
-  {/* ✅ Add debug info */}
-  {selectedCategory && (
-    <div className="mt-2 text-xs text-gray-500">
-      Debug: Found {filteredJobs.length} jobs for category "{selectedCategory}"
-      {filteredJobs.length > 0 && (
-        <div className="mt-1">
-          Jobs: {filteredJobs.map(job => job.title).join(', ')}
-        </div>
-      )}
-    </div>
-  )}
-  {selectedJob && (
-    <div className="mt-3 p-3 bg-slate-100 border border-slate-200 rounded-lg">
-      <h4 className="font-semibold text-[#003A70] mb-1">Job Description:</h4>
-      <p className="text-sm text-slate-700">{selectedJob.description}</p>
-      <p className="text-xs text-slate-500 mt-1">Category: {selectedJob.category}</p>
-    </div>
-  )}
-</div>
-
-                {/* ✅ Updated Specialty Field - Now loads from selected job */}
-                <div className="sm:col-span-2 relative" ref={specialtyRef}>
-                  <label htmlFor="specialty" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Specialty <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="specialtySearch"
-                    id="specialtySearch"
-                    required
-                    value={specialtySearch}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setSpecialtySearch(value);
-                      if (availableSpecialties.includes(value)) {
-                        setSpecialty(value);
-                      } else {
-                        setSpecialty('');
-                      }
-                      setShowSpecialtyList(true);
-                    }}
-                    onFocus={() => setShowSpecialtyList(true)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                    placeholder={selectedJob ? "Search and select your specialty" : "Please select a job position first"}
-                    disabled={isLoading || !selectedJob}
-                    autoComplete="off"
-                  />
-                  {showSpecialtyList && filteredSpecialties.length > 0 && selectedJob && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {filteredSpecialties.map((spec, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => {
-                            setSpecialty(spec);
-                            setSpecialtySearch(spec);
-                            setShowSpecialtyList(false);
-                          }}
-                          className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
-                        >
-                          {spec}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {selectedJob && availableSpecialties.length > 0 && (
-                    <div className="mt-2 p-3 bg-green-50 rounded-lg">
-                      <p className="text-sm text-green-800 font-medium">Available Specialties:</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {availableSpecialties.map((spec, index) => (
-                          <span key={index} className="px-2 py-1 text-xs bg-green-200 text-green-800 rounded-full">
-                            {spec}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {selectedJob && availableSpecialties.length === 0 && (
-                    <div className="mt-2 p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-sm text-yellow-800">No specialties defined for this job position. Please contact admin.</p>
-                    </div>
-                  )}
-                </div>
+              <div className="text-center">
+                <p className="text-xs text-slate-500">
+                  We'll check if you're an existing candidate or verify your email for new applications.
+                </p>
               </div>
             </div>
+          </div>
 
-            {/* Additional Information Section - keep existing */}
-            <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
-              <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Additional Information</h2>
-              <div className="space-y-4">
-                {additionalInfo.map((info, index) => (
-                  <div key={index} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <select
-                      value={info.type}
-                      onChange={(e) => {
-                        const newInfo = [...additionalInfo];
-                        newInfo[index] = {...newInfo[index], type: e.target.value as 'link' | 'file' | 'text', content: '', file: undefined};
-                        setAdditionalInfo(newInfo);
-                      }}
-                      className="px-3 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-white min-w-[100px]"
-                      disabled={isLoading}
-                    >
-                      <option value="link">Link</option>
-                      <option value="file">File</option>
-                      <option value="text">Text</option>
-                    </select>
-                    
-                    <div className="flex-1 w-full">
-                      {info.type === 'link' && (
-                        <input type="url" value={info.content} onChange={(e) => updateAdditionalInfo(index, e.target.value)}
-                          className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                          placeholder="https://linkedin.com/in/yourprofile" disabled={isLoading} />
-                      )}
-                      {info.type === 'file' && (
-                        <input type="file" onChange={(e) => { const file = e.target.files?.[0]; if (file) { updateAdditionalInfo(index, file.name, file); } }}
-                          className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-[#003A70] hover:file:bg-slate-200"
-                          disabled={isLoading} />
-                      )}
-                      {info.type === 'text' && (
-                        <textarea value={info.content} onChange={(e) => updateAdditionalInfo(index, e.target.value)}
-                          className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
-                          placeholder="Enter additional notes..." rows={2} disabled={isLoading} />
-                      )}
-                    </div>
-                    
-                    {additionalInfo.length > 1 && (
-                      <button type="button" onClick={() => removeAdditionalInfo(index)}
-                        className="p-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 self-center sm:self-auto"
-                        disabled={isLoading}>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                      </button>
-                    )}
-                  </div>
-                ))}
-                
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <button type="button" onClick={() => addAdditionalInfo('link')} disabled={isLoading}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-sky-100 text-sky-800 rounded-lg hover:bg-sky-200 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                    <span>Add Link</span>
-                  </button>
-                  <button type="button" onClick={() => addAdditionalInfo('file')} disabled={isLoading}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-emerald-100 text-emerald-800 rounded-lg hover:bg-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                    <span>Add File</span>
-                  </button>
-                  <button type="button" onClick={() => addAdditionalInfo('text')} disabled={isLoading}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium bg-violet-100 text-violet-800 rounded-lg hover:bg-violet-200 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" /></svg>
-                    <span>Add Text</span>
-                  </button>
-                </div>
+          {/* Features */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16">
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 bg-[#003A70]/10 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-[#003A70]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                </svg>
               </div>
-            </div>
-            
-            {/* ✅ Updated File Upload Section */}
-            <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
-              <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Required Documents</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                  <label htmlFor="cv" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Upload CV <span className="text-red-500">*</span>
-                  </label>
-                  <input type="file" name="cv" id="cv" required accept=".pdf,.doc,.docx" onChange={handleFileChange}
-                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-[#003A70] hover:file:bg-slate-200"
-                    disabled={isLoading} />
-                  <p className="mt-1 text-xs text-slate-500">PDF, DOC, DOCX only.</p>
-                </div>
-                <div>
-                  <label htmlFor="passport" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Upload Passport/ID <span className="text-red-500">*</span>
-                  </label>
-                  <input type="file" name="passport" id="passport" required accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange}
-                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-[#003A70] hover:file:bg-slate-200"
-                    disabled={isLoading} />
-                  <p className="mt-1 text-xs text-slate-500">PDF, JPG, PNG only.</p>
-                </div>
-                {/* ✅ Updated Photo Upload Field - Now Optional */}
-                <div>
-                  <label htmlFor="photo" className="block text-sm font-semibold text-slate-600 mb-2">
-                    Upload Photo <span className="text-slate-400">(Optional)</span>
-                  </label>
-                  <input type="file" name="photo" id="photo" accept=".jpg,.jpeg,.png" onChange={handleFileChange}
-                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-[#003A70] hover:file:bg-slate-200"
-                    disabled={isLoading} />
-                  <p className="mt-1 text-xs text-slate-500">JPG, PNG only. Professional photo preferred.</p>
-                </div>
-              </div>
+              <h3 className="font-semibold text-slate-800">Global Opportunities</h3>
+              <p className="text-sm text-slate-600">Access international job opportunities across various industries</p>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-600">{error}</p>
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 bg-[#003A70]/10 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-[#003A70]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-            )}
-
-            <div className="text-center pt-4">
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-10 py-4 bg-[#003A70] text-white font-bold tracking-wide rounded-lg shadow-lg hover:bg-[#002B54] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#003A70] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Submitting...' : 'Submit Application'}
-              </button>
+              <h3 className="font-semibold text-slate-800">Verified Process</h3>
+              <p className="text-sm text-slate-600">Secure and verified application process with real email validation</p>
             </div>
-          </form>
+
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 bg-[#003A70]/10 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-[#003A70]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-slate-800">Fast Track</h3>
+              <p className="text-sm text-slate-600">Streamlined application process to get you started quickly</p>
+            </div>
+          </div>
         </div>
       </main>
 
-      <SuccessToast
-        message={success || ''}
-        isVisible={showSuccessToast}
-        onClose={() => setShowSuccessToast(false)}
-      />
-
-      {/* Footer remains the same */}
+      {/* Footer */}
       <footer className="bg-[#003A70] text-white">
           <div className="max-w-screen-xl mx-auto py-16 px-4 sm:px-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-12">

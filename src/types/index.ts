@@ -13,6 +13,7 @@ export interface Candidate {
     phoneNumber?: string;
     countryCode?: string;
     dateOfBirth?: string;
+    age?: number; // 🔥 NEW: Add age field
     city?: string;
     country?: string;
     nationality?: string;
@@ -20,7 +21,7 @@ export interface Candidate {
     jobTitle?: string;
     jobTitleText?: string;
     jobCategory?: string;
-    specialty?: string; // ✅ Add specialty field
+    specialty?: string;
     websites: string[];
     cvUrl: string;
     passportUrl: string;
@@ -181,6 +182,7 @@ export interface SuccessToastProps {
   message: string;
   isVisible: boolean;
   onClose: () => void;
+  duration?: number; // Add this optional property
 }
 
 export interface TabProps {

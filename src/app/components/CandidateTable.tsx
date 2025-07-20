@@ -175,14 +175,29 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
     );
   };
 
-  const calculateAge = (dateOfBirth: string) => {
+const calculateAge = (dateOfBirth: string) => {
+  if (!dateOfBirth) return null;
+  
+  try {
     const birthDate = new Date(dateOfBirth);
     const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear() - 
-      (today.getMonth() < birthDate.getMonth() || 
-       (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
+    
+    // Check if date is valid
+    if (isNaN(birthDate.getTime())) return null;
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    // If birth month hasn't occurred this year, or it's the birth month but the day hasn't occurred
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
     return age;
-  };
+  } catch {
+    return null;
+  }
+};
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
