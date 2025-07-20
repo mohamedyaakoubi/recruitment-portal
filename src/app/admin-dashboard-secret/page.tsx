@@ -479,6 +479,31 @@ if (candidate.dateOfBirth && (filterAgeMin || filterAgeMax)) {
         });
     };
 
+    const handleEditCandidate = async (candidateId: string, updatedData: Partial<Candidate>) => {
+    try {
+        const response = await fetch('/api/update-candidate', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ candidateId, updatedData }),
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to update candidate');
+        }
+
+        console.log('✅ Candidate updated successfully:', result);
+        showToast('Candidate information updated successfully!', 'success');
+        
+    } catch (error) {
+        console.error('❌ Failed to update candidate:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        showToast(`Failed to update candidate: ${errorMessage}`, 'error');
+        throw error; // Re-throw to let the modal handle it
+    }
+};
+
 const performStatusChange = async (candidateId: string, newStatus: string, interviewTimestampISO?: string) => {
     setStatusUpdateLoading(prev => ({ ...prev, [candidateId]: true }));
     setStatusUpdateError(null);
@@ -712,15 +737,16 @@ const performStatusChange = async (candidateId: string, newStatus: string, inter
                 error={scoringError}
             />
 
-            <CandidateProfileModal
-                isOpen={isProfileModalOpen}
-                onClose={closeProfileModal}
-                candidate={selectedCandidate}
-                onStatusChange={handleStatusChange}
-                onCancelInterview={handleCancelInterview}
-                statusUpdateLoading={selectedCandidate ? statusUpdateLoading[selectedCandidate.id] || false : false}
-                onScheduleInterview={() => setIsInterviewSchedulingOpen(true)}
-            />
+<CandidateProfileModal
+    isOpen={isProfileModalOpen}
+    onClose={closeProfileModal}
+    candidate={selectedCandidate}
+    onStatusChange={handleStatusChange}
+    onCancelInterview={handleCancelInterview}
+    statusUpdateLoading={selectedCandidate ? statusUpdateLoading[selectedCandidate.id] || false : false}
+    onScheduleInterview={() => setIsInterviewSchedulingOpen(true)}
+    onEditCandidate={handleEditCandidate} // 🔥 NEW: Add edit handler
+/>
 
             <InterviewSchedulingModal
                 isOpen={isInterviewSchedulingOpen}

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { FiX, FiUser, FiFileText, FiClipboard, FiLink, FiCalendar, FiCheckCircle, FiXCircle, FiClock, FiEdit, FiTrash2, FiExternalLink, FiAward, FiBriefcase, FiMapPin, FiPhone, FiMail, FiGlobe, FiImage, FiCode, FiKey, FiUsers, FiTarget } from 'react-icons/fi';
+import EditCandidateModal from './EditCandidateModal';
 
 import type { Candidate, CandidateProfileModalProps } from '@/types';
 
@@ -77,12 +78,32 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
     onCancelInterview,
     statusUpdateLoading,
     onScheduleInterview,
+    onEditCandidate, // 🔥 NEW: Add edit handler
 }) => {
+    // 🔥 NEW: Add edit modal state
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+
     if (!isOpen || !candidate) return null;
 
     const handleReject = () => onStatusChange(candidate.id, 'rejected');
     const handleApprove = () => onStatusChange(candidate.id, 'approved');
     const age = candidate.dateOfBirth ? calculateAge(candidate.dateOfBirth) : null;
+
+    // 🔥 NEW: Handle edit candidate
+const handleEditCandidate = async (candidateId: string, updatedData: Partial<Candidate>) => {
+    if (!onEditCandidate) return;
+    
+    setIsUpdating(true);
+    try {
+        await onEditCandidate(candidateId, updatedData);
+        setIsEditModalOpen(false);
+    } catch (error) {
+        console.error('Failed to update candidate:', error);
+    } finally {
+        setIsUpdating(false);
+    }
+};
 
     const renderInterviewSection = () => {
         if (candidate?.status !== 'interview_scheduled' || !candidate?.interviewDate) return null;
@@ -144,25 +165,39 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
     };
 
     return (
+        <>
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
             <div className="bg-gray-50 rounded-xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col">
-                {/* Header */}
-                <div className="p-5 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
-                    <div className="flex items-center">
-                        {candidate.photoUrl ? (
-                            <img src={candidate.photoUrl} alt={candidate.fullName} className="w-12 h-12 rounded-full object-cover mr-4 border-2 border-white shadow" />
-                        ) : (
-                            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mr-4"><FiUser size={24} className="text-gray-500" /></div>
-                        )}
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900">{candidate.fullName}</h2>
-                            <p className="text-sm text-gray-500">{candidate.jobTitleText}</p>
+               {/* Header */}
+                    <div className="p-5 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
+                        <div className="flex items-center">
+                            {candidate.photoUrl ? (
+                                <img src={candidate.photoUrl} alt={candidate.fullName} className="w-12 h-12 rounded-full object-cover mr-4 border-2 border-white shadow" />
+                            ) : (
+                                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mr-4"><FiUser size={24} className="text-gray-500" /></div>
+                            )}
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">{candidate.fullName}</h2>
+                                <p className="text-sm text-gray-500">{candidate.jobTitleText}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            {/* 🔥 NEW: Add edit button */}
+                            {onEditCandidate && (
+                                <button
+                                    onClick={() => setIsEditModalOpen(true)}
+                                    className="flex items-center px-3 py-2 text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 transition-colors"
+                                    disabled={statusUpdateLoading || isUpdating}
+                                >
+                                    <FiEdit className="mr-2" size={16} />
+                                    Edit
+                                </button>
+                            )}
+                            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors rounded-full p-2">
+                                <FiX size={24} />
+                            </button>
                         </div>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors rounded-full p-2">
-                        <FiX size={24} />
-                    </button>
-                </div>
 
                 {/* Body */}
                 <div className="p-5 overflow-y-auto flex-grow">
@@ -256,6 +291,14 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
                 </div>
             </div>
         </div>
+                    <EditCandidateModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                candidate={candidate}
+                onSave={handleEditCandidate}
+                isLoading={isUpdating}
+            />
+               </>
     );
 };
 
