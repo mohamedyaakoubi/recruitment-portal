@@ -51,9 +51,48 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
     };
   }, []);
 
+    const calculateAge = (dateOfBirth: string): number | null => {
+    if (!dateOfBirth) return null;
+    
+    try {
+      const birthDate = new Date(dateOfBirth);
+      const today = new Date();
+      
+      if (isNaN(birthDate.getTime())) return null;
+      
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      
+      return age;
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
       <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Personal Information</h2>
+      
+      {/* 🔥 NEW: Age requirement notice */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="flex items-start space-x-3">
+          <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <h3 className="font-semibold text-blue-800 mb-1">Age Requirement</h3>
+            <p className="text-sm text-blue-700">
+              You must be at least <strong>18 years old</strong> to submit an application. 
+              Please ensure your date of birth is accurate as it will be verified.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
           <label htmlFor="firstName" className="block text-sm font-semibold text-slate-600 mb-2">
@@ -139,7 +178,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
           </select>
         </div>
 
-        <div>
+         <div>
           <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-slate-600 mb-2">
             Date of Birth <span className="text-red-500">*</span>
             {isExistingCandidate && (
@@ -157,7 +196,37 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
               isExistingCandidate ? 'bg-gray-100 cursor-not-allowed' : ''
             }`}
             disabled={isLoading || isExistingCandidate}
+            // 🔥 NEW: Set max date to 18 years ago
+            max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
           />
+          {/* 🔥 NEW: Show calculated age with validation */}
+          {dateOfBirth && (
+            <div className="mt-1">
+              {(() => {
+                const age = calculateAge(dateOfBirth);
+                const isValidAge = age !== null && age >= 18;
+                
+                return (
+                  <p className={`text-xs mt-1 ${isValidAge ? 'text-gray-600' : 'text-red-600 font-medium'}`}>
+                    {age !== null ? (
+                      isValidAge ? (
+                        <>Age: {age} years old</>
+                      ) : (
+                        <>⚠️ Age: {age} years old - You must be at least 18 years old to apply</>
+                      )
+                    ) : (
+                      <span className="text-red-600">Invalid date format</span>
+                    )}
+                  </p>
+                );
+              })()}
+            </div>
+          )}
+          {isExistingCandidate && dateOfBirth && (
+            <p className="text-xs text-gray-500 mt-1">
+              Age: {calculateAge(dateOfBirth)} years old
+            </p>
+          )}
         </div>
 
         <div className="sm:col-span-2">

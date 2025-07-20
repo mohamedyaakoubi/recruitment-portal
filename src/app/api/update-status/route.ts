@@ -1,4 +1,3 @@
-// src/app/api/update-status/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { updateCandidateStatus } from '@/services/candidate';
 
@@ -17,7 +16,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing candidateId or newStatus' }, { status: 400 });
         }
 
-        const status = await updateCandidateStatus(
+        // 🔥 UPDATED: Get email status from service
+        const result = await updateCandidateStatus(
             candidateId, 
             newStatus, 
             interviewTimestampISO,
@@ -26,11 +26,18 @@ export async function POST(request: NextRequest) {
             duration
         );
 
-        return NextResponse.json({ success: true, newStatus: status });
+        return NextResponse.json({ 
+            success: true, 
+            newStatus: result.status,
+            emailSent: result.emailSent // 🔥 NEW: Include email status
+        });
 
     } catch (error) {
         console.error("Error in /api/update-status:", error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ error: 'Failed to update candidate status', details: errorMessage }, { status: 500 });
+        return NextResponse.json({ 
+            error: 'Failed to update candidate status', 
+            details: errorMessage 
+        }, { status: 500 });
     }
 }
