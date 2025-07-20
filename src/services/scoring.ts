@@ -87,7 +87,8 @@ async function uploadFileToGemini(fileUrl: string, mimeType: string) {
 
 // Function to get MIME type from URL
 function getMimeTypeFromUrl(url: string): string {
-    const extension = url.toLowerCase().split('.').pop();
+    const urlWithoutQuery = url.split('?')[0];
+    const extension = urlWithoutQuery.toLowerCase().split('.').pop();
     
     switch (extension) {
         case 'pdf':
@@ -212,7 +213,7 @@ async function getGemini25ScoringAnalysis(
 
         // Get model
         const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-pro"
+            model: "gemini-2.5-pro"
         });
 
         // Construct comprehensive analysis prompt
@@ -267,7 +268,7 @@ Provide your response in the following JSON format:
 Please provide a thorough assessment based on ALL available information including uploaded documents.
         `;
 
-        console.log(`🔍 Sending comprehensive analysis request to Gemini 1.5 Pro...`);
+        console.log(`🔍 Sending comprehensive analysis request to Gemini 2.5 Pro...`);
         console.log(`📊 Analysis includes: ${geminiFiles.length} uploaded files, ${additionalContent.length} additional info items`);
 
         // 🔥 FIXED: Create content parts using the correct API structure
@@ -310,7 +311,7 @@ Please provide a thorough assessment based on ALL available information includin
             throw new Error("No response text received from Gemini API");
         }
         
-        console.log("🤖 Gemini 1.5 Pro Raw Response:", responseText.substring(0, 200) + "...");
+        console.log("🤖 Gemini 2.5 Pro Pro Raw Response:", responseText.substring(0, 200) + "...");
 
         // 🔥 FIXED: Cleanup using the correct FileManager API
         for (const file of geminiFiles) {
@@ -347,7 +348,7 @@ Please provide a thorough assessment based on ALL available information includin
                 Array.isArray(parsedResponse.areasForImprovement) &&
                 ['highly_recommended', 'recommended', 'conditional', 'not_recommended'].includes(parsedResponse.recommendation)
             ) {
-                console.log(`✅ Gemini 1.5 Pro Analysis Complete - Score: ${parsedResponse.score}, Recommendation: ${parsedResponse.recommendation}`);
+                console.log(`✅ Gemini 2.5 Pro Analysis Complete - Score: ${parsedResponse.score}, Recommendation: ${parsedResponse.recommendation}`);
                 return parsedResponse;
             } else {
                 console.error("❌ Parsed response doesn't match expected format:", parsedResponse);
@@ -376,7 +377,7 @@ Please provide a thorough assessment based on ALL available information includin
         }
 
     } catch (error) {
-        console.error("❌ Error calling Gemini 1.5 Pro API:", error);
+        console.error("❌ Error calling Gemini 2.5 Pro API:", error);
         return null;
     }
 }
@@ -391,7 +392,7 @@ export const scoreCandidate = async (
         throw new Error('AI Scoring is not configured on the server.');
     }
 
-    console.log(`🎯 Starting comprehensive Gemini 1.5 Pro scoring for candidate: ${candidateId}`);
+    console.log(`🎯 Starting comprehensive Gemini 2.5 Pro scoring for candidate: ${candidateId}`);
 
     const db = getFirestoreAdmin();
     const candidateRef = db.collection("candidates").doc(candidateId);
@@ -424,7 +425,7 @@ export const scoreCandidate = async (
     const scoringResult = await getGemini25ScoringAnalysis(jobTitle, jobDescription, candidateDataForScoring);
 
     if (scoringResult === null) {
-        throw new Error('Failed to get AI score and analysis from Gemini 1.5 Pro');
+        throw new Error('Failed to get AI score and analysis from Gemini 2.5 Pro');
     }
 
     // Update candidate document with enhanced scoring data
@@ -437,11 +438,11 @@ export const scoreCandidate = async (
         scoredForJobId: jobId || null,
         scoredForJobTitle: jobTitle,
         lastScoredAt: admin.firestore.Timestamp.now(),
-        scoringVersion: 'gemini-1.5-pro-enhanced'
+        scoringVersion: 'gemini-2.5-pro-enhanced'
     };
 
     await candidateRef.update(updateData);
 
-    console.log(`✅ Candidate ${candidateId} scored successfully with comprehensive Gemini 1.5 Pro analysis`);
+    console.log(`✅ Candidate ${candidateId} scored successfully with comprehensive Gemini 2.5 Pro analysis`);
     return scoringResult;
 };
