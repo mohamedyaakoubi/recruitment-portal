@@ -479,65 +479,45 @@ if (candidate.dateOfBirth && (filterAgeMin || filterAgeMax)) {
         });
     };
 
-    const performStatusChange = async (candidateId: string, newStatus: string, interviewTimestampISO?: string) => {
-        setStatusUpdateLoading(prev => ({ ...prev, [candidateId]: true }));
-        setStatusUpdateError(null);
-        try {
-            const response = await fetch('/api/update-status', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ candidateId, newStatus, interviewTimestampISO }),
-            });
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.error || 'Failed to update status');
-            }
-            console.log('Status update successful:', result);
-            
-            if (newStatus === 'rejected') {
-                const candidate = candidates.find(c => c.id === candidateId);
-                if (candidate && candidate.email) {
-                    try {
-                        const emailResponse = await fetch('/api/send-rejection-email', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                candidateEmail: candidate.email,
-                                candidateName: candidate.fullName,
-                                jobTitle: candidate.jobTitleText || ''
-                            }),
-                        });
-                        
-                        if (emailResponse.ok) {
-                            console.log('Rejection email sent successfully');
-                            showToast('Candidate rejected and email notification sent successfully!', 'success');
-                        } else {
-                            console.error('Failed to send rejection email');
-                            showToast('Candidate rejected, but email notification failed to send.', 'warning');
-                        }
-                    } catch (emailError) {
-                        console.error('Error sending rejection email:', emailError);
-                        showToast('Candidate rejected, but email notification failed to send.', 'warning');
-                    }
-                } else {
-                    showToast(`Candidate status updated to ${newStatus.replace('_', ' ')} successfully!`, 'success');
-                }
-            } else {
-                showToast(`Candidate status updated to ${newStatus.replace('_', ' ')} successfully!`, 'success');
-            }
-            
-            if (selectedCandidate?.id === candidateId) {
-                closeProfileModal();
-            }
-        } catch (error) {
-            console.error('Status update failed:', error);
-            const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-            setStatusUpdateError(errorMessage);
-            showToast(`Failed to update status: ${errorMessage}`, 'error');
-        } finally {
-            setStatusUpdateLoading(prev => ({ ...prev, [candidateId]: false }));
+const performStatusChange = async (candidateId: string, newStatus: string, interviewTimestampISO?: string) => {
+    setStatusUpdateLoading(prev => ({ ...prev, [candidateId]: true }));
+    setStatusUpdateError(null);
+    try {
+        const response = await fetch('/api/update-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ candidateId, newStatus, interviewTimestampISO }),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to update status');
         }
-    };
+        console.log('Status update successful:', result);
+        
+        // 🔥 FIXED: Remove the duplicate email sending logic
+        if (newStatus === 'rejected') {
+            // The email is already sent by the updateCandidateStatus service
+            if (result.emailSent) {
+                showToast('Candidate rejected and email notification sent successfully!', 'success');
+            } else {
+                showToast('Candidate rejected. Email notification may have failed - check server logs.', 'warning');
+            }
+        } else {
+            showToast(`Candidate status updated to ${newStatus.replace('_', ' ')} successfully!`, 'success');
+        }
+        
+        if (selectedCandidate?.id === candidateId) {
+            closeProfileModal();
+        }
+    } catch (error) {
+        console.error('Status update failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        setStatusUpdateError(errorMessage);
+        showToast(`Failed to update status: ${errorMessage}`, 'error');
+    } finally {
+        setStatusUpdateLoading(prev => ({ ...prev, [candidateId]: false }));
+    }
+};
 
     // Loading state
     if (authLoading || (user && loadingCandidates)) {

@@ -1,4 +1,3 @@
-// src/services/email.ts
 import nodemailer from 'nodemailer';
 
 const SMTP_HOST = process.env.SMTP_HOST;
@@ -13,15 +12,41 @@ if (!smtpConfigured) {
     console.warn("SMTP environment variables are not fully set. Email notifications will be disabled.");
 }
 
+// 🔥 UPDATED: Proper SSL configuration for port 465
 const transporter = smtpConfigured ? nodemailer.createTransport({
     host: SMTP_HOST,
     port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
+    secure: SMTP_PORT === 465, // true for 465, false for other ports
     auth: {
         user: SMTP_USER,
         pass: SMTP_PASS,
     },
+    // 🔥 UPDATED: Better timeout configurations for SSL
+    connectionTimeout: 15000, // 15 seconds for SSL
+    greetingTimeout: 10000,   // 10 seconds
+    socketTimeout: 20000,     // 20 seconds for SSL
+    pool: true,               // Use connection pooling
+    maxConnections: 3,        // Reduce concurrent connections for stability
+    maxMessages: 50,          // Reduce messages per connection
+    // 🔥 NEW: Additional SSL options
+    tls: {
+        rejectUnauthorized: false, // Accept self-signed certificates if needed
+        minVersion: 'TLSv1.2'
+    },
+    debug: process.env.NODE_ENV === 'development', // Enable debug in development
+    logger: process.env.NODE_ENV === 'development'  // Enable logging in development
 }) : null;
+
+// Test the connection on startup
+if (transporter && process.env.NODE_ENV === 'development') {
+    transporter.verify((error, success) => {
+        if (error) {
+            console.error('❌ SMTP connection failed:', error);
+        } else {
+            console.log('✅ SMTP server is ready to take our messages');
+        }
+    });
+}
 
 export const sendNotificationEmail = async (to: string, status: string, candidateName: string, interviewDate?: Date) => {
     if (!transporter) {
@@ -31,10 +56,10 @@ export const sendNotificationEmail = async (to: string, status: string, candidat
 
     let subject = '';
     let htmlBody = '';
-    const companyName = "Your Company Name";
+    const companyName = "International Skills Labor Company";
 
     if (status === 'rejected') {
-        subject = `Update on your application with ${companyName}`;
+        subject = `Application Status Update - ${companyName}`;
         htmlBody = `
             <p>Dear ${candidateName},</p>
             <p>Thank you for your interest in ${companyName} and for taking the time to apply.</p>
@@ -53,7 +78,6 @@ export const sendNotificationEmail = async (to: string, status: string, candidat
             <p>Your interview is scheduled for:</p>
             <p><b>Date:</b> ${formattedDate}</p>
             <p><b>Time:</b> ${formattedTime}</p>
-            <p>[Optional: Add details about interview format, location/link, interviewer name, etc. here]</p>
             <p>Please confirm if this time works for you. If not, please let us know your availability.</p>
             <p>We look forward to speaking with you.</p>
             <p>Sincerely,</p>
@@ -65,18 +89,24 @@ export const sendNotificationEmail = async (to: string, status: string, candidat
     }
 
     const mailOptions = {
-        from: SMTP_FROM,
+        from: {
+            name: 'International Skills Labor Company',
+            address: SMTP_FROM || 'noreply@internationalskills.fi'
+        },
         to: to,
         subject: subject,
         html: htmlBody,
+        replyTo: 'Apply@internationalskills.fi'
     };
 
     try {
-        console.log(`Sending ${status} email to ${to}...`);
+        console.log(`📧 Sending ${status} email to ${to}...`);
         const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent: ' + info.response);
+        console.log('✅ Email sent successfully:', info.messageId);
+        return info;
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('❌ Error sending email:', error);
+        throw error; // Re-throw to let caller handle
     }
 };
 
@@ -85,15 +115,10 @@ export const sendRejectionEmail = async (candidateEmail: string, candidateName: 
     throw new Error('Missing required fields');
   }
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+  if (!transporter) {
+    console.warn("SMTP not configured, skipping rejection email.");
+    return;
+  }
 
   const htmlTemplate = `
     <!DOCTYPE html>
@@ -163,7 +188,7 @@ export const sendRejectionEmail = async (candidateEmail: string, candidateName: 
         
         <div class="contact-info">
           <h3>Contact Information:</h3>
-          <p><strong>Email:</strong> wassim@internationalskills.fi</p>
+          <p><strong>Email:</strong> Apply@internationalskills.fi</p>
           <p><strong>Phone:</strong> +358 452644966 | +216 29 581 180</p>
           <p><strong>Website:</strong> <a href="https://internationalskills.fi">internationalskills.fi</a></p>
         </div>
@@ -194,7 +219,7 @@ We will keep your resume on file and may contact you if a suitable opportunity a
 Thank you again for your interest in International Skills Labor Company. We wish you the best of luck in your job search.
 
 Contact Information:
-Email: wassim@internationalskills.fi
+Email: Apply@internationalskills.fi
 Phone: +358 452644966 | +216 29 581 180
 Website: internationalskills.fi
 
@@ -208,16 +233,24 @@ This is an automated message. Please do not reply to this email.
   const mailOptions = {
     from: {
       name: 'International Skills Labor Company',
-      address: process.env.SMTP_USER || 'noreply@internationalskills.fi'
+      address: SMTP_FROM || 'noreply@internationalskills.fi'
     },
     to: candidateEmail,
     subject: `Application Status Update - International Skills Labor Company`,
     text: textTemplate,
     html: htmlTemplate,
-    replyTo: 'wassim@internationalskills.fi'
+    replyTo: 'Apply@internationalskills.fi'
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    console.log(`📧 Sending rejection email to ${candidateEmail}...`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Rejection email sent successfully:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('❌ Error sending rejection email:', error);
+    throw error;
+  }
 };
 
 export const sendCancellationEmail = async ({
@@ -231,15 +264,10 @@ export const sendCancellationEmail = async ({
   jobTitle?: string;
   reason: string;
 }) => {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '465'),
-    secure: process.env.SMTP_PORT === '465',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+  if (!transporter) {
+    console.warn("SMTP not configured, skipping cancellation email.");
+    return;
+  }
 
   const cancellationEmailTemplate = `
     <!DOCTYPE html>
@@ -312,7 +340,7 @@ export const sendCancellationEmail = async ({
         <h3>📞 Contact Us:</h3>
         <p>If you have any questions or concerns, please don't hesitate to contact us:</p>
         <div style="background-color: #e8f5e8; padding: 15px; border-radius: 5px;">
-          <p><strong>📧 Email:</strong> wassim@internationalskills.fi</p>
+          <p><strong>📧 Email:</strong> Apply@internationalskills.fi</p>
           <p><strong>📱 Phone:</strong> +358 452644966 | +216 29 581 180</p>
           <p><strong>💼 Company:</strong> International Skills Labor Company</p>
         </div>
@@ -332,14 +360,20 @@ export const sendCancellationEmail = async ({
   const mailOptions = {
     from: {
       name: 'International Skills Labor Company',
-      address: process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER || 'noreply@internationalskills.fi'
+      address: SMTP_FROM || 'noreply@internationalskills.fi'
     },
     to: candidateEmail,
     subject: `⚠️ Interview Cancelled - ${jobTitle || 'Position'} at International Skills`,
     html: cancellationEmailTemplate,
-    replyTo: 'wassim@internationalskills.fi'
+    replyTo: 'Apply@internationalskills.fi'
   };
 
-  await transporter.sendMail(mailOptions);
-  console.log(`📧 Cancellation email sent to ${candidateEmail}`);
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 Cancellation email sent to ${candidateEmail}:`, info.messageId);
+    return info;
+  } catch (error) {
+    console.error('❌ Error sending cancellation email:', error);
+    throw error;
+  }
 };

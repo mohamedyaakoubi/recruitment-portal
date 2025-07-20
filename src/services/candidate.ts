@@ -1,8 +1,7 @@
-// src/services/candidate.ts
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { sendNotificationEmail } from './email';
+import { sendNotificationEmail, sendRejectionEmail } from './email';
 import { format } from 'date-fns';
 
 // 🔥 NEW: Helper function to calculate age
@@ -37,7 +36,7 @@ export const updateCandidateStatus = async (
     calendarEventId?: string,
     meetLink?: string,
     duration?: number
-) => {
+): Promise<{ status: string; emailSent?: boolean }> => {
     const db = getFirestoreAdmin();
     const validStatuses = ['submitted', 'rejected', 'interview_scheduled', 'approved'];
     if (!validStatuses.includes(newStatus)) {
@@ -95,16 +94,45 @@ export const updateCandidateStatus = async (
         }
     }
 
+    // 🔥 UPDATED: Update database first
     await candidateRef.update(updateData);
 
-    if (candidateData.email && (newStatus === 'rejected' || (newStatus === 'interview_scheduled' && interviewDate))) {
-        await sendNotificationEmail(candidateData.email, newStatus, candidateData.fullName || 'Candidate', interviewDate);
+    let emailSent = false;
+
+    // 🔥 UPDATED: Handle email sending with proper error handling
+    if (candidateData.email) {
+        try {
+            if (newStatus === 'rejected') {
+                console.log(`📧 Sending rejection email to ${candidateData.email}...`);
+                await sendRejectionEmail(
+                    candidateData.email, 
+                    candidateData.fullName || 'Candidate', 
+                    candidateData.jobTitleText || ''
+                );
+                console.log(`✅ Rejection email sent successfully to ${candidateData.email}`);
+                emailSent = true;
+            } else if (newStatus === 'interview_scheduled' && interviewDate) {
+                console.log(`📧 Sending interview notification to ${candidateData.email}...`);
+                await sendNotificationEmail(
+                    candidateData.email, 
+                    newStatus, 
+                    candidateData.fullName || 'Candidate', 
+                    interviewDate
+                );
+                console.log(`✅ Interview notification sent successfully to ${candidateData.email}`);
+                emailSent = true;
+            }
+        } catch (emailError) {
+            console.error(`❌ Failed to send email to ${candidateData.email}:`, emailError);
+            // Don't throw error - status update was successful, just email failed
+            emailSent = false;
+        }
     }
 
-    return newStatus;
+    return { status: newStatus, emailSent };
 };
 
-// 🔥 UPDATED: Export candidates with complete information
+// Rest of the exportCandidates function remains the same...
 export const exportCandidates = async (
     filterStatus: string,
     filterName: string,
@@ -113,7 +141,7 @@ export const exportCandidates = async (
     filterCountry: string = '',
     filterJobTitle: string = '',
     filterCategory: string = '',
-    filterSpecialty: string = '', // 🔥 ADD: Specialty filter parameter
+    filterSpecialty: string = '',
     filterAgeMin: string = '',
     filterAgeMax: string = ''
 ) => {
@@ -168,7 +196,7 @@ export const exportCandidates = async (
       };
     });
 
-    // 🔥 ENHANCED: Apply all filters including specialty
+    // Apply all filters...
     if (filterName) {
       candidates = candidates.filter((candidate: any) => 
         candidate.fullName.toLowerCase().includes(filterName.toLowerCase()) ||
@@ -209,7 +237,6 @@ export const exportCandidates = async (
       );
     }
 
-    // 🔥 ADD: Specialty filtering
     if (filterSpecialty) {
       candidates = candidates.filter((candidate: any) => 
         candidate.specialty.toLowerCase().includes(filterSpecialty.toLowerCase())

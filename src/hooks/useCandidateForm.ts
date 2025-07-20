@@ -165,14 +165,20 @@ export const useCandidateForm = () => {
     loadJobs();
   }, []);
 
-  useEffect(() => {
-    if (selectedJob && selectedJob.specialties) {
-      setAvailableSpecialties(selectedJob.specialties);
+useEffect(() => {
+  if (selectedJob && selectedJob.specialties && Array.isArray(selectedJob.specialties)) {
+    setAvailableSpecialties(selectedJob.specialties);
+    // 🔥 FIXED: Don't automatically clear specialty if it's already valid
+    if (!selectedJob.specialties.includes(specialty)) {
       setSpecialty('');
-    } else {
-      setAvailableSpecialties([]);
+      setSpecialtySearch('');
     }
-  }, [selectedJob]);
+  } else {
+    setAvailableSpecialties([]);
+    setSpecialty('');
+    setSpecialtySearch('');
+  }
+}, [selectedJob]);
 
   const handleCategorySelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
@@ -284,24 +290,72 @@ export const useCandidateForm = () => {
     return { isValid: true, age, message: '' };
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+ const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
+    // 🔥 ENHANCED: Age validation first
     const ageValidation = validateAge(dateOfBirth);
     if (!ageValidation.isValid) {
       setError(ageValidation.message || 'Age validation failed.');
       return;
     }
 
-    if (!firstName || !lastName || !candidateEmail || !gender || !countryCode || !phoneNumber || !dateOfBirth || !city || !country || !nationality || !selectedCategory || !jobTitle || !specialty || !cvFile || !passportFile) {
-      setError("Please fill all required fields.");
+    // 🔥 ENHANCED: Detailed validation with specific missing field messages
+    const missingFields = [];
+    
+    if (!firstName) missingFields.push('First Name');
+    if (!lastName) missingFields.push('Last Name');
+    if (!candidateEmail) missingFields.push('Email');
+    if (!gender) missingFields.push('Gender');
+    if (!countryCode) missingFields.push('Country Code');
+    if (!phoneNumber) missingFields.push('Phone Number');
+    if (!dateOfBirth) missingFields.push('Date of Birth');
+    if (!city) missingFields.push('City');
+    if (!country) missingFields.push('Country');
+    if (!nationality) missingFields.push('Nationality');
+    if (!selectedCategory) missingFields.push('Job Category');
+    if (!jobTitle) missingFields.push('Job Position');
+    if (!specialty) missingFields.push('Specialty');
+    if (!cvFile) missingFields.push('CV/Resume');
+    if (!passportFile) missingFields.push('Passport/ID');
+
+    // 🔥 DEBUG: Log all field values for debugging
+    console.log('🔍 Form validation debug:', {
+      firstName,
+      lastName,
+      candidateEmail,
+      gender,
+      countryCode,
+      phoneNumber,
+      dateOfBirth,
+      city,
+      country,
+      nationality,
+      selectedCategory,
+      jobTitle,
+      specialty,
+      cvFile: cvFile ? cvFile.name : 'Missing',
+      passportFile: passportFile ? passportFile.name : 'Missing',
+      availableSpecialties,
+      specialtyValid: availableSpecialties.includes(specialty)
+    });
+
+    if (missingFields.length > 0) {
+      setError(`Missing required fields: ${missingFields.join(', ')}`);
       return;
     }
 
+    // 🔥 ENHANCED: Specialty validation with better error message
     if (!availableSpecialties.includes(specialty)) {
-      setError("Please select a valid specialty.");
+      setError(`Please select a valid specialty from the available options. Selected: "${specialty}". Available: ${availableSpecialties.join(', ')}`);
+      return;
+    }
+
+    // 🔥 FIXED: Add null checks for file operations
+    if (!cvFile || !passportFile) {
+      setError('CV/Resume and Passport/ID files are required.');
       return;
     }
 
@@ -315,6 +369,7 @@ export const useCandidateForm = () => {
         return;
       }
 
+      // 🔥 FIXED: Safe file name access with null checks
       const cvFileName = `cv_${Date.now()}_${cvFile.name}`;
       const passportFileName = `passport_${Date.now()}_${passportFile.name}`;
       
@@ -332,6 +387,7 @@ export const useCandidateForm = () => {
       ]);
       
       let photoUrl = null;
+      // 🔥 FIXED: Safe photo file handling
       if (photoFile) {
         const photoFileName = `photo_${Date.now()}_${photoFile.name}`;
         const photoStorageRef = ref(storage, `candidate_files/${photoFileName}`);
@@ -378,6 +434,7 @@ export const useCandidateForm = () => {
       }, 2000);
 
     } catch (err) {
+      console.error('❌ Submission error:', err);
       setError(err instanceof Error ? `Submission failed: ${err.message}` : 'An unknown error occurred');
     } finally {
       setIsLoading(false);
@@ -385,45 +442,47 @@ export const useCandidateForm = () => {
   };
 
   return {
-    firstName, setFirstName,
-    lastName, setLastName,
-    email: candidateEmail,
-    gender, setGender,
-    countryCode, setCountryCode,
-    phoneNumber, setPhoneNumber,
-    dateOfBirth, setDateOfBirth,
-    city, setCity,
-    country, setCountry,
-    nationality, setNationality,
-    doubleNationality, setDoubleNationality,
-    jobTitle, setJobTitle,
-    specialty, setSpecialty,
-    specialtySearch, setSpecialtySearch,
-    websites, setWebsites,
-    additionalInfo, setAdditionalInfo,
-    cvFile, setCvFile,
-    passportFile, setPassportFile,
-    photoFile, setPhotoFile,
-    jobs,
-    selectedCategory,
-    filteredJobs,
-    selectedJob,
-    availableSpecialties,
-    isLoading,
-    error,
-    success,
-    showSuccessToast, setShowSuccessToast,
-    isExistingCandidate,
-    addAdditionalInfo,
-    removeAdditionalInfo,
-    updateAdditionalInfo,
-    addWebsite,
-    removeWebsite,
-    updateWebsite,
-    handleCategorySelection,
-    handleJobSelection,
-    handleFileChange,
-    handleSubmit,
-    calculateAge,
-  };
+  firstName, setFirstName,
+  lastName, setLastName,
+  email: candidateEmail,
+  gender, setGender,
+  countryCode, setCountryCode,
+  phoneNumber, setPhoneNumber,
+  dateOfBirth, setDateOfBirth,
+  city, setCity,
+  country, setCountry,
+  nationality, setNationality,
+  doubleNationality, setDoubleNationality,
+  jobTitle, setJobTitle,
+  specialty, setSpecialty,
+  specialtySearch, setSpecialtySearch,
+  websites, setWebsites,
+  additionalInfo, setAdditionalInfo,
+  // 🔥 ADD: Missing file state variables
+  cvFile, setCvFile,
+  passportFile, setPassportFile,
+  photoFile, setPhotoFile,
+  jobs,
+  selectedCategory,
+  filteredJobs,
+  selectedJob,
+  availableSpecialties,
+  isLoading,
+  error,
+  success,
+  showSuccessToast, setShowSuccessToast,
+  isExistingCandidate,
+  addAdditionalInfo,
+  removeAdditionalInfo,
+  updateAdditionalInfo,
+  addWebsite,
+  removeWebsite,
+  updateWebsite,
+  handleCategorySelection,
+  handleJobSelection,
+  handleFileChange,
+  handleSubmit,
+  // 🔥 ADD: Missing calculate age function
+  calculateAge,
+};
 };
