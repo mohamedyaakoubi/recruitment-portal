@@ -1,4 +1,4 @@
-import type { Candidate } from '@/types';
+import type { Candidate, Stats } from '@/types';
 
 export const getStatusChartData = (candidates: Candidate[]) => {
     const counts = candidates.reduce((acc, curr) => {
@@ -34,4 +34,15 @@ export const getScoreDistributionData = (candidates: Candidate[]) => {
     });
 
     return Object.entries(bins).map(([name, value]) => ({ name, count: value }));
+};
+
+// 🔥 ADD: New calculateStats function
+export const calculateStats = (candidates: Candidate[]): Stats => {
+    return {
+        total: candidates.length,
+        submitted: candidates.filter(c => c.status === 'submitted').length,
+        scheduled: candidates.filter(c => c.status === 'interview_scheduled').length,
+        rejected: candidates.filter(c => c.status === 'rejected').length,
+        approved: candidates.filter(c => c.status === 'approved').length,
+    };
 };

@@ -1,4 +1,3 @@
-// src/app/components/StatsCards.tsx
 import React from 'react';
 import { Candidate, Stats, StatsCardsProps } from '@/types';
 
@@ -8,6 +7,20 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, candidates }) => {
     : 0;
 
   const highScorers = candidates.filter(c => (c.score || 0) >= 80).length;
+
+  // 🔥 IMPROVED: Better conversion rate calculation
+  const calculateConversionRate = () => {
+    if (stats.submitted === 0) return '0.0';
+    const conversionRate = (stats.scheduled / stats.submitted) * 100;
+    if (conversionRate > 100) {
+      console.warn('Warning: Scheduled count is higher than submitted count. This may indicate data inconsistency.');
+      return '100.0';
+    }
+    return conversionRate.toFixed(1);
+  };
+
+  // 🔥 NEW: Calculate interview completion rate (scheduled vs approved)
+  const interviewCompletionRate = stats.scheduled > 0 ? ((stats.approved / stats.scheduled) * 100).toFixed(1) : '0.0';
 
   return (
     <section className="mb-8">
@@ -79,14 +92,17 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, candidates }) => {
         </div>
       </div>
 
-      {/* Secondary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 🔥 IMPROVED: More comprehensive secondary stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-sm font-medium text-gray-600">Average AI Score</h4>
               <p className="text-2xl font-bold text-purple-600">
                 {averageScore > 0 ? averageScore.toFixed(1) : '0.0'}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {candidates.filter(c => c.score !== null).length} candidates scored
               </p>
             </div>
             <div className="text-purple-500">
@@ -102,6 +118,9 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, candidates }) => {
             <div>
               <h4 className="text-sm font-medium text-gray-600">High Scorers (80+)</h4>
               <p className="text-2xl font-bold text-yellow-600">{highScorers}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Excellent candidates
+              </p>
             </div>
             <div className="text-yellow-500">
               <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
@@ -116,12 +135,14 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, candidates }) => {
             <div>
               <h4 className="text-sm font-medium text-gray-600">Conversion Rate</h4>
               <p className="text-2xl font-bold text-teal-600">
-                {stats.submitted > 0 
-                  ? `${((stats.scheduled / stats.submitted) * 100).toFixed(1)}%`
-                  : '0%'
-                }
+                {calculateConversionRate()}%
               </p>
-              <p className="text-xs text-gray-500 mt-1">Submitted → Scheduled</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Submitted → Scheduled
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {stats.scheduled} of {stats.submitted} submitted
+              </p>
             </div>
             <div className="text-teal-500">
               <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
@@ -130,10 +151,34 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, candidates }) => {
             </div>
           </div>
         </div>
+
+        <div className="bg-white p-4 rounded-lg shadow border-l-4 border-emerald-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-medium text-gray-600">Interview Success</h4>
+              <p className="text-2xl font-bold text-emerald-600">
+                {interviewCompletionRate}%
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Scheduled → Approved
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {stats.approved} of {stats.scheduled} interviewed
+              </p>
+            </div>
+            <div className="text-emerald-500">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* 🔥 REMOVED: Duplicate pipeline insights section completely */}
+      {/* The information is already clearly shown in the cards above */}
     </section>
   );
 };
 
 export default StatsCards;
-

@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, onSnapshot, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import type { Candidate, InterviewEvent } from '@/types';
 import { isBefore } from 'date-fns';
+import { calculateStats } from '@/lib/dashboardUtils';
 
 export const useDashboard = () => {
     const { user, loading: authLoading, signOut } = useAuth();
@@ -139,14 +140,21 @@ export const useDashboard = () => {
     }, [allInterviewEvents, calendarFilter]);
 
     // Stats calculation
-    const stats = useMemo(() => {
-        const total = candidates.length;
-        const rejected = candidates.filter(c => c.status === 'rejected').length;
-        const scheduled = candidates.filter(c => c.status === 'interview_scheduled').length;
-        const submitted = candidates.filter(c => c.status === 'submitted').length;
-        const approved = candidates.filter(c => c.status === 'approved').length;
-        return { total, rejected, scheduled, submitted, approved };
-    }, [candidates]);
+const stats = useMemo(() => {
+    const total = candidates.length;
+    const submitted = candidates.filter(c => c.status === 'submitted').length;
+    const scheduled = candidates.filter(c => c.status === 'interview_scheduled').length;
+    const rejected = candidates.filter(c => c.status === 'rejected').length;
+    const approved = candidates.filter(c => c.status === 'approved').length; // 🔥 ADD: Calculate approved
+
+    return {
+        total,
+        submitted,
+        scheduled,
+        rejected,
+        approved // 🔥 ADD: Include approved in return
+    };
+}, [candidates]);
 
     // Filtered candidates
     const filteredCandidates = useMemo(() => {

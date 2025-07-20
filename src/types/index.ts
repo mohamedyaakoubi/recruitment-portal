@@ -17,7 +17,7 @@ export interface Candidate {
     city?: string;
     country?: string;
     nationality?: string;
-    doubleNationality?: string; // 🔥 CLARIFIED: Keep as optional string (undefined, not null)
+    doubleNationality?: string;
     jobTitle?: string;
     jobTitleText?: string;
     jobCategory?: string;
@@ -30,12 +30,23 @@ export interface Candidate {
     status: 'submitted' | 'rejected' | 'interview_scheduled' | 'approved' | string;
     score: number | null;
     scoreAnalysis?: string;
+    // 🔥 NEW: Enhanced scoring fields for Gemini 2.5 Pro
+    keyStrengths?: string[];
+    areasForImprovement?: string[];
+    aiRecommendation?: 'highly_recommended' | 'recommended' | 'conditional' | 'not_recommended';
+    scoringVersion?: string; // Track which AI version was used
     lastScoredAt?: Timestamp;
     interviewDate?: Timestamp;
     calendarEventId?: string;
     meetLink?: string;
     meetSpaceId?: string;
     duration?: number;
+    // 🔥 NEW: Support for additional candidate information
+    additionalInfo?: {
+        type: 'link' | 'file' | 'text';
+        content: string;
+        fileUrl?: string;
+    }[];
 }
 
 export interface Job {
@@ -175,8 +186,8 @@ export interface Stats {
   submitted: number;
   scheduled: number;
   rejected: number;
+  approved: number; // 🔥 ADD: Missing approved property
 }
-
 export interface StatsCardsProps {
   stats: Stats;
   candidates: Candidate[];
