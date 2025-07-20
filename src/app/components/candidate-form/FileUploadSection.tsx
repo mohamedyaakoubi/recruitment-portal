@@ -1,0 +1,53 @@
+// src/app/components/candidate-form/FileUploadSection.tsx
+import React from 'react';
+import { FileUploadSectionProps } from '@/types';
+import FileInput from '../ui/FileInput';
+
+const FileUploadSection: React.FC<FileUploadSectionProps> = ({
+  handleFileChange,
+  isLoading,
+  isExistingCandidate,
+}) => (
+  <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
+    <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">
+      Required Documents
+      {isExistingCandidate && (
+        <span className="text-sm font-normal text-gray-600 ml-2">
+          (Please upload fresh copies of your documents)
+        </span>
+      )}
+    </h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <FileInput
+        name="cv"
+        label="CV/Resume"
+        required
+        accept=".pdf,.doc,.docx"
+        onChange={handleFileChange}
+        disabled={isLoading}
+        helpText="Accepted formats: PDF, DOC, DOCX"
+      />
+      <FileInput
+        name="passport"
+        label="Passport/ID"
+        required
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={handleFileChange}
+        disabled={isLoading}
+        helpText="Accepted formats: PDF, JPG, PNG"
+      />
+      <div className="sm:col-span-2">
+        <FileInput
+          name="photo"
+          label="Professional Photo"
+          accept=".jpg,.jpeg,.png"
+          onChange={handleFileChange}
+          disabled={isLoading}
+          helpText="Accepted formats: JPG, PNG (Optional)"
+        />
+      </div>
+    </div>
+  </div>
+);
+
+export default FileUploadSection;
