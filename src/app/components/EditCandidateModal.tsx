@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSave, FiUser, FiMail, FiPhone, FiMapPin, FiBriefcase } from 'react-icons/fi';
-import { Candidate } from '@/types';
+import { Candidate, Job } from '@/types';
 import SearchableDropdown from './ui/SearchableDropdown';
 import { countries, countryCodes } from '@/lib/formData';
 
@@ -32,11 +32,71 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
     nationality: '',
     doubleNationality: '',
     jobCategory: '',
+    jobTitle: '',
     specialty: '',
     jobTitleText: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // 🔥 NEW: Job-related state
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobCategories, setJobCategories] = useState<string[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
+
+  // 🔥 NEW: Fetch jobs from database
+  useEffect(() => {
+    if (isOpen) {
+      fetchJobs();
+    }
+  }, [isOpen]);
+
+  const fetchJobs = async () => {
+    setLoadingJobs(true);
+    try {
+      const response = await fetch('/api/jobs?activeOnly=true');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setJobs(data.jobs || []);
+        setJobCategories(data.categories || []);
+      } else {
+        console.error('Failed to fetch jobs:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
+
+  // 🔥 NEW: Filter jobs by selected category
+  useEffect(() => {
+    if (formData.jobCategory) {
+      const filtered = jobs.filter(job => 
+        job.category === formData.jobCategory && job.isActive
+      );
+      setFilteredJobs(filtered);
+    } else {
+      setFilteredJobs([]);
+    }
+  }, [formData.jobCategory, jobs]);
+
+  // 🔥 NEW: Update specialties when job is selected
+  useEffect(() => {
+    if (selectedJob && selectedJob.specialties) {
+      setAvailableSpecialties(selectedJob.specialties);
+      // If current specialty is not in the new job's specialties, clear it
+      if (!selectedJob.specialties.includes(formData.specialty)) {
+        setFormData(prev => ({ ...prev, specialty: '' }));
+      }
+    } else {
+      setAvailableSpecialties([]);
+    }
+  }, [selectedJob]);
 
   useEffect(() => {
     if (candidate) {
@@ -65,17 +125,53 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
         nationality: candidate.nationality || '',
         doubleNationality: candidate.doubleNationality || '',
         jobCategory: candidate.jobCategory || '',
+        jobTitle: candidate.jobTitle || '',
         specialty: candidate.specialty || '',
         jobTitleText: candidate.jobTitleText || ''
       });
+
+      // 🔥 NEW: Find and set the selected job based on candidate's job data
+      if (candidate.jobTitle && jobs.length > 0) {
+        const foundJob = jobs.find(job => job.id === candidate.jobTitle);
+        if (foundJob) {
+          setSelectedJob(foundJob);
+        }
+      }
+
       setErrors({});
     }
-  }, [candidate]);
+  }, [candidate, jobs]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // 🔥 NEW: Handle category selection
+  const handleCategoryChange = (category: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      jobCategory: category,
+      jobTitle: '', // Clear job selection when category changes
+      specialty: '' // Clear specialty when category changes
+    }));
+    setSelectedJob(null);
+    setAvailableSpecialties([]);
+  };
+
+  // 🔥 NEW: Handle job selection
+  const handleJobChange = (jobId: string) => {
+    const job = jobs.find(j => j.id === jobId);
+    if (job) {
+      setSelectedJob(job);
+      setFormData(prev => ({ 
+        ...prev, 
+        jobTitle: job.id,
+        jobTitleText: job.title,
+        specialty: '' // Clear specialty when job changes
+      }));
     }
   };
 
@@ -118,7 +214,7 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
     if (!candidate || !validateForm()) return;
 
     try {
-      const updatedData: Partial<Candidate> = { // 🔥 FIXED: Use Partial<Candidate> type
+      const updatedData: Partial<Candidate> = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         fullName: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
@@ -130,10 +226,11 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
         city: formData.city.trim(),
         country: formData.country.trim(),
         nationality: formData.nationality.trim(),
-        doubleNationality: formData.doubleNationality.trim() || undefined, // 🔥 FIXED: Use undefined instead of null
+        doubleNationality: formData.doubleNationality.trim() || undefined,
         jobCategory: formData.jobCategory.trim(),
-        specialty: formData.specialty.trim(),
-        jobTitleText: formData.jobTitleText.trim()
+        jobTitle: formData.jobTitle.trim(), // Job ID
+        jobTitleText: formData.jobTitleText.trim(), // Job display name
+        specialty: formData.specialty.trim()
       };
 
       await onSave(candidate.id, updatedData);
@@ -359,51 +456,120 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
               </div>
             </div>
 
-            {/* Job Information */}
+            {/* 🔥 UPDATED: Job Information with Database Integration */}
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                 <FiBriefcase className="mr-2" /> Job Information
               </h3>
               
+              {loadingJobs && (
+                <div className="text-center py-4">
+                  <div className="inline-flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-600">Loading jobs...</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Job Category Selection */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Job Category
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.jobCategory}
-                    onChange={(e) => handleInputChange('jobCategory', e.target.value)}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={isLoading}
-                  />
+                    disabled={isLoading || loadingJobs}
+                  >
+                    <option value="">Select Category</option>
+                    {jobCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
+                {/* Job Selection */}
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Job Position
+                  </label>
+                  <select
+                    value={formData.jobTitle}
+                    onChange={(e) => handleJobChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={isLoading || loadingJobs || !formData.jobCategory}
+                  >
+                    <option value="">
+                      {!formData.jobCategory 
+                        ? 'Select category first' 
+                        : 'Select job position'
+                      }
+                    </option>
+                    {filteredJobs.map((job) => (
+                      <option key={job.id} value={job.id}>
+                        {job.title}
+                      </option>
+                    ))}
+                  </select>
+                  {formData.jobCategory && filteredJobs.length === 0 && !loadingJobs && (
+                    <p className="text-xs text-orange-600 mt-1">
+                      No active jobs available in this category
+                    </p>
+                  )}
+                </div>
+
+                {/* Specialty Selection */}
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Specialty
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.specialty}
                     onChange={(e) => handleInputChange('specialty', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={isLoading}
-                  />
+                    disabled={isLoading || !selectedJob}
+                  >
+                    <option value="">
+                      {!selectedJob 
+                        ? 'Select job position first' 
+                        : 'Select specialty'
+                      }
+                    </option>
+                    {availableSpecialties.map((specialty) => (
+                      <option key={specialty} value={specialty}>
+                        {specialty}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedJob && availableSpecialties.length === 0 && (
+                    <p className="text-xs text-orange-600 mt-1">
+                      No specialties available for this job
+                    </p>
+                  )}
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Job Title
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.jobTitleText}
-                    onChange={(e) => handleInputChange('jobTitleText', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    disabled={isLoading}
-                  />
-                </div>
+                {/* Display current job title for reference */}
+                {formData.jobTitleText && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Current Job Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.jobTitleText}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600"
+                      disabled
+                      readOnly
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      This will be updated automatically when you select a job position
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </form>
@@ -421,7 +587,7 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={isLoading}
+            disabled={isLoading || loadingJobs}
             className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
           >
             {isLoading ? (
