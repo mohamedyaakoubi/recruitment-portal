@@ -11,6 +11,7 @@
     "reset-db:confirm": "echo 'Are you sure? This will delete ALL data!' && read -p 'Type YES to continue: ' confirm && [ \"$confirm\" = \"YES\" ] && npm run reset-db"
   },
   "dependencies": {
+    "@google/genai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^2.2.4",
     "@types/nodemailer": "^6.4.17",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20.19.2",
+    "@types/node-fetch": "^2.6.12",
     "@types/react": "^19",
     "@types/react-big-calendar": "^1.16.1",
     "@types/react-dom": "^19",
