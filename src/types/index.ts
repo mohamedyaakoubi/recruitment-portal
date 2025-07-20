@@ -219,3 +219,91 @@ export interface InterviewEvent extends CalendarEvent {
     isCompleted: boolean;
     eventType: 'scheduled' | 'completed';
 }
+
+
+export interface ApplicationStatusProps {
+  applications: Candidate[];
+  formatDate: (timestamp: any) => string;
+}
+
+export interface InterviewDetailsProps {
+  applications: Candidate[];
+  formatDate: (timestamp: any) => string;
+}
+
+export interface AdditionalInfoSectionProps {
+  additionalInfo: { type: 'link' | 'file' | 'text'; content: string; file?: File }[];
+  addAdditionalInfo: (type: 'link' | 'file' | 'text') => void;
+  removeAdditionalInfo: (index: number) => void;
+  updateAdditionalInfo: (index: number, content: string, file?: File) => void;
+  isLoading: boolean;
+}
+
+export interface FileUploadSectionProps {
+  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isLoading: boolean;
+  isExistingCandidate: boolean;
+}
+
+export interface JobApplicationSectionProps {
+  selectedCategory: string;
+  handleCategorySelection: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  jobTitle: string;
+  handleJobSelection: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  filteredJobs: any[];
+  selectedJob: any;
+  specialty: string;
+  setSpecialty: (specialty: string) => void;
+  specialtySearch: string;
+  setSpecialtySearch: (search: string) => void;
+  availableSpecialties: string[];
+  isLoading: boolean;
+}
+
+export interface PersonalInfoSectionProps {
+  firstName: string;
+  setFirstName: (name: string) => void;
+  lastName: string;
+  setLastName: (name: string) => void;
+  email: string;
+  gender: string;
+  setGender: (gender: string) => void;
+  dateOfBirth: string;
+  setDateOfBirth: (date: string) => void;
+  countryCode: string;
+  setCountryCode: (code: string) => void;
+  phoneNumber: string;
+  setPhoneNumber: (phone: string) => void;
+  city: string;
+  setCity: (city: string) => void;
+  country: string;
+  setCountry: (country: string) => void;
+  nationality: string;
+  setNationality: (nationality: string) => void;
+  doubleNationality: string;
+  setDoubleNationality: (nationality: string) => void;
+  isLoading: boolean;
+  isExistingCandidate: boolean;
+}
+
+export interface FileInputProps {
+  name: string;
+  label: string;
+  required?: boolean;
+  accept: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  helpText?: string;
+}
+
+export interface SearchableDropdownProps {
+  options: string[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  disabled?: boolean;
+}
+
+export interface StatusBadgeProps {
+  status: string;
+}
