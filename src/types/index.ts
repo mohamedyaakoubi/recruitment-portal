@@ -69,8 +69,10 @@ export interface CandidateTableProps {
     name: string;
     city: string;
     country: string;
+    nationality: string; // 🔥 ADD: Missing nationality filter
     jobTitle: string;
     category: string;
+    specialty: string; // 🔥 ADD: Missing specialty filter
     ageMin: string;
     ageMax: string;
   };

@@ -5,6 +5,31 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { sendNotificationEmail } from './email';
 import { format } from 'date-fns';
 
+// 🔥 NEW: Helper function to calculate age
+const calculateAge = (dateOfBirth: string): number | null => {
+  if (!dateOfBirth) return null;
+  
+  try {
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    
+    // Check if date is valid
+    if (isNaN(birthDate.getTime())) return null;
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    // If birth month hasn't occurred this year, or it's the birth month but the day hasn't occurred
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  } catch {
+    return null;
+  }
+};
+
 export const updateCandidateStatus = async (
     candidateId: string, 
     newStatus: string, 
@@ -79,10 +104,18 @@ export const updateCandidateStatus = async (
     return newStatus;
 };
 
+// 🔥 UPDATED: Export candidates with complete information
 export const exportCandidates = async (
     filterStatus: string,
     filterName: string,
-    filterNationality: string
+    filterNationality: string,
+    filterCity: string = '',
+    filterCountry: string = '',
+    filterJobTitle: string = '',
+    filterCategory: string = '',
+    filterSpecialty: string = '', // 🔥 ADD: Specialty filter parameter
+    filterAgeMin: string = '',
+    filterAgeMax: string = ''
 ) => {
     const db = getFirestoreAdmin();
     let query: any = db.collection("candidates");
@@ -95,40 +128,108 @@ export const exportCandidates = async (
     
     let candidates = snapshot.docs.map((doc: any) => {
       const data = doc.data();
+      const age = calculateAge(data.dateOfBirth);
+      
       return {
         id: doc.id,
         fullName: data.fullName || '',
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
         email: data.email || '',
         gender: data.gender || '',
         phoneNumber: data.phoneNumber || '',
+        countryCode: data.countryCode || '',
         dateOfBirth: data.dateOfBirth || '',
+        age: age || '',
         city: data.city || '',
         country: data.country || '',
         nationality: data.nationality || '',
         doubleNationality: data.doubleNationality || '',
-        jobTitle: data.jobTitleText || '',
+        jobTitle: data.jobTitle || '',
+        jobTitleText: data.jobTitleText || '',
+        jobCategory: data.jobCategory || '',
+        specialty: data.specialty || '',
         websites: Array.isArray(data.websites) ? data.websites.join(', ') : '',
         status: data.status || '',
         score: data.score || null,
         scoreAnalysis: data.scoreAnalysis || '',
         submittedAt: data.submittedAt ? format(data.submittedAt.toDate(), 'yyyy-MM-dd HH:mm:ss') : '',
         interviewDate: data.interviewDate ? format(data.interviewDate.toDate(), 'yyyy-MM-dd HH:mm:ss') : '',
+        meetLink: data.meetLink || '',
+        calendarEventId: data.calendarEventId || '',
+        meetSpaceId: data.meetSpaceId || '',
+        duration: data.duration || '',
         cvUrl: data.cvUrl || '',
         passportUrl: data.passportUrl || '',
-        photoUrl: data.photoUrl || ''
+        photoUrl: data.photoUrl || '',
+        applicationSource: data.applicationSource || 'web_form',
+        lastUpdated: data.lastUpdated ? format(data.lastUpdated.toDate(), 'yyyy-MM-dd HH:mm:ss') : '',
+        lastScoredAt: data.lastScoredAt ? format(data.lastScoredAt.toDate(), 'yyyy-MM-dd HH:mm:ss') : ''
       };
     });
 
+    // 🔥 ENHANCED: Apply all filters including specialty
     if (filterName) {
       candidates = candidates.filter((candidate: any) => 
-        candidate.fullName.toLowerCase().includes(filterName.toLowerCase())
+        candidate.fullName.toLowerCase().includes(filterName.toLowerCase()) ||
+        candidate.firstName.toLowerCase().includes(filterName.toLowerCase()) ||
+        candidate.lastName.toLowerCase().includes(filterName.toLowerCase())
       );
     }
 
     if (filterNationality) {
       candidates = candidates.filter((candidate: any) => 
-        candidate.nationality.toLowerCase().includes(filterNationality.toLowerCase())
+        candidate.nationality.toLowerCase().includes(filterNationality.toLowerCase()) ||
+        candidate.doubleNationality.toLowerCase().includes(filterNationality.toLowerCase())
       );
+    }
+
+    if (filterCity) {
+      candidates = candidates.filter((candidate: any) => 
+        candidate.city.toLowerCase().includes(filterCity.toLowerCase())
+      );
+    }
+
+    if (filterCountry) {
+      candidates = candidates.filter((candidate: any) => 
+        candidate.country.toLowerCase().includes(filterCountry.toLowerCase())
+      );
+    }
+
+    if (filterJobTitle) {
+      candidates = candidates.filter((candidate: any) => 
+        candidate.jobTitleText.toLowerCase().includes(filterJobTitle.toLowerCase()) ||
+        candidate.jobTitle.toLowerCase().includes(filterJobTitle.toLowerCase())
+      );
+    }
+
+    if (filterCategory) {
+      candidates = candidates.filter((candidate: any) => 
+        candidate.jobCategory.toLowerCase().includes(filterCategory.toLowerCase())
+      );
+    }
+
+    // 🔥 ADD: Specialty filtering
+    if (filterSpecialty) {
+      candidates = candidates.filter((candidate: any) => 
+        candidate.specialty.toLowerCase().includes(filterSpecialty.toLowerCase())
+      );
+    }
+
+    // Age filtering
+    if (filterAgeMin || filterAgeMax) {
+      candidates = candidates.filter((candidate: any) => {
+        const candidateAge = candidate.age;
+        if (!candidateAge && candidateAge !== 0) return false;
+        
+        const age = typeof candidateAge === 'string' ? parseInt(candidateAge) : candidateAge;
+        if (isNaN(age)) return false;
+        
+        if (filterAgeMin && age < parseInt(filterAgeMin)) return false;
+        if (filterAgeMax && age > parseInt(filterAgeMax)) return false;
+        
+        return true;
+      });
     }
 
     return candidates;
