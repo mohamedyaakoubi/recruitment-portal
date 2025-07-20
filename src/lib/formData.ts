@@ -1,5 +1,3 @@
-// src/lib/formData.ts
-
 export const countryCodes = [
     { code: '+93', country: 'Afghanistan', flag: '🇦🇫', iso: 'AF' },
     { code: '+355', country: 'Albania', flag: '🇦🇱', iso: 'AL' },
@@ -243,7 +241,7 @@ export const countryCodes = [
     { code: '+967', country: 'Yemen', flag: '🇾🇪', iso: 'YE' },
     { code: '+260', country: 'Zambia', flag: '🇿🇲', iso: 'ZM' },
     { code: '+263', country: 'Zimbabwe', flag: '🇿🇼', iso: 'ZW' }
-  ];
+];
 
 export const countries = [
     'Afghanistan', 'Albania', 'Algeria', 'American Samoa', 'Andorra', 'Angola', 'Anguilla', 'Antarctica', 'Antigua and Barbuda', 'Argentina',
@@ -265,8 +263,8 @@ export const countries = [
     'Northern Mariana Islands', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru',
     'Philippines', 'Poland', 'Portugal', 'Puerto Rico', 'Qatar', 'Réunion', 'Romania', 'Russia', 'Rwanda', 'Saint Barthélemy',
     'Saint Helena', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Martin', 'Saint Pierre and Miquelon', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'São Tomé and Príncipe', 'Saudi Arabia', 'Scotland', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone',
-  'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'Spain', 'Sri Lanka', 'Sudan',
-  'Suriname', 'Eswatini', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo',
-  'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Tuvalu', 'Uganda', 'Ukraine', 'Uruguay', 'Uzbekistan', 'Venezuela',
-  'Vietnam', 'Wales', 'Yemen', 'Zambia', 'Zimbabwe'
+    'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'Spain', 'Sri Lanka', 'Sudan',
+    'Suriname', 'Eswatini', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo',
+    'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Tuvalu', 'Uganda', 'Ukraine', 'Uruguay', 'Uzbekistan', 'Venezuela',
+    'Vietnam', 'Wales', 'Yemen', 'Zambia', 'Zimbabwe'
 ];

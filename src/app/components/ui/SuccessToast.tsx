@@ -1,19 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { SuccessToastProps } from '@/types';
 
-const SuccessToast: React.FC<SuccessToastProps> = ({ message, isVisible, onClose }) => {
+const SuccessToast: React.FC<SuccessToastProps & { duration?: number }> = ({ 
+  message, 
+  isVisible, 
+  onClose, 
+  duration = 5000 
+}) => {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [countdown, setCountdown] = useState(Math.floor(duration / 1000));
 
   useEffect(() => {
     if (isVisible) {
       setIsAnimating(true);
+      setCountdown(Math.floor(duration / 1000));
+      
+      // Countdown timer
+      const countdownInterval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      // Auto close timer
       const timer = setTimeout(() => {
         setIsAnimating(false);
         setTimeout(onClose, 300); // Wait for fade out animation
-      }, 4000); // Show for 4 seconds
-      return () => clearTimeout(timer);
+      }, duration);
+      
+      return () => {
+        clearTimeout(timer);
+        clearInterval(countdownInterval);
+      };
     }
-  }, [isVisible, onClose]);
+  }, [isVisible, onClose, duration]);
 
   if (!isVisible) return null;
 
@@ -52,9 +76,15 @@ const SuccessToast: React.FC<SuccessToastProps> = ({ message, isVisible, onClose
                 </svg>
               </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold">Success!</h3>
-              <p className="text-white/90 text-sm mt-1">Your application has been submitted</p>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold">Application Submitted!</h3>
+              <p className="text-white/90 text-sm mt-1">Redirecting to your dashboard...</p>
+            </div>
+            {/* Countdown circle */}
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">{countdown}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -73,7 +103,7 @@ const SuccessToast: React.FC<SuccessToastProps> = ({ message, isVisible, onClose
             </div>
             <div className="flex items-center text-sm text-slate-600">
               <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 animate-pulse"></div>
-              Confirmation email will be sent shortly
+              You'll be redirected to your dashboard shortly
             </div>
             <div className="flex items-center text-sm text-slate-600">
               <div className="w-2 h-2 bg-purple-500 rounded-full mr-3 animate-pulse"></div>
@@ -95,7 +125,7 @@ const SuccessToast: React.FC<SuccessToastProps> = ({ message, isVisible, onClose
               }}
               className="text-[#003A70] hover:text-[#002B54] text-sm font-semibold transition-colors"
             >
-              Close
+              Close ({countdown}s)
             </button>
           </div>
         </div>

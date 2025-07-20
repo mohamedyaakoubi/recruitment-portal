@@ -226,17 +226,27 @@ function DashboardContent() {
             const specialtyMatch = filterSpecialty === '' || (candidate.specialty && candidate.specialty.toLowerCase().includes(filterSpecialty.toLowerCase())); // ✅ Add specialty match
             
             // Age filtering
-            let ageMatch = true;
-            if (candidate.dateOfBirth && (filterAgeMin || filterAgeMax)) {
-                const birthDate = new Date(candidate.dateOfBirth);
-                const today = new Date();
-                const age = today.getFullYear() - birthDate.getFullYear() - 
-                    (today.getMonth() < birthDate.getMonth() || 
-                     (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
-                
-                if (filterAgeMin && age < parseInt(filterAgeMin)) ageMatch = false;
-                if (filterAgeMax && age > parseInt(filterAgeMax)) ageMatch = false;
-            }
+let ageMatch = true;
+if (candidate.dateOfBirth && (filterAgeMin || filterAgeMax)) {
+    const birthDate = new Date(candidate.dateOfBirth);
+    const today = new Date();
+    
+    // Check if date is valid
+    if (isNaN(birthDate.getTime())) {
+        ageMatch = filterAgeMin === '' && filterAgeMax === ''; // Only match if no age filters
+    } else {
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        // If birth month hasn't occurred this year, or it's the birth month but the day hasn't occurred
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        
+        if (filterAgeMin && age < parseInt(filterAgeMin)) ageMatch = false;
+        if (filterAgeMax && age > parseInt(filterAgeMax)) ageMatch = false;
+    }
+}
 
             let tabMatch = true;
             if (activeTab === 'main') {
