@@ -210,7 +210,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
 
           {!isAddingJob && (
             <div className="mb-6">
-              <button onClick={() => setIsAddingJob(true)} disabled={loading} className="btn btn-primary">
+              <button onClick={() => setIsAddingJob(true)} disabled={loading} className="btn btn-primary" data-testid="add-job-button">
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                 <span>Add New Job</span>
               </button>
@@ -218,7 +218,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
           )}
 
           {isAddingJob && (
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg mb-6 border border-gray-200 dark:border-gray-700 shadow-md">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg mb-6 border border-gray-200 dark:border-gray-700 shadow-md" data-testid="job-form">
               <h3 className="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-300">{editingJobId ? 'Edit Job' : 'Add New Job'}</h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -255,7 +255,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                   </div>
                 </div>
                 <div className="flex gap-4 pt-2">
-                  <button type="submit" disabled={operationLoading[editingJobId || 'create']} className="btn btn-primary">
+                  <button type="submit" disabled={operationLoading[editingJobId || 'create']} className="btn btn-primary" data-testid="create-job-button">
                     {operationLoading[editingJobId || 'create'] ? 'Saving...' : (editingJobId ? 'Update Job' : 'Create Job')}
                   </button>
                   <button type="button" onClick={resetForm} className="btn btn-secondary">Cancel</button>

@@ -1,43 +1,30 @@
- Starting Gemini 2.5 Pro scoring request...
-📊 Scoring candidate D6zAuArkaI0AVWw9wWNC for position: web
-🎯 Starting comprehensive Gemini 1.5 Pro scoring for candidate: D6zAuArkaI0AVWw9wWNC
-📊 Candidate data prepared for comprehensive analysis: {
-  name: 'Mohamed Yaakoubi',
-  hasCV: true,
-  websiteCount: 0,
-  additionalInfoCount: 0
-}
-🤖 Initializing Gemini 2.5 Pro for candidate: Mohamed Yaakoubi
-📤 Uploading file to Gemini: https://firebasestorage.googleapis.com/v0/b/notyet-68c17.appspot.com/o/candidate_files%2Fcv_1753026858960_%D9%86%D9%85%D9%88%D8%B0%D8%AC%20%D8%B9%D9%82%D8%AF%20%D8%A3%D8%AF%D8%A7%D8%A1%20%D9%85%D9%87%D9%85%D8%A7%D8%AA%20%D9%88%D8%B8%D9%8A%D9%81%D8%A9%20%D8%A8%D8%AF%D9%88%D8%A7%D9%85%20%D9%83%D8%A7%D9%85%D9%84%20%D9%84%D8%BA%D9%8A%D8%B1%20%D8%A7%D9%84%D8%B3%D8%B9%D9%88%D8%AF%D9%8A%D9%8A%D9%86%20(1).pdf?alt=media&token=c71f0ef8-eb3a-4c2e-bfb7-26c5c6b127cc
-✅ File uploaded successfully: https://generativelanguage.googleapis.com/v1beta/files/igspeq941zpy
-🎉 File ready for analysis: https://generativelanguage.googleapis.com/v1beta/files/igspeq941zpy
-📎 CV file added for analysis: https://generativelanguage.googleapis.com/v1beta/files/igspeq941zpy
-🔍 Sending comprehensive analysis request to Gemini 1.5 Pro...
-📊 Analysis includes: 1 uploaded files, 0 additional info items
-❌ Error calling Gemini 1.5 Pro API: Error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage
-.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent: [400 Bad Request] Unable to submit request because it has a mimeType parameter with value application/octet-stream, which is not supported. Update the mimeType and try again. Learn more: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/gemini
-    at async getGemini25ScoringAnalysis (file://C%3A/Users/MSI/Desktop/wassim/src/services/scoring.ts:292:23)        
-    at async scoreCandidate (file://C%3A/Users/MSI/Desktop/wassim/src/services/scoring.ts:424:26)
-    at async POST (file://C%3A/Users/MSI/Desktop/wassim/src/app/api/score-candidate/route.ts:18:26)
-  290 |
-  291 |         // 🔥 FIXED: Use the correct API structure for content generation
-> 292 |         const result = await model.generateContent({
-      |                       ^
-  293 |             contents: [{
-  294 |                 role: "user",
-  295 |                 parts: parts {
-  status: 400,
-  statusText: 'Bad Request',
-  errorDetails: undefined
-}
-❌ Error in Gemini 2.5 Pro scoring: Error: Failed to get AI score and analysis from Gemini 1.5 Pro
-    at scoreCandidate (file://C%3A/Users/MSI/Desktop/wassim/src/services/scoring.ts:427:14)
-    at async POST (file://C%3A/Users/MSI/Desktop/wassim/src/app/api/score-candidate/route.ts:18:26)
-  425 |
-  426 |     if (scoringResult === null) {
-> 427 |         throw new Error('Failed to get AI score and analysis from Gemini 1.5 Pro');
-      |              ^
-  428 |     }
-  429 |
-  430 |     // Update candidate document with enhanced scoring data
- POST /api/score-candidate 500 in 6125ms
+PS C:\Users\MSI\Desktop\wassim> pnpm dev
+
+> candidate-portal@0.1.0 dev C:\Users\MSI\Desktop\wassim
+> next dev --turbopack
+
+   ▲ Next.js 15.1.8 (Turbopack)
+   - Local:        http://localhost:3000   
+   - Network:      http://192.168.56.1:3000
+   - Environments: .env.local, .env        
+
+ ✓ Starting...
+ ✓ Ready in 5.6s
+ ⨯ You are using configuration and/or tools that are not yet      
+supported by Next.js with Turbopack:
+Babel detected (.babelrc)
+  Babel is not yet supported. To use Turbopack at the moment,     
+  you'll need to remove your usage of Babel.
+
+If you cannot make the changes above, but still want to try out   
+Next.js with Turbopack, create the Next.js playground app
+by running the following commands:
+
+  pnpm create next-app --example with-turbopack with-turbopack-app
+  cd with-turbopack-app
+  pnpm run dev
+        
+ ⚠ Learn more about Next.js and Turbopack: https://nextjs.link/with-turbopack
+
+
+PS C:\Users\MSI\Desktop\wassim> 

@@ -20,10 +20,11 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({ formData, errors, h
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="city" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         City <span className="text-red-500">*</span>
                     </label>
                     <input
+                        id="city"
                         type="text"
                         value={formData.city}
                         onChange={(e) => handleInputChange('city', e.target.value)}
@@ -33,10 +34,11 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({ formData, errors, h
                     {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Country <span className="text-red-500">*</span>
                     </label>
                     <SearchableDropdown
+                        id="country"
                         options={countries}
                         value={formData.country}
                         onChange={(value) => handleInputChange('country', value)}
@@ -46,10 +48,11 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({ formData, errors, h
                     {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="nationality" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Nationality <span className="text-red-500">*</span>
                     </label>
                     <SearchableDropdown
+                        id="nationality"
                         options={countries}
                         value={formData.nationality}
                         onChange={(value) => handleInputChange('nationality', value)}
@@ -59,10 +62,11 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({ formData, errors, h
                     {errors.nationality && <p className="text-red-500 text-xs mt-1">{errors.nationality}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="doubleNationality" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Second Nationality <span className="text-gray-500 dark:text-gray-400">(Optional)</span>
                     </label>
                     <SearchableDropdown
+                        id="doubleNationality"
                         options={countries}
                         value={formData.doubleNationality}
                         onChange={(value) => handleInputChange('doubleNationality', value)}

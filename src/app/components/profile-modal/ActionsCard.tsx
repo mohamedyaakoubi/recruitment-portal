@@ -39,10 +39,10 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
                 )}
                 <div className="grid grid-cols-2 gap-3">
                     <button onClick={handleApprove} disabled={statusUpdateLoading} className="w-full flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 transition-colors">
-                        <FiCheckCircle className="mr-2" /> {statusUpdateLoading ? '...' : 'Approve'}
+                        <FiCheckCircle className="mr-2" /> {statusUpdateLoading ? 'Approving...' : 'Approve'}
                     </button>
                     <button onClick={handleReject} disabled={statusUpdateLoading} className="w-full flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors">
-                        <FiXCircle className="mr-2" /> {statusUpdateLoading ? '...' : 'Reject'}
+                        <FiXCircle className="mr-2" /> {statusUpdateLoading ? 'Rejecting...' : 'Reject'}
                     </button>
                 </div>
             </div>

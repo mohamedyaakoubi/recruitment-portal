@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { SuccessToastProps } from '@/types';
 
 const SuccessToast: React.FC<SuccessToastProps & { duration?: number }> = ({ 
@@ -9,6 +9,7 @@ const SuccessToast: React.FC<SuccessToastProps & { duration?: number }> = ({
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [countdown, setCountdown] = useState(Math.floor(duration / 1000));
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (isVisible) {
@@ -27,19 +28,27 @@ const SuccessToast: React.FC<SuccessToastProps & { duration?: number }> = ({
       }, 1000);
       
       // Auto close timer
-      const timer = setTimeout(() => {
+      timerRef.current = setTimeout(() => {
         setIsAnimating(false);
         setTimeout(onClose, 300); // Wait for fade out animation
       }, duration);
       
       return () => {
-        clearTimeout(timer);
+        if(timerRef.current) clearTimeout(timerRef.current);
         clearInterval(countdownInterval);
       };
     }
   }, [isVisible, onClose, duration]);
 
   if (!isVisible) return null;
+
+  const handleClose = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    setIsAnimating(false);
+    setTimeout(onClose, 300);
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
@@ -119,10 +128,7 @@ const SuccessToast: React.FC<SuccessToastProps & { duration?: number }> = ({
               Application ID: #APP{Date.now().toString().slice(-6)}
             </p>
             <button
-              onClick={() => {
-                setIsAnimating(false);
-                setTimeout(onClose, 300);
-              }}
+              onClick={handleClose}
               className="text-[#003A70] dark:text-blue-400 hover:text-[#002B54] dark:hover:text-blue-300 text-sm font-semibold transition-colors"
             >
               Close ({countdown}s)
