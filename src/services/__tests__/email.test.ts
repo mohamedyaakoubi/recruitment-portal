@@ -36,6 +36,7 @@ describe('Email Service', () => {
             const to = 'test@example.com';
             const candidateName = 'Test User';
             const interviewDate = new Date();
+            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
             await sendNotificationEmail(to, 'interview_scheduled', candidateName, interviewDate);
 
             expect(mockSendMail).toHaveBeenCalled();
@@ -43,11 +44,13 @@ describe('Email Service', () => {
             expect(mailOptions.to).toBe(to);
             expect(mailOptions.subject).toContain('Interview Invitation');
             expect(mailOptions.html).toContain(candidateName);
+            consoleLogSpy.mockRestore();
         });
 
         it('should send a rejection email', async () => {
             const to = 'test@example.com';
             const candidateName = 'Test User';
+            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
             await sendNotificationEmail(to, 'rejected', candidateName);
 
             expect(mockSendMail).toHaveBeenCalled();
@@ -55,6 +58,7 @@ describe('Email Service', () => {
             expect(mailOptions.to).toBe(to);
             expect(mailOptions.subject).toContain('Application Status Update');
             expect(mailOptions.html).toContain('decided not to move forward');
+            consoleLogSpy.mockRestore();
         });
     });
 
@@ -63,6 +67,7 @@ describe('Email Service', () => {
             const to = 'test@example.com';
             const candidateName = 'Test User';
             const jobTitle = 'Developer';
+            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
             await sendRejectionEmail(to, candidateName, jobTitle);
 
             expect(mockSendMail).toHaveBeenCalled();
@@ -70,6 +75,7 @@ describe('Email Service', () => {
             expect(mailOptions.to).toBe(to);
             expect(mailOptions.subject).toContain('Application Status Update');
             expect(mailOptions.html).toContain(jobTitle);
+            consoleLogSpy.mockRestore();
         });
     });
 
@@ -79,6 +85,7 @@ describe('Email Service', () => {
             const candidateName = 'Test User';
             const jobTitle = 'Developer';
             const reason = 'Unforeseen circumstances';
+            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
             await sendCancellationEmail({ candidateEmail: to, candidateName, jobTitle, reason });
 
             expect(mockSendMail).toHaveBeenCalled();
@@ -86,6 +93,7 @@ describe('Email Service', () => {
             expect(mailOptions.to).toBe(to);
             expect(mailOptions.subject).toContain('Interview Cancelled');
             expect(mailOptions.html).toContain(reason);
+            consoleLogSpy.mockRestore();
         });
     });
 });

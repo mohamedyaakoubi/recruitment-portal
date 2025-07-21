@@ -40,28 +40,34 @@ describe('API Handlers', () => {
   describe('handleScoreSubmit', () => {
     it('should score a candidate successfully', async () => {
       (fetch as jest.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       await handlers.handleScoreSubmit('job1', 'Job Title', 'Job Desc');
       expect(mockSetIsScoring).toHaveBeenCalledWith(true);
       expect(fetch).toHaveBeenCalledWith('/api/score-candidate', expect.any(Object));
       expect(mockShowToast).toHaveBeenCalledWith('Candidate scored successfully!', 'success');
       expect(mockCloseScoringModal).toHaveBeenCalled();
       expect(mockSetIsScoring).toHaveBeenCalledWith(false);
+      consoleLogSpy.mockRestore();
     });
 
     it('should handle scoring failure', async () => {
         (fetch as jest.Mock).mockResolvedValue({ ok: false, json: () => Promise.resolve({ error: 'Failed' }) });
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         await handlers.handleScoreSubmit('job1', 'Job Title', 'Job Desc');
         expect(mockSetScoringError).toHaveBeenCalledWith('Failed');
         expect(mockSetIsScoring).toHaveBeenCalledWith(false);
+        consoleErrorSpy.mockRestore();
       });
   });
 
   describe('handleStatusChange', () => {
     it('should change status directly for non-rejected status', async () => {
         (fetch as jest.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         await handlers.handleStatusChange('1', 'approved');
         expect(fetch).toHaveBeenCalledWith('/api/update-status', expect.any(Object));
         expect(mockShowToast).toHaveBeenCalledWith('Candidate status updated to approved successfully!', 'success');
+        consoleLogSpy.mockRestore();
     });
 
     it('should open confirmation modal for rejected status', async () => {
@@ -92,9 +98,11 @@ describe('API Handlers', () => {
   describe('handleEditCandidate', () => {
     it('should edit a candidate successfully', async () => {
         (fetch as jest.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         await handlers.handleEditCandidate('1', { fullName: 'New Name' });
         expect(fetch).toHaveBeenCalledWith('/api/update-candidate', expect.any(Object));
         expect(mockShowToast).toHaveBeenCalledWith('Candidate information updated successfully!', 'success');
+        consoleLogSpy.mockRestore();
     });
   });
 });

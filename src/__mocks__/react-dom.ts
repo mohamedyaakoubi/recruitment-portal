@@ -1,6 +1,11 @@
-const reactDom = jest.requireActual('react-dom');
-
 module.exports = {
-  ...reactDom,
-  createPortal: (node: any) => node,
+  ...jest.requireActual('react-dom'),
+  createRoot: () => ({
+    render: (app) => {
+      // No-op
+    },
+    unmount: () => {
+      // No-op
+    },
+  }),
 };

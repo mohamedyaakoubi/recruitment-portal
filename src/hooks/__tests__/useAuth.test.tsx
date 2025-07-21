@@ -74,6 +74,7 @@ describe('useAuth', () => {
   it('should handle sign in failure', async () => {
     const error = new Error('Invalid credentials');
     (signInWithEmailAndPassword as jest.Mock).mockRejectedValue(error);
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -83,6 +84,7 @@ describe('useAuth', () => {
     });
 
     expect(result.current.error).toBe(error.message);
+    consoleErrorSpy.mockRestore();
   });
 
   it('should sign out a user successfully', async () => {
@@ -102,6 +104,7 @@ describe('useAuth', () => {
   it('should handle sign out failure', async () => {
     const error = new Error('Sign out failed');
     (signOut as jest.Mock).mockRejectedValue(error);
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -111,5 +114,6 @@ describe('useAuth', () => {
     });
 
     expect(result.current.error).toBe(error.message);
+    consoleErrorSpy.mockRestore();
   });
 });

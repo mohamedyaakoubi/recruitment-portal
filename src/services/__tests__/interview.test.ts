@@ -64,12 +64,14 @@ describe('Interview Service', () => {
           });
         
         const sendCancellationEmailSpy = jest.spyOn(emailService, 'sendCancellationEmail');
+        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
         await cancelInterview('c1', 'reason');
 
         expect(mockEventsDelete).toHaveBeenCalledWith({ calendarId: 'primary', eventId: 'test-event-id', sendUpdates: 'all' });
         expect(updateDoc).toHaveBeenCalled();
         expect(sendCancellationEmailSpy).toHaveBeenCalled();
+        consoleLogSpy.mockRestore();
     });
   });
 });
