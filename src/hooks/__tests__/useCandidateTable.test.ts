@@ -1,6 +1,25 @@
-import { renderHook, act } from '@testing-library/react';
+jest.mock('react-dom/client');
+
+jest.mock('react-dom');
+
+/**
+ * @jest-environment jsdom
+ */
+
+import { render, act } from '@testing-library/react';
 import { useCandidateTable } from '../useCandidateTable';
-import type { Candidate } from '@/types';
+import { Candidate } from '@/types';
+import React from 'react';
+
+const renderHook = (hook: () => any) => {
+  const result = {};
+  const TestComponent = () => {
+    Object.assign(result, hook());
+    return null;
+  };
+  render(<TestComponent />);
+  return { result };
+};
 
 jest.mock('react-dom', () => ({
   ...jest.requireActual('react-dom'),
@@ -164,37 +183,37 @@ describe('useCandidateTable', () => {
   it('should initialize with default sort values', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
     
-    expect(result.current.sortField).toBe('submittedAt');
-    expect(result.current.sortDirection).toBe('desc');
-    expect(result.current.isExporting).toBe(false);
+    expect(result.sortField).toBe('submittedAt');
+    expect(result.sortDirection).toBe('desc');
+    expect(result.isExporting).toBe(false);
   });
 
   it('should handle sorting correctly', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
     
     act(() => {
-      result.current.handleSort('fullName');
+      result.handleSort('fullName');
     });
     
-    expect(result.current.sortField).toBe('fullName');
-    expect(result.current.sortDirection).toBe('asc');
+    expect(result.sortField).toBe('fullName');
+    expect(result.sortDirection).toBe('asc');
     
     // Sort same field again to reverse direction
     act(() => {
-      result.current.handleSort('fullName');
+      result.handleSort('fullName');
     });
     
-    expect(result.current.sortDirection).toBe('desc');
+    expect(result.sortDirection).toBe('desc');
   });
 
   it('should sort candidates by fullName', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
     
     act(() => {
-      result.current.handleSort('fullName');
+      result.handleSort('fullName');
     });
     
-    const sorted = result.current.sortedCandidates;
+    const sorted = result.sortedCandidates;
     // With ascending sort, Bob should come first alphabetically
     expect(sorted[0].fullName).toBe('Bob Johnson');
     expect(sorted[1].fullName).toBe('Jane Smith');
@@ -205,7 +224,7 @@ describe('useCandidateTable', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
     
     // Default sort is by submittedAt desc
-    const sorted = result.current.sortedCandidates;
+    const sorted = result.sortedCandidates;
     expect(sorted[0].id).toBe('2'); // highest timestamp (2000)
     expect(sorted[1].id).toBe('1'); // middle timestamp (1000)
     expect(sorted[2].id).toBe('3'); // lowest timestamp (500)
@@ -215,10 +234,10 @@ describe('useCandidateTable', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
     
     act(() => {
-      result.current.handleSort('status');
+      result.handleSort('status');
     });
     
-    const sorted = result.current.sortedCandidates;
+    const sorted = result.sortedCandidates;
     // Alphabetical order: interview_scheduled, rejected, submitted
     expect(sorted[0].status).toBe('interview_scheduled');
     expect(sorted[1].status).toBe('rejected');
@@ -229,10 +248,10 @@ describe('useCandidateTable', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
     
     act(() => {
-      result.current.handleSort('score');
+      result.handleSort('score');
     });
     
-    const sorted = result.current.sortedCandidates;
+    const sorted = result.sortedCandidates;
     // Ascending order: 70, 85, 90
     expect(sorted[0].score).toBe(70);
     expect(sorted[1].score).toBe(85);
@@ -243,7 +262,7 @@ describe('useCandidateTable', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, { status: 'all' }));
     
     await act(async () => {
-      await result.current.handleExport('xlsx');
+      await result.handleExport('xlsx');
     });
     
     expect(global.fetch).toHaveBeenCalledWith(
@@ -256,7 +275,7 @@ describe('useCandidateTable', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, filters));
     
     await act(async () => {
-      await result.current.handleExport('csv');
+      await result.handleExport('csv');
     });
     
     expect(global.fetch).toHaveBeenCalledWith(
@@ -267,17 +286,17 @@ describe('useCandidateTable', () => {
   it('should split names correctly', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
     
-    expect(result.current.splitName('John Doe')).toEqual({
+    expect(result.splitName('John Doe')).toEqual({
       firstName: 'John',
       lastName: 'Doe'
     });
     
-    expect(result.current.splitName('Mary Jane Smith')).toEqual({
+    expect(result.splitName('Mary Jane Smith')).toEqual({
       firstName: 'Mary',
       lastName: 'Jane Smith'
     });
     
-    expect(result.current.splitName('Madonna')).toEqual({
+    expect(result.splitName('Madonna')).toEqual({
       firstName: 'Madonna',
       lastName: ''
     });
@@ -294,10 +313,10 @@ describe('useCandidateTable', () => {
     global.Date.UTC = originalDate.UTC;
     global.Date.prototype = originalDate.prototype;
     
-    expect(result.current.calculateAge('1990-01-01')).toBe(34);
-    expect(result.current.calculateAge('2000-06-15')).toBe(23);
-    expect(result.current.calculateAge('')).toBeNull();
-    expect(result.current.calculateAge('invalid-date')).toBeNull();
+    expect(result.calculateAge('1990-01-01')).toBe(34);
+    expect(result.calculateAge('2000-06-15')).toBe(23);
+    expect(result.calculateAge('')).toBeNull();
+    expect(result.calculateAge('invalid-date')).toBeNull();
     
     // Restore Date
     global.Date = originalDate;
@@ -312,10 +331,10 @@ describe('useCandidateTable', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
     
     await act(async () => {
-      await result.current.handleExport('xlsx');
+      await result.handleExport('xlsx');
     });
     
-    expect(result.current.isExporting).toBe(false);
+    expect(result.isExporting).toBe(false);
     expect(mockAlert).toHaveBeenCalledWith(expect.stringContaining('Export failed'));
   });
 
@@ -331,11 +350,11 @@ describe('useCandidateTable', () => {
     
     // Start the export but don't await it yet
     act(() => {
-      result.current.handleExport('xlsx');
+      result.handleExport('xlsx');
     });
     
     // Should be exporting now
-    expect(result.current.isExporting).toBe(true);
+    expect(result.isExporting).toBe(true);
     
     // Resolve the fetch
     await act(async () => {
@@ -348,7 +367,7 @@ describe('useCandidateTable', () => {
     });
     
     // Should not be exporting anymore
-    expect(result.current.isExporting).toBe(false);
+    expect(result.isExporting).toBe(false);
   });
 
   it('should handle createObjectURL errors', async () => {
@@ -359,7 +378,7 @@ describe('useCandidateTable', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
     
     await act(async () => {
-      await result.current.handleExport('xlsx');
+      await result.handleExport('xlsx');
     });
     
     expect(mockAlert).toHaveBeenCalledWith(expect.stringContaining('createObjectURL failed'));

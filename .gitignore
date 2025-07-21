@@ -39,3 +39,25 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+__mocks__/
+# Ignore test files
+__tests__/
+**/*.test.*
+**/*.spec.*
+
+# Ignore test snapshots (used with Jest)
+*.snap
+
+# Ignore coverage reports
+coverage/
+.nyc_output/
+
+# Ignore test result outputs (Vitest/Jest, etc.)
+test-results/
+*.log
+
+# Ignore Playwright/Cypress test artifacts (optional if you use them)
+playwright-report/
+cypress/videos/
+cypress/screenshots/

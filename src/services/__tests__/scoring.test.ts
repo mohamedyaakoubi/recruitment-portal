@@ -81,6 +81,7 @@ describe('Scoring Service', () => {
                 arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
             });
 
+            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
             const result = await scoreCandidate(candidateId, jobId, jobTitle, jobDescription);
 
             expect(result).toEqual(mockApiResponse);
@@ -88,11 +89,14 @@ describe('Scoring Service', () => {
                 score: mockApiResponse.score,
                 scoreAnalysis: mockApiResponse.analysis,
             }));
+            consoleLogSpy.mockRestore();
         });
 
         it('should throw an error if candidate not found', async () => {
             mockDoc.get.mockResolvedValue({ exists: false });
+            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
             await expect(scoreCandidate('1', '1', 't', 'd')).rejects.toThrow('Candidate not found');
+            consoleLogSpy.mockRestore();
         });
 
         it('should throw an error if AI scoring fails', async () => {
@@ -107,7 +111,11 @@ describe('Scoring Service', () => {
                     text: () => 'invalid json',
                 },
             });
+            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
             await expect(scoreCandidate('1', '1', 't', 'd')).rejects.toThrow('Failed to get AI score and analysis from Gemini 2.5 Pro');
+            consoleLogSpy.mockRestore();
+            consoleErrorSpy.mockRestore();
         });
     });
 });

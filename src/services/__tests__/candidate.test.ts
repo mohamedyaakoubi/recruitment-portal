@@ -57,23 +57,27 @@ describe('Candidate Service', () => {
       const candidateData = { email: 'test@example.com', fullName: 'Test User', jobTitleText: 'Developer' };
       mockDoc.get.mockResolvedValue({ exists: true, data: () => candidateData });
       const sendRejectionEmailSpy = jest.spyOn(emailService, 'sendRejectionEmail');
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
 
       await updateCandidateStatus('1', 'rejected');
 
       expect(mockDoc.update).toHaveBeenCalledWith({ status: 'rejected' });
       expect(sendRejectionEmailSpy).toHaveBeenCalledWith(candidateData.email, candidateData.fullName, candidateData.jobTitleText);
+      consoleLogSpy.mockRestore();
     });
 
     it('should update status and send interview email', async () => {
         const candidateData = { email: 'test@example.com', fullName: 'Test User' };
         mockDoc.get.mockResolvedValue({ exists: true, data: () => candidateData });
         const sendNotificationEmailSpy = jest.spyOn(emailService, 'sendNotificationEmail');
+        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         const interviewDate = new Date();
     
         await updateCandidateStatus('1', 'interview_scheduled', interviewDate.toISOString());
     
         expect(mockDoc.update).toHaveBeenCalledWith(expect.objectContaining({ status: 'interview_scheduled' }));
         expect(sendNotificationEmailSpy).toHaveBeenCalled();
+        consoleLogSpy.mockRestore();
       });
 
     it('should throw error for invalid status', async () => {

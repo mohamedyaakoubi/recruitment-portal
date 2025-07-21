@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "jest --env=jsdom",
     "reset-db": "tsx scripts/reset-database.ts",
     "reset-db:confirm": "echo 'Are you sure? This will delete ALL data!' && read -p 'Type YES to continue: ' confirm && [ \"$confirm\" = \"YES\" ] && npm run reset-db"
   },

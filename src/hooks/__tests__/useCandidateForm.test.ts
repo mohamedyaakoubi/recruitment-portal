@@ -52,6 +52,7 @@ describe('useCandidateForm', () => {
     });
 
     it('should initialize with default values', async () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         let result: any;
         await act(async () => {
             const { result: r } = renderHook(() => useCandidateForm());
@@ -61,14 +62,17 @@ describe('useCandidateForm', () => {
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBeNull();
         expect(result.current.success).toBeNull();
+        consoleErrorSpy.mockRestore();
     });
 
     it('should redirect if email is not in URL params', async () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         await act(async () => {
             window.history.pushState({}, '', '/');
             renderHook(() => useCandidateForm());
         });
         expect(mockPush).toHaveBeenCalledWith('/');
+        consoleErrorSpy.mockRestore();
     });
 
     it('should load existing candidate data if email is in URL', async () => {
@@ -91,6 +95,7 @@ describe('useCandidateForm', () => {
             json: async () => mockData,
         });
 
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         let result: any;
         await act(async () => {
             const { result: r } = renderHook(() => useCandidateForm());
@@ -100,9 +105,11 @@ describe('useCandidateForm', () => {
         expect(result.current.firstName).toBe('John');
         expect(result.current.lastName).toBe('Doe');
         expect(result.current.isExistingCandidate).toBe(true);
+        consoleErrorSpy.mockRestore();
     });
 
     it('should handle website and additional info arrays', async () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         let result: any;
         await act(async () => {
             const { result: r } = renderHook(() => useCandidateForm());
@@ -128,9 +135,11 @@ describe('useCandidateForm', () => {
             result.current.addAdditionalInfo('text');
         });
         expect(result.current.additionalInfo.length).toBe(2);
+        consoleErrorSpy.mockRestore();
     });
 
     it('should calculate age correctly', async () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         let result: any;
         await act(async () => {
             const { result: r } = renderHook(() => useCandidateForm());
@@ -140,9 +149,11 @@ describe('useCandidateForm', () => {
         // This might fail depending on the current date. A more robust test would be to mock the date.
         const expectedAge = new Date().getFullYear() - 1990 - (new Date().getMonth() < 0 || (new Date().getMonth() === 0 && new Date().getDate() < 1) ? 1 : 0);
         expect(age).toBe(expectedAge);
+        consoleErrorSpy.mockRestore();
     });
 
     it('should not submit if required fields are missing', async () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         let result: any;
         await act(async () => {
             const { result: r } = renderHook(() => useCandidateForm());
@@ -154,11 +165,14 @@ describe('useCandidateForm', () => {
         });
 
         expect(result.current.error).toContain('Date of birth is required');
+        consoleErrorSpy.mockRestore();
     });
 
     // This is a simplified test for submission. A full test would be very complex.
     it('should handle successful submission', async () => {
         jest.useFakeTimers();
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
         let result: any;
         await act(async () => {
             const { result: r } = renderHook(() => useCandidateForm());
@@ -226,5 +240,7 @@ describe('useCandidateForm', () => {
 
         expect(mockPush).toHaveBeenCalledWith('/candidate-dashboard?email=test%40example.com');
         jest.useRealTimers();
+        consoleErrorSpy.mockRestore();
+        consoleLogSpy.mockRestore();
     });
 });

@@ -23,9 +23,13 @@ describe('useCandidateDashboard', () => {
         mockPush.mockClear();
     });
 
-  it('should redirect to home if email is not in URL params', () => {
-    renderHook(() => useCandidateDashboard());
+  it('should redirect to home if email is not in URL params', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    await act(async () => {
+      renderHook(() => useCandidateDashboard());
+    });
     expect(mockPush).toHaveBeenCalledWith('/');
+    consoleErrorSpy.mockRestore();
   });
 
   it('should fetch applications when email is in URL params', async () => {
@@ -37,6 +41,7 @@ describe('useCandidateDashboard', () => {
       json: async () => ({ applications: mockApplications }),
     });
 
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     let result: any;
     await act(async () => {
         const url = new URL(window.location.href);
@@ -49,6 +54,7 @@ describe('useCandidateDashboard', () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.applications).toEqual(mockApplications);
     expect(result.current.error).toBeNull();
+    consoleErrorSpy.mockRestore();
   });
 
   it('should handle fetch error', async () => {
@@ -58,6 +64,7 @@ describe('useCandidateDashboard', () => {
       json: async () => ({ error: errorMessage }),
     });
 
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     let result: any;
     await act(async () => {
         const url = new URL(window.location.href);
@@ -70,10 +77,16 @@ describe('useCandidateDashboard', () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.applications).toEqual([]);
     expect(result.current.error).toBe(errorMessage);
+    consoleErrorSpy.mockRestore();
   });
 
-  it('handleNewApplication should redirect to candidate form with email', () => {
-    const { result } = renderHook(() => useCandidateDashboard());
+  it('handleNewApplication should redirect to candidate form with email', async () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    let result: any;
+    await act(async () => {
+      const { result: r } = renderHook(() => useCandidateDashboard());
+      result = r;
+    });
 
     act(() => {
         const url = new URL(window.location.href);
@@ -86,17 +99,26 @@ describe('useCandidateDashboard', () => {
     });
 
     expect(mockPush).toHaveBeenCalledWith('/candidate-form?email=test%40example.com');
+    consoleErrorSpy.mockRestore();
   });
 
   describe('formatDate', () => {
-    it('should return "N/A" for null or undefined timestamp', () => {
-      const { result } = renderHook(() => useCandidateDashboard());
+    it('should return "N/A" for null or undefined timestamp', async () => {
+      let result: any;
+      await act(async () => {
+        const { result: r } = renderHook(() => useCandidateDashboard());
+        result = r;
+      });
       expect(result.current.formatDate(null)).toBe('N/A');
       expect(result.current.formatDate(undefined)).toBe('N/A');
     });
 
-    it('should format a Date object', () => {
-      const { result } = renderHook(() => useCandidateDashboard());
+    it('should format a Date object', async () => {
+      let result: any;
+      await act(async () => {
+        const { result: r } = renderHook(() => useCandidateDashboard());
+        result = r;
+      });
       const date = new Date('2023-10-27T10:00:00Z');
       // The output of toLocaleDateString can vary based on the test environment's timezone.
       // This test will be more stable if we don't assert the exact string.
@@ -106,16 +128,24 @@ describe('useCandidateDashboard', () => {
       expect(formattedDate).toContain('2023');
     });
 
-    it('should format a string date', () => {
-        const { result } = renderHook(() => useCandidateDashboard());
+    it('should format a string date', async () => {
+        let result: any;
+        await act(async () => {
+          const { result: r } = renderHook(() => useCandidateDashboard());
+          result = r;
+        });
         const dateString = '2023-10-27T10:00:00Z';
         const formattedDate = result.current.formatDate(dateString);
         expect(formattedDate).not.toBe('N/A');
         expect(formattedDate).toContain('2023');
       });
   
-      it('should format a Firestore timestamp-like object', () => {
-        const { result } = renderHook(() => useCandidateDashboard());
+      it('should format a Firestore timestamp-like object', async () => {
+        let result: any;
+        await act(async () => {
+          const { result: r } = renderHook(() => useCandidateDashboard());
+          result = r;
+        });
         const timestamp = {
           toDate: () => new Date('2023-10-27T10:00:00Z'),
         };
@@ -124,8 +154,12 @@ describe('useCandidateDashboard', () => {
         expect(formattedDate).toContain('2023');
       });
 
-    it('should return "N/A" for an invalid date', () => {
-      const { result } = renderHook(() => useCandidateDashboard());
+    it('should return "N/A" for an invalid date', async () => {
+      let result: any;
+      await act(async () => {
+        const { result: r } = renderHook(() => useCandidateDashboard());
+        result = r;
+      });
       expect(result.current.formatDate('invalid-date')).toBe('N/A');
     });
   });
