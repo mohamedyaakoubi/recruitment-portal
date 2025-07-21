@@ -53,18 +53,18 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({
 }) => {
     return (
         <section className="mt-8">
-            <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <h3 className="text-xl font-bold text-gray-800">Interview Schedule</h3>
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Interview Schedule</h3>
                     
                     <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium text-gray-600 mr-2">Filter:</span>
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-2">Filter:</span>
                         <button
                             onClick={() => setCalendarFilter('all')}
                             className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                                 calendarFilter === 'all' 
                                     ? 'bg-gray-600 text-white border-gray-600' 
-                                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                    : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
                             }`}
                         >
                             All ({allInterviewEvents.length})
@@ -74,7 +74,7 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({
                             className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                                 calendarFilter === 'upcoming' 
                                     ? 'bg-blue-600 text-white border-blue-600' 
-                                    : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                                    : 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-300 border-blue-300 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/50'
                             }`}
                         >
                             Upcoming ({allInterviewEvents.filter(e => !e.isCompleted).length})
@@ -84,7 +84,7 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({
                             className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
                                 calendarFilter === 'completed' 
                                     ? 'bg-green-600 text-white border-green-600' 
-                                    : 'bg-white text-green-600 border-green-300 hover:bg-green-50'
+                                    : 'bg-white dark:bg-gray-700 text-green-600 dark:text-green-300 border-green-300 dark:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/50'
                             }`}
                         >
                             Completed ({allInterviewEvents.filter(e => e.isCompleted).length})
@@ -92,18 +92,18 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-6 mb-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-6 mb-4 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-blue-500 rounded border-l-4 border-blue-700"></div>
-                        <span className="text-sm text-gray-600">Upcoming Interviews</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300">Upcoming Interviews</span>
                     </div>
                     <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-green-500 rounded border-l-4 border-green-700"></div>
-                        <span className="text-sm text-gray-600">Completed Interviews</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300">Completed Interviews</span>
                     </div>
                 </div>
 
-                <div style={{ height: '500px' }}>
+                <div style={{ height: '500px' }} className="dark-calendar-theme">
                     <Calendar
                         localizer={localizer}
                         events={filteredInterviewEvents}
@@ -126,8 +126,8 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({
                 </div>
 
                 {filteredInterviewEvents.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                        <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h2a1 1 0 011 1v10a1 1 0 01-1 1H5a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
                         </svg>
                         <p className="text-lg font-medium">No interviews {calendarFilter === 'all' ? '' : calendarFilter}</p>

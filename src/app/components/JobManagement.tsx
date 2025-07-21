@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { JOB_CATEGORIES, JobCategory } from '@/lib/job-categories';
 import { Job, JobManagementProps } from '@/types';
 
-const inputFieldStyles = "block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
+const inputFieldStyles = "block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
 
 const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -196,10 +196,10 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-      <div className="bg-gray-50 p-6 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col">
-        <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800">Job Management</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full -mr-2 -mt-2">
+      <div className="bg-gray-50 dark:bg-gray-900 p-6 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col">
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Job Management</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2 rounded-full -mr-2 -mt-2">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
@@ -218,8 +218,8 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
           )}
 
           {isAddingJob && (
-            <div className="bg-white p-6 rounded-lg mb-6 border border-gray-200 shadow-md">
-              <h3 className="text-xl font-semibold mb-4 text-gray-700">{editingJobId ? 'Edit Job' : 'Add New Job'}</h3>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg mb-6 border border-gray-200 dark:border-gray-700 shadow-md">
+              <h3 className="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-300">{editingJobId ? 'Edit Job' : 'Add New Job'}</h3>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <InputField label="Category" required>
@@ -236,19 +236,19 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                   <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className={inputFieldStyles} placeholder="Describe the role..." rows={4} required />
                 </InputField>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Specialties <span className="text-red-500">*</span></label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Specialties <span className="text-red-500">*</span></label>
                   <div className="space-y-2">
                     {formData.specialties.map((specialty, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <input type="text" value={specialty} onChange={(e) => updateSpecialty(index, e.target.value)} className={`${inputFieldStyles} flex-1`} placeholder={`Specialty ${index + 1}`} required />
                         {formData.specialties.length > 1 && (
-                          <button type="button" onClick={() => removeSpecialty(index)} className="p-2 text-red-500 hover:bg-red-100 rounded-full transition-colors">
+                          <button type="button" onClick={() => removeSpecialty(index)} className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-full transition-colors">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
                         )}
                       </div>
                     ))}
-                    <button type="button" onClick={addSpecialty} className="flex items-center space-x-2 px-3 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    <button type="button" onClick={addSpecialty} className="flex items-center space-x-2 px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                       <span>Add Specialty</span>
                     </button>
@@ -264,7 +264,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-md">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-md">
             <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <InputField label="Search Jobs">
                 <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={inputFieldStyles} placeholder="Search..." />
@@ -283,7 +283,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                     <option value="category">Category</option>
                     <option value="isActive">Status</option>
                   </select>
-                  <button onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="p-2 border border-gray-300 rounded-md hover:bg-gray-100">
+                  <button onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="p-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
                     {sortOrder === 'asc' ? '↑' : '↓'}
                   </button>
                 </div>
@@ -291,11 +291,11 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
             </div>
 
             <div className="space-y-3">
-              {loading && !isAddingJob && <p>Loading jobs...</p>}
+              {loading && !isAddingJob && <p className="dark:text-gray-300">Loading jobs...</p>}
               {!loading && filteredAndSortedJobs.length === 0 && (
                 <div className="text-center py-10">
-                  <p className="text-gray-500">No jobs match your filters.</p>
-                  <button onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }} className="mt-2 text-blue-600 hover:underline">Clear filters</button>
+                  <p className="text-gray-500 dark:text-gray-400">No jobs match your filters.</p>
+                  <button onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }} className="mt-2 text-blue-600 dark:text-blue-400 hover:underline">Clear filters</button>
                 </div>
               )}
               {filteredAndSortedJobs.map((job) => <JobListItem key={job.id} job={job} onEdit={handleEdit} onToggleStatus={handleToggleStatus} onDelete={handleDelete} loading={operationLoading} />)}
@@ -309,15 +309,15 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
 
 const InputField: React.FC<{ label: string; children: React.ReactNode; required?: boolean }> = ({ label, children, required = false }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">{label} {required && <span className="text-red-500">*</span>}</label>
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label} {required && <span className="text-red-500">*</span>}</label>
     {children}
   </div>
 );
 
 const Alert: React.FC<{ type: 'error' | 'success'; message: string }> = ({ type, message }) => {
   const colors = {
-    error: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', icon: 'text-red-400' },
-    success: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800', icon: 'text-green-400' },
+    error: { bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-200 dark:border-red-500/30', text: 'text-red-800 dark:text-red-300', icon: 'text-red-400 dark:text-red-400' },
+    success: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-200 dark:border-green-500/30', text: 'text-green-800 dark:text-green-300', icon: 'text-green-400 dark:text-green-400' },
   };
   const style = colors[type];
   return (
@@ -343,23 +343,23 @@ interface JobListItemProps {
 }
 
 const JobListItem: React.FC<JobListItemProps> = ({ job, onEdit, onToggleStatus, onDelete, loading }) => (
-  <div className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow bg-white">
+  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-lg transition-shadow bg-white dark:bg-gray-800">
     <div className="flex justify-between items-start">
       <div className="flex-1">
         <div className="flex items-center gap-3 mb-2">
-          <h4 className="font-bold text-lg text-gray-800">{job.title}</h4>
-          <span className={`px-2.5 py-0.5 text-xs rounded-full font-semibold ${job.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{job.isActive ? 'Active' : 'Inactive'}</span>
+          <h4 className="font-bold text-lg text-gray-800 dark:text-gray-200">{job.title}</h4>
+          <span className={`px-2.5 py-0.5 text-xs rounded-full font-semibold ${job.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>{job.isActive ? 'Active' : 'Inactive'}</span>
         </div>
-        <p className="text-sm text-indigo-600 font-semibold mb-2">{job.category}</p>
-        <p className="text-gray-600 text-sm leading-relaxed mb-3">{job.description}</p>
+        <p className="text-sm text-indigo-600 dark:text-indigo-400 font-semibold mb-2">{job.category}</p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-3">{job.description}</p>
         {job.specialties && job.specialties.length > 0 && (
           <div className="mb-3">
             <div className="flex flex-wrap gap-2">
-              {job.specialties.map((specialty, index) => <span key={index} className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md">{specialty}</span>)}
+              {job.specialties.map((specialty, index) => <span key={index} className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md">{specialty}</span>)}
             </div>
           </div>
         )}
-        {job.createdAt && <p className="text-xs text-gray-400">Created: {job.createdAt.toDate?.().toLocaleDateString() || 'Unknown'}</p>}
+        {job.createdAt && <p className="text-xs text-gray-400 dark:text-gray-500">Created: {job.createdAt.toDate?.().toLocaleDateString() || 'Unknown'}</p>}
       </div>
       <div className="flex items-center gap-2 ml-4">
         <ActionButton onClick={() => onEdit(job)} disabled={loading[`edit_${job.id}`]} icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg>} srText="Edit" color="blue" />
@@ -379,7 +379,7 @@ interface ActionButtonProps {
 }
 
 const ActionButton: React.FC<ActionButtonProps> = ({ onClick, icon, srText, color, disabled }) => (
-    <button onClick={onClick} disabled={disabled} className={`p-2 rounded-full text-${color}-600 hover:bg-${color}-100 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${color}-500 transition-colors`}>
+    <button onClick={onClick} disabled={disabled} className={`p-2 rounded-full text-${color}-600 dark:text-${color}-400 hover:bg-${color}-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${color}-500 transition-colors`}>
         <span className="sr-only">{srText}</span>
         {icon}
     </button>

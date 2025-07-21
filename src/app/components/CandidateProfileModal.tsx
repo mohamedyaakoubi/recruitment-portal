@@ -38,7 +38,7 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
     return (
         <>
             <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-                <div className="bg-gray-50 rounded-xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl shadow-2xl max-w-5xl w-full max-h-[95vh] flex flex-col">
                     <ProfileHeader
                         candidate={candidate}
                         onClose={onClose}

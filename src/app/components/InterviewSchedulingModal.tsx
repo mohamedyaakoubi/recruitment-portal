@@ -88,27 +88,27 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">📅 Schedule Google Meet Interview</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-200">📅 Schedule Google Meet Interview</h3>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 focus:outline-none"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
             disabled={isLoading}
           >
             ✕
           </button>
         </div>
         
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-          <p className="text-sm text-gray-700">
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border-l-4 border-blue-400 dark:border-blue-500">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
             <strong>👤 Candidate:</strong> {candidate.fullName}
           </p>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
             <strong>📧 Email:</strong> {candidate.email}
           </p>
           {candidate.jobTitleText && (
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
               <strong>💼 Position:</strong> {candidate.jobTitleText}
             </p>
           )}
@@ -116,7 +116,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="interviewDate" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="interviewDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               📅 Interview Date *
             </label>
             <input
@@ -126,13 +126,13 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               onChange={(e) => setInterviewDate(e.target.value)}
               min={tomorrow}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
               disabled={isLoading}
             />
           </div>
 
           <div>
-            <label htmlFor="interviewTime" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="interviewTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               ⏰ Interview Time * (Finland Time)
             </label>
             <select
@@ -140,7 +140,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               value={interviewTime}
               onChange={(e) => setInterviewTime(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
               disabled={isLoading}
             >
               <option value="">Select time</option>
@@ -162,14 +162,14 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
           </div>
 
           <div>
-            <label htmlFor="duration" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="duration" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               ⏱️ Duration *
             </label>
             <select
               id="duration"
               value={duration}
               onChange={(e) => setDuration(parseInt(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
               disabled={isLoading}
             >
               <option value={15}>15 minutes</option>
@@ -182,7 +182,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
           </div>
 
           <div>
-            <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="adminEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               👨‍💼 Interviewer Email
             </label>
             <input
@@ -190,14 +190,14 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               id="adminEmail"
               value={adminEmail}
               onChange={(e) => setAdminEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
               disabled={isLoading}
               placeholder="wassim@internationalskills.fi"
             />
           </div>
 
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               📝 Additional Notes (optional)
             </label>
             <textarea
@@ -205,22 +205,22 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
               placeholder="Any additional information for the interview..."
               disabled={isLoading}
             />
           </div>
 
-          <div className="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border-l-4 border-green-400 dark:border-green-500">
             <div className="flex">
               <div className="flex-shrink-0">
                 <span className="text-green-400 text-lg">✅</span>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-green-800">
+                <p className="text-sm text-green-800 dark:text-green-300">
                   <strong>What happens next:</strong>
                 </p>
-                <ul className="text-sm text-green-700 mt-2 space-y-1">
+                <ul className="text-sm text-green-700 dark:text-green-300/80 mt-2 space-y-1">
                   <li>• Google Calendar event will be created automatically</li>
                   <li>• Google Meet link will be generated</li>
                   <li>• Both candidate and interviewer receive email invitations</li>
@@ -233,13 +233,13 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
 
           {/* Show cancellation info if interview is already scheduled */}
           {candidate.status === 'interview_scheduled' && (
-            <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border-l-4 border-yellow-400 dark:border-yellow-500">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <span className="text-yellow-400 text-lg">⚠️</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-yellow-800">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
                     <strong>Note:</strong> This candidate already has an interview scheduled. 
                     Scheduling a new interview will cancel the existing one and create a new Google Meet event.
                   </p>
@@ -252,7 +252,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               disabled={isLoading}
             >
               Cancel

@@ -41,7 +41,7 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col">
         <EditModalHeader onClose={onClose} isLoading={isLoading} />
         <div className="p-6 overflow-y-auto flex-grow">
           <form onSubmit={handleSubmit} className="space-y-6">

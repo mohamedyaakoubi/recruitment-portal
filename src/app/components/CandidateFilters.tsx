@@ -147,26 +147,26 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100 mb-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Filters:</h3>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 mb-6">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">Filters:</h3>
       
       {/* Main Filter Inputs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
         {/* Name Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Name</label>
           <input
             type="text"
             placeholder="Filter by name..."
             value={filterName}
             onChange={(e) => onFilterNameChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
           />
         </div>
         
         {/* City Filter with Dropdown */}
         <div className="relative" ref={cityRef}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by City</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by City</label>
           <input
             type="text"
             placeholder="Search and select city..."
@@ -177,11 +177,11 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               setShowCityList(true);
             }}
             onFocus={() => setShowCityList(true)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
             autoComplete="off"
           />
           {showCityList && filteredCities.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredCities.map((city, index) => (
                 <button
                   key={index}
@@ -191,10 +191,10 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                     setCitySearch(city);
                     setShowCityList(false);
                   }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none flex justify-between items-center"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
                 >
                   <span>{city}</span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({candidates.filter(c => c.city === city).length})
                   </span>
                 </button>
@@ -205,7 +205,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
         
         {/* Country Filter with Dropdown */}
         <div className="relative" ref={countryRef}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Country</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Country</label>
           <input
             type="text"
             placeholder="Search and select country..."
@@ -216,11 +216,11 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               setShowCountryList(true);
             }}
             onFocus={() => setShowCountryList(true)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
             autoComplete="off"
           />
           {showCountryList && filteredCountries.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredCountries.map((country, index) => (
                 <button
                   key={index}
@@ -230,10 +230,10 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                     setCountrySearch(country);
                     setShowCountryList(false);
                   }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none flex justify-between items-center"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
                 >
                   <span>{country}</span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({candidates.filter(c => c.country === country).length})
                   </span>
                 </button>
@@ -244,7 +244,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
         
         {/* ✅ Nationality Filter with Dropdown */}
         <div className="relative" ref={nationalityRef}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Nationality</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Nationality</label>
           <input
             type="text"
             placeholder="Search and select nationality..."
@@ -255,11 +255,11 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               setShowNationalityList(true);
             }}
             onFocus={() => setShowNationalityList(true)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
             autoComplete="off"
           />
           {showNationalityList && filteredNationalities.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredNationalities.map((nationality, index) => (
                 <button
                   key={index}
@@ -269,10 +269,10 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                     setNationalitySearch(nationality);
                     setShowNationalityList(false);
                   }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none flex justify-between items-center"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
                 >
                   <span>{nationality}</span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({candidates.filter(c => c.nationality === nationality).length})
                   </span>
                 </button>
@@ -283,7 +283,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
         
         {/* Category Filter with Dropdown */}
         <div className="relative" ref={categoryRef}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Category</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Category</label>
           <input
             type="text"
             placeholder="Search and select category..."
@@ -294,11 +294,11 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               setShowCategoryList(true);
             }}
             onFocus={() => setShowCategoryList(true)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
             autoComplete="off"
           />
           {showCategoryList && filteredCategories.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredCategories.map((category, index) => (
                 <button
                   key={index}
@@ -308,10 +308,10 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                     setCategorySearch(category);
                     setShowCategoryList(false);
                   }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none flex justify-between items-center"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
                 >
                   <span>{category}</span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({candidates.filter(c => c.jobCategory === category).length})
                   </span>
                 </button>
@@ -322,7 +322,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
 
         {/* ✅ New Specialty Filter with Dropdown */}
         <div className="relative" ref={specialtyRef}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Specialty</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Specialty</label>
           <input
             type="text"
             placeholder="Search and select specialty..."
@@ -333,11 +333,11 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               setShowSpecialtyList(true);
             }}
             onFocus={() => setShowSpecialtyList(true)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
             autoComplete="off"
           />
           {showSpecialtyList && filteredSpecialties.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredSpecialties.map((specialty, index) => (
                 <button
                   key={index}
@@ -347,10 +347,10 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                     setSpecialtySearch(specialty);
                     setShowSpecialtyList(false);
                   }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none flex justify-between items-center"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
                 >
                   <span>{specialty}</span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({candidates.filter(c => c.specialty === specialty).length})
                   </span>
                 </button>
@@ -361,7 +361,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
 
         {/* Job Title Filter with Dropdown */}
         <div className="relative" ref={jobTitleRef}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Job Title</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Job Title</label>
           <input
             type="text"
             placeholder="Search and select job title..."
@@ -372,11 +372,11 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               setShowJobTitleList(true);
             }}
             onFocus={() => setShowJobTitleList(true)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
             autoComplete="off"
           />
           {showJobTitleList && filteredJobTitles.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredJobTitles.map((jobTitle, index) => (
                 <button
                   key={index}
@@ -386,10 +386,10 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                     setJobTitleSearch(jobTitle);
                     setShowJobTitleList(false);
                   }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none flex justify-between items-center"
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
                 >
                   <span>{jobTitle}</span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     ({candidates.filter(c => c.jobTitleText === jobTitle).length})
                   </span>
                 </button>
@@ -402,33 +402,33 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
       {/* Age and Status Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Min Age</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Min Age</label>
           <input
             type="number"
             placeholder="Min age..."
             value={filterAgeMin}
             onChange={(e) => onFilterAgeMinChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Max Age</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Max Age</label>
           <input
             type="number"
             placeholder="Max age..."
             value={filterAgeMax}
             onChange={(e) => onFilterAgeMaxChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Status</label>
           <select
             value={filterStatus}
             onChange={(e) => onFilterStatusChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
           >
             <option value="all">All Statuses</option>
             <option value="submitted">Submitted</option>
@@ -443,7 +443,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
       <div className="mb-6">
         <button
           onClick={handleClearAllFilters}
-          className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+          className="px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
         >
           Clear All Filters
         </button>
@@ -453,14 +453,14 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
       <div className="space-y-4">
         {/* Status Quick Filters */}
         <div>
-          <span className="text-sm font-medium text-gray-600 mr-3">Status:</span>
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Status:</span>
           <div className="inline-flex flex-wrap gap-2">
             <button
               onClick={() => onFilterStatusChange('all')}
               className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                 filterStatus === 'all' 
                   ? 'bg-gray-600 text-white border-gray-600' 
-                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                  : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
               }`}
             >
               All
@@ -470,7 +470,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                 filterStatus === 'submitted' 
                   ? 'bg-blue-600 text-white border-blue-600' 
-                  : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50'
+                  : 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-300 border-blue-300 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/50'
               }`}
             >
               Submitted ({candidates.filter(c => c.status === 'submitted').length})
@@ -480,7 +480,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                 filterStatus === 'interview_scheduled' 
                   ? 'bg-green-600 text-white border-green-600' 
-                  : 'bg-white text-green-600 border-green-300 hover:bg-green-50'
+                  : 'bg-white dark:bg-gray-700 text-green-600 dark:text-green-300 border-green-300 dark:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/50'
               }`}
             >
               Scheduled ({candidates.filter(c => c.status === 'interview_scheduled').length})
@@ -490,7 +490,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                 filterStatus === 'rejected' 
                   ? 'bg-red-600 text-white border-red-600' 
-                  : 'bg-white text-red-600 border-red-300 hover:bg-red-50'
+                  : 'bg-white dark:bg-gray-700 text-red-600 dark:text-red-300 border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/50'
               }`}
             >
               Rejected ({candidates.filter(c => c.status === 'rejected').length})
@@ -500,7 +500,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
               className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                 filterStatus === 'approved' 
                   ? 'bg-purple-600 text-white border-purple-600' 
-                  : 'bg-white text-purple-600 border-purple-300 hover:bg-purple-50'
+                  : 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-300 border-purple-300 dark:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/50'
               }`}
             >
               Approved ({candidates.filter(c => c.status === 'approved').length})
@@ -511,7 +511,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
    {/* ✅ Specialties Quick Filters */}
         {candidates.length > 0 && uniqueSpecialties.length > 0 && (
           <div>
-            <span className="text-sm font-medium text-gray-600 mr-3">Popular Specialties:</span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Popular Specialties:</span>
             <div className="inline-flex flex-wrap gap-2">
               {uniqueSpecialties.slice(0, 8).map(specialty => (
                 <button
@@ -528,7 +528,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                   className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                     filterSpecialty === specialty 
                       ? 'bg-emerald-600 text-white border-emerald-600' 
-                      : 'bg-white text-emerald-600 border-emerald-300 hover:bg-emerald-50'
+                      : 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-300 border-emerald-300 dark:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/50'
                   }`}
                 >
                   {specialty} ({candidates.filter(c => c.specialty === specialty).length})
@@ -541,7 +541,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
         {/* Nationalities Quick Filters */}
         {candidates.length > 0 && uniqueNationalities.length > 0 && (
           <div>
-            <span className="text-sm font-medium text-gray-600 mr-3">Nationalities:</span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Nationalities:</span>
             <div className="inline-flex flex-wrap gap-2">
               {uniqueNationalities.slice(0, 5).map(nationality => (
                 <button
@@ -558,7 +558,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                   className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                     filterNationality === nationality 
                       ? 'bg-pink-600 text-white border-pink-600' 
-                      : 'bg-white text-pink-600 border-pink-300 hover:bg-pink-50'
+                      : 'bg-white dark:bg-gray-700 text-pink-600 dark:text-pink-300 border-pink-300 dark:border-pink-600 hover:bg-pink-50 dark:hover:bg-pink-900/50'
                   }`}
                 >
                   {nationality} ({candidates.filter(c => c.nationality === nationality).length})
@@ -571,7 +571,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
         {/* Popular Cities Quick Filters */}
         {candidates.length > 0 && (
           <div>
-            <span className="text-sm font-medium text-gray-600 mr-3">Popular Cities:</span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Popular Cities:</span>
             <div className="inline-flex flex-wrap gap-2">
               {uniqueCities.slice(0, 5).map(city => (
                 <button
@@ -588,7 +588,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                   className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                     filterCity === city 
                       ? 'bg-indigo-600 text-white border-indigo-600' 
-                      : 'bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50'
+                      : 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-300 border-indigo-300 dark:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/50'
                   }`}
                 >
                   {city} ({candidates.filter(c => c.city === city).length})
@@ -601,7 +601,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
         {/* Popular Countries Quick Filters */}
         {candidates.length > 0 && (
           <div>
-            <span className="text-sm font-medium text-gray-600 mr-3">Popular Countries:</span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Popular Countries:</span>
             <div className="inline-flex flex-wrap gap-2">
               {uniqueCountries.slice(0, 5).map(country => (
                 <button
@@ -618,7 +618,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                   className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                     filterCountry === country 
                       ? 'bg-purple-600 text-white border-purple-600' 
-                      : 'bg-white text-purple-600 border-purple-300 hover:bg-purple-50'
+                      : 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-300 border-purple-300 dark:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/50'
                   }`}
                 >
                   {country} ({candidates.filter(c => c.country === country).length})
@@ -631,7 +631,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
         {/* Job Categories Quick Filters */}
         {candidates.length > 0 && (
           <div>
-            <span className="text-sm font-medium text-gray-600 mr-3">Job Categories:</span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Job Categories:</span>
             <div className="inline-flex flex-wrap gap-2">
               {uniqueCategories.slice(0, 5).map(category => (
                 <button
@@ -648,7 +648,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                   className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                     filterCategory === category 
                       ? 'bg-orange-600 text-white border-orange-600' 
-                      : 'bg-white text-orange-600 border-orange-300 hover:bg-orange-50'
+                      : 'bg-white dark:bg-gray-700 text-orange-600 dark:text-orange-300 border-orange-300 dark:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/50'
                   }`}
                 >
                   {category} ({candidates.filter(c => c.jobCategory === category).length})
@@ -661,7 +661,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
         {/* Job Titles Quick Filters */}
         {candidates.length > 0 && (
           <div>
-            <span className="text-sm font-medium text-gray-600 mr-3">Job Positions:</span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Job Positions:</span>
             <div className="inline-flex flex-wrap gap-2">
               {uniqueJobTitles.slice(0, 5).map(jobTitle => (
                 <button
@@ -678,7 +678,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
                   className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                     filterJobTitle === jobTitle 
                       ? 'bg-teal-600 text-white border-teal-600' 
-                      : 'bg-white text-teal-600 border-teal-300 hover:bg-teal-50'
+                      : 'bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-300 border-teal-300 dark:border-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/50'
                   }`}
                 >
                   {jobTitle} ({candidates.filter(c => c.jobTitleText === jobTitle).length})

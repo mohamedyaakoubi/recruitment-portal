@@ -43,9 +43,9 @@ const CandidateManagement: React.FC<CandidateManagementProps> = ({
     const { isExporting, handleExport } = useCandidateTable(filteredCandidates, filters);
 
     return (
-        <div className="mt-8 bg-white rounded-xl shadow-lg border border-gray-200">
-            <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center">
-                <h2 className="text-lg font-bold text-gray-800">Candidate List</h2>
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+            <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h2 className="text-lg font-bold text-gray-800 dark:text-gray-200">Candidate List</h2>
                 <ExportButtons isExporting={isExporting} handleExport={handleExport} />
             </div>
             <Tabs

@@ -26,26 +26,37 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
     const age = candidate.dateOfBirth ? calculateAge(candidate.dateOfBirth) : null;
 
     return (
-        <tr key={candidate.id} className="hover:bg-gray-50 transition-colors duration-150">
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
-                {firstName}
+        <tr key={candidate.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-200">
+                <div className="flex items-center">
+                    <div className="flex-shrink-0 h-10 w-10">
+                        {candidate.photoUrl ? (
+                            <img className="h-10 w-10 rounded-full object-cover" src={candidate.photoUrl} alt="" />
+                        ) : (
+                            <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                <span className="text-gray-500 dark:text-gray-400">{firstName.charAt(0)}{lastName.charAt(0)}</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{firstName} {lastName}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400 md:hidden">{candidate.email}</div>
+                    </div>
+                </div>
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {lastName}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                 {candidate.email}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                 {age || 'N/A'}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                 {candidate.city || 'N/A'}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                 {candidate.country || 'N/A'}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                 {candidate.submittedAt
                     ? new Date(candidate.submittedAt.toDate()).toLocaleDateString()
                     : 'N/A'
@@ -54,7 +65,7 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
             <td className="px-6 py-4 whitespace-nowrap">
                 <StatusBadge status={candidate.status} />
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800 dark:text-gray-200">
                 {candidate.score !== null ? candidate.score : 'N/A'}
             </td>
             <CandidateTableActions

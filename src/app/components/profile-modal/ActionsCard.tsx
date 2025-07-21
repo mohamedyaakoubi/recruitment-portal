@@ -24,7 +24,7 @@ const ActionsCard: React.FC<ActionsCardProps> = ({
     const renderActionButtons = () => {
         if (candidate.status === 'approved' || candidate.status === 'rejected') {
             return (
-                <div className="text-center py-4 text-gray-600 italic">
+                <div className="text-center py-4 text-gray-600 dark:text-gray-400 italic">
                     This candidate has been <strong>{candidate.status}</strong>.
                 </div>
             );

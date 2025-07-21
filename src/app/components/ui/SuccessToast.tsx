@@ -48,7 +48,7 @@ const SuccessToast: React.FC<SuccessToastProps & { duration?: number }> = ({
       
       {/* Toast Container */}
       <div className={`
-        relative bg-white rounded-2xl shadow-2xl border border-slate-200 
+        relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-gray-700 
         max-w-md w-full mx-4 transform transition-all duration-500 ease-out
         ${isAnimating 
           ? 'scale-100 opacity-100 translate-y-0' 
@@ -91,21 +91,21 @@ const SuccessToast: React.FC<SuccessToastProps & { duration?: number }> = ({
 
         {/* Message Content */}
         <div className="p-6">
-          <p className="text-slate-700 text-base leading-relaxed mb-4">
+          <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed mb-4">
             {message}
           </p>
           
           {/* Success indicators */}
           <div className="space-y-3">
-            <div className="flex items-center text-sm text-slate-600">
+            <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-3 animate-pulse"></div>
               Application received and being processed
             </div>
-            <div className="flex items-center text-sm text-slate-600">
+            <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
               <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 animate-pulse"></div>
               You'll be redirected to your dashboard shortly
             </div>
-            <div className="flex items-center text-sm text-slate-600">
+            <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">
               <div className="w-2 h-2 bg-purple-500 rounded-full mr-3 animate-pulse"></div>
               Our team will review your application
             </div>
@@ -113,9 +113,9 @@ const SuccessToast: React.FC<SuccessToastProps & { duration?: number }> = ({
         </div>
 
         {/* Bottom section with action */}
-        <div className="bg-slate-50 px-6 py-4 rounded-b-2xl border-t border-slate-200">
+        <div className="bg-slate-50 dark:bg-gray-700/50 px-6 py-4 rounded-b-2xl border-t border-slate-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Application ID: #APP{Date.now().toString().slice(-6)}
             </p>
             <button
@@ -123,7 +123,7 @@ const SuccessToast: React.FC<SuccessToastProps & { duration?: number }> = ({
                 setIsAnimating(false);
                 setTimeout(onClose, 300);
               }}
-              className="text-[#003A70] hover:text-[#002B54] text-sm font-semibold transition-colors"
+              className="text-[#003A70] dark:text-blue-400 hover:text-[#002B54] dark:hover:text-blue-300 text-sm font-semibold transition-colors"
             >
               Close ({countdown}s)
             </button>

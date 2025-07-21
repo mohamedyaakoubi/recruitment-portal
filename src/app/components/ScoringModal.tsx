@@ -49,21 +49,21 @@ const ScoringModal: React.FC<ScoringModalProps> = ({ isOpen, onClose, candidate,
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <h2 className="text-xl font-semibold mb-4">Score Candidate: {candidate.fullName}</h2>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-200">Score Candidate: {candidate.fullName}</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
-                        <label htmlFor="jobSelection" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="jobSelection" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Select Job Position <span className="text-red-500">*</span>
                         </label>
                         {loadingJobs ? (
-                            <div className="text-gray-500">Loading jobs...</div>
+                            <div className="text-gray-500 dark:text-gray-400">Loading jobs...</div>
                         ) : (
                             <select
                                 id="jobSelection"
                                 value={selectedJobId}
                                 onChange={handleJobSelection}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
                                 required
                             >
                                 <option value="">Select a job position</option>
@@ -77,15 +77,15 @@ const ScoringModal: React.FC<ScoringModalProps> = ({ isOpen, onClose, candidate,
                     </div>
 
                     {selectedJob && (
-                        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <h4 className="font-medium text-blue-900 mb-2">Job Description:</h4>
-                            <p className="text-sm text-blue-800 whitespace-pre-wrap">{selectedJob.description}</p>
+                        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-lg">
+                            <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">Job Description:</h4>
+                            <p className="text-sm text-blue-800 dark:text-blue-300/80 whitespace-pre-wrap">{selectedJob.description}</p>
                         </div>
                     )}
 
                     {error && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-red-600 text-sm">Error: {error}</p>
+                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-lg">
+                            <p className="text-red-600 dark:text-red-300 text-sm">Error: {error}</p>
                         </div>
                     )}
 
@@ -94,7 +94,7 @@ const ScoringModal: React.FC<ScoringModalProps> = ({ isOpen, onClose, candidate,
                             type="button" 
                             onClick={onClose} 
                             disabled={isLoading} 
-                            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 disabled:opacity-50"
+                            className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500 disabled:opacity-50"
                         >
                             Cancel
                         </button>

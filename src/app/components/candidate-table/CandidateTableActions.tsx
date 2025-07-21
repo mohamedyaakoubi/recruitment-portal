@@ -20,7 +20,7 @@ interface ActionButtonProps {
 const ActionButton: React.FC<ActionButtonProps> = ({ onClick, icon, srText, color }) => (
     <button
         onClick={onClick}
-        className={`p-2 rounded-full text-${color}-500 hover:bg-${color}-100 hover:text-${color}-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${color}-500 transition-colors`}
+        className={`p-2 rounded-full text-${color}-500 hover:bg-${color}-100 dark:hover:bg-gray-700 hover:text-${color}-700 dark:text-${color}-400 dark:hover:text-${color}-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-${color}-500 transition-colors`}
     >
         <span className="sr-only">{srText}</span>
         {icon}

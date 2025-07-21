@@ -74,18 +74,18 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
   };
 
   return (
-    <div className="bg-slate-50 p-5 sm:p-6 rounded-lg">
-      <h2 className="text-xl font-bold text-slate-800 mb-6 border-b border-slate-200 pb-3">Personal Information</h2>
+    <div className="bg-slate-50 dark:bg-gray-800/50 p-5 sm:p-6 rounded-lg">
+      <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-200 dark:border-gray-700 pb-3">Personal Information</h2>
       
       {/* 🔥 NEW: Age requirement notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4 mb-6">
         <div className="flex items-start space-x-3">
-          <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <h3 className="font-semibold text-blue-800 mb-1">Age Requirement</h3>
-            <p className="text-sm text-blue-700">
+            <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-1">Age Requirement</h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300/80">
               You must be at least <strong>18 years old</strong> to submit an application. 
               Please ensure your date of birth is accurate as it will be verified.
             </p>
@@ -95,10 +95,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="firstName" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             First Name <span className="text-red-500">*</span>
             {isExistingCandidate && (
-              <span className="text-xs text-gray-500 ml-2">(Cannot be modified)</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Cannot be modified)</span>
             )}
           </label>
           <input
@@ -108,8 +108,8 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
             required
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className={`w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] ${
-              isExistingCandidate ? 'bg-gray-100 cursor-not-allowed' : ''
+            className={`w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white ${
+              isExistingCandidate ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''
             }`}
             placeholder="Enter your first name"
             disabled={isLoading || isExistingCandidate}
@@ -117,10 +117,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
         </div>
 
         <div>
-          <label htmlFor="lastName" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="lastName" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Last Name <span className="text-red-500">*</span>
             {isExistingCandidate && (
-              <span className="text-xs text-gray-500 ml-2">(Cannot be modified)</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Cannot be modified)</span>
             )}
           </label>
           <input
@@ -130,8 +130,8 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
             required
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className={`w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] ${
-              isExistingCandidate ? 'bg-gray-100 cursor-not-allowed' : ''
+            className={`w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white ${
+              isExistingCandidate ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''
             }`}
             placeholder="Enter your last name"
             disabled={isLoading || isExistingCandidate}
@@ -139,7 +139,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="email" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="email" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Email Address <span className="text-red-500">*</span>
           </label>
           <input
@@ -148,17 +148,17 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
             id="email"
             required
             value={email}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm bg-gray-100 cursor-not-allowed"
+            className="w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm bg-gray-100 dark:bg-gray-800 cursor-not-allowed"
             disabled={true}
           />
-          <p className="text-xs text-gray-500 mt-1">This email was verified in the previous step</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This email was verified in the previous step</p>
         </div>
 
         <div>
-          <label htmlFor="gender" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="gender" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Gender <span className="text-red-500">*</span>
             {isExistingCandidate && (
-              <span className="text-xs text-gray-500 ml-2">(Cannot be modified)</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Cannot be modified)</span>
             )}
           </label>
           <select
@@ -167,8 +167,8 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
             required
             value={gender}
             onChange={(e) => setGender(e.target.value)}
-            className={`w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] ${
-              isExistingCandidate ? 'bg-gray-100 cursor-not-allowed' : ''
+            className={`w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white ${
+              isExistingCandidate ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''
             }`}
             disabled={isLoading || isExistingCandidate}
           >
@@ -179,10 +179,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
         </div>
 
          <div>
-          <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Date of Birth <span className="text-red-500">*</span>
             {isExistingCandidate && (
-              <span className="text-xs text-gray-500 ml-2">(Cannot be modified)</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Cannot be modified)</span>
             )}
           </label>
           <input
@@ -192,8 +192,8 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
             required
             value={dateOfBirth}
             onChange={(e) => setDateOfBirth(e.target.value)}
-            className={`w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] ${
-              isExistingCandidate ? 'bg-gray-100 cursor-not-allowed' : ''
+            className={`w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white ${
+              isExistingCandidate ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''
             }`}
             disabled={isLoading || isExistingCandidate}
             // 🔥 NEW: Set max date to 18 years ago
@@ -207,7 +207,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
                 const isValidAge = age !== null && age >= 18;
                 
                 return (
-                  <p className={`text-xs mt-1 ${isValidAge ? 'text-gray-600' : 'text-red-600 font-medium'}`}>
+                  <p className={`text-xs mt-1 ${isValidAge ? 'text-gray-600 dark:text-gray-400' : 'text-red-600 font-medium'}`}>
                     {age !== null ? (
                       isValidAge ? (
                         <>Age: {age} years old</>
@@ -223,14 +223,14 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
             </div>
           )}
           {isExistingCandidate && dateOfBirth && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Age: {calculateAge(dateOfBirth)} years old
             </p>
           )}
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor="phoneNumber" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="phoneNumber" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Phone Number <span className="text-red-500">*</span>
           </label>
           <div className="flex">
@@ -241,10 +241,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
                   setShowCountryCodeList(!showCountryCodeList);
                   setCountryCodeSearch('');
                 }}
-                className="w-32 px-3 py-3 border border-slate-300 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-slate-100 text-sm flex items-center justify-between"
+                className="w-32 px-3 py-3 border border-slate-300 dark:border-gray-600 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-slate-100 dark:bg-gray-700 text-sm flex items-center justify-between"
                 disabled={isLoading}
               >
-                <span>
+                <span className="dark:text-white">
                   {countryCodes.find(item => item.code === countryCode)?.flag} {countryCode}
                 </span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,13 +253,13 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
               </button>
               
               {showCountryCodeList && (
-                <div className="absolute z-20 w-80 mt-1 bg-white border border-slate-300 rounded-lg shadow-lg">
-                  <div className="p-2 border-b border-slate-200">
+                <div className="absolute z-20 w-80 mt-1 bg-white dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg shadow-lg">
+                  <div className="p-2 border-b border-slate-200 dark:border-gray-600">
                     <input
                       type="text"
                       value={countryCodeSearch}
                       onChange={(e) => setCountryCodeSearch(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+                      className="w-full px-3 py-2 text-sm border border-slate-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-600 dark:text-white"
                       placeholder="Search country..."
                       autoFocus
                     />
@@ -274,15 +274,15 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
                           setShowCountryCodeList(false);
                           setCountryCodeSearch('');
                         }}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 focus:bg-slate-100 focus:outline-none flex items-center space-x-3"
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-gray-600 focus:bg-slate-100 dark:focus:bg-gray-600 focus:outline-none flex items-center space-x-3"
                       >
                         <span className="text-lg">{item.flag}</span>
-                        <span className="font-medium">{item.code}</span>
-                        <span className="text-slate-600 truncate">{item.country}</span>
+                        <span className="font-medium dark:text-white">{item.code}</span>
+                        <span className="text-slate-600 dark:text-slate-300 truncate">{item.country}</span>
                       </button>
                     ))}
                     {filteredCountryCodes.length === 0 && (
-                      <div className="px-3 py-2 text-sm text-slate-500">
+                      <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
                         No countries found
                       </div>
                     )}
@@ -297,7 +297,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
               required
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              className="flex-1 px-4 py-3 border-l-0 border border-slate-300 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+              className="flex-1 px-4 py-3 border-l-0 border border-slate-300 dark:border-gray-600 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white"
               placeholder="123 456 789"
               disabled={isLoading}
             />
@@ -305,7 +305,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
         </div>
 
         <div>
-          <label htmlFor="city" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="city" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             City <span className="text-red-500">*</span>
           </label>
           <input
@@ -315,14 +315,14 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
             required
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+            className="w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white"
             placeholder="Enter your city"
             disabled={isLoading}
           />
         </div>
 
         <div>
-          <label htmlFor="country" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="country" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Country <span className="text-red-500">*</span>
           </label>
           <SearchableDropdown
@@ -335,7 +335,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
         </div>
 
         <div>
-          <label htmlFor="nationality" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="nationality" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Nationality <span className="text-red-500">*</span>
           </label>
           <SearchableDropdown
@@ -348,7 +348,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
         </div>
 
         <div>
-          <label htmlFor="doubleNationality" className="block text-sm font-semibold text-slate-600 mb-2">
+          <label htmlFor="doubleNationality" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Second Nationality <span className="text-slate-400">(Optional)</span>
           </label>
           <SearchableDropdown

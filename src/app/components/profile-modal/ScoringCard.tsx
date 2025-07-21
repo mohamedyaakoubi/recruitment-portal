@@ -91,7 +91,7 @@ const ScoringCard: React.FC<ScoringCardProps> = ({ candidate }) => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">AI Score</p>
                             {candidate.aiRecommendation && (
-                                <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${recommendationDisplay.color}`}>
+                                <div className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium ${recommendationDisplay.color} dark:bg-opacity-20`}>
                                     {recommendationDisplay.icon}
                                     <span>{recommendationDisplay.text}</span>
                                 </div>
@@ -103,20 +103,20 @@ const ScoringCard: React.FC<ScoringCardProps> = ({ candidate }) => {
                 {/* Analysis */}
                 {candidate.scoreAnalysis && (
                     <div>
-                        <h4 className="text-sm font-semibold text-gray-800 mb-2">📋 Analysis</h4>
-                        <p className="text-sm text-gray-700 leading-relaxed">{candidate.scoreAnalysis}</p>
+                        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">📋 Analysis</h4>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{candidate.scoreAnalysis}</p>
                     </div>
                 )}
 
                 {/* Key Strengths */}
                 {candidate.keyStrengths && candidate.keyStrengths.length > 0 && (
                     <div>
-                        <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2 flex items-center">
                             <span className="text-green-600 mr-1">✅</span> Key Strengths
                         </h4>
                         <ul className="space-y-1">
                             {candidate.keyStrengths.map((strength, index) => (
-                                <li key={index} className="text-sm text-gray-700 flex items-start">
+                                <li key={index} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
                                     <span className="text-green-500 mr-2 mt-1">•</span>
                                     <span>{strength}</span>
                                 </li>
@@ -128,12 +128,12 @@ const ScoringCard: React.FC<ScoringCardProps> = ({ candidate }) => {
                 {/* Areas for Improvement */}
                 {candidate.areasForImprovement && candidate.areasForImprovement.length > 0 && (
                     <div>
-                        <h4 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                        <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2 flex items-center">
                             <span className="text-yellow-600 mr-1">⚠️</span> Development Areas
                         </h4>
                         <ul className="space-y-1">
                             {candidate.areasForImprovement.map((area, index) => (
-                                <li key={index} className="text-sm text-gray-700 flex items-start">
+                                <li key={index} className="text-sm text-gray-700 dark:text-gray-300 flex items-start">
                                     <span className="text-yellow-500 mr-2 mt-1">•</span>
                                     <span>{area}</span>
                                 </li>
@@ -143,15 +143,15 @@ const ScoringCard: React.FC<ScoringCardProps> = ({ candidate }) => {
                 )}
 
                 {/* Metadata */}
-                <div className="pt-2 border-t border-gray-200">
-                    <div className="flex justify-between items-center text-xs text-gray-500">
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
                         <span>
                             {candidate.lastScoredAt && 
                                 `Analyzed: ${candidate.lastScoredAt.toDate().toLocaleDateString()}`
                             }
                         </span>
                         {candidate.scoringVersion && (
-                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                            <span className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-2 py-1 rounded">
                                 {candidate.scoringVersion}
                             </span>
                         )}
