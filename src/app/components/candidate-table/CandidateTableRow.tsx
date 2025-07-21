@@ -26,26 +26,26 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
     const age = candidate.dateOfBirth ? calculateAge(candidate.dateOfBirth) : null;
 
     return (
-        <tr key={candidate.id} className="hover:bg-gray-50">
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        <tr key={candidate.id} className="hover:bg-gray-50 transition-colors duration-150">
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
                 {firstName}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {lastName}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {candidate.email}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {age || 'N/A'}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {candidate.city || 'N/A'}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {candidate.country || 'N/A'}
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {candidate.submittedAt
                     ? new Date(candidate.submittedAt.toDate()).toLocaleDateString()
                     : 'N/A'
@@ -54,7 +54,7 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
             <td className="px-6 py-4 whitespace-nowrap">
                 <StatusBadge status={candidate.status} />
             </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
                 {candidate.score !== null ? candidate.score : 'N/A'}
             </td>
             <CandidateTableActions

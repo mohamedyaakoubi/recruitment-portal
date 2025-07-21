@@ -16,30 +16,32 @@ const SortableHeader: React.FC<{
     sortDirection: SortDirection;
     handleSort: (field: SortField) => void;
 }> = ({ field, label, sortField, sortDirection, handleSort }) => {
+    const isSorted = sortField === field;
+    
     const getSortIcon = () => {
-        if (sortField !== field) {
+        if (!isSorted) {
             return (
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
                 </svg>
             );
         }
         return sortDirection === 'asc' ? (
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+            <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
             </svg>
         ) : (
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+            <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
         );
     };
 
     return (
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
             <button
                 onClick={() => handleSort(field)}
-                className="flex items-center space-x-1 hover:text-gray-700"
+                className="group flex items-center space-x-2"
             >
                 <span>{label}</span>
                 {getSortIcon()}
@@ -66,7 +68,7 @@ const CandidateTableHeader: React.FC<CandidateTableHeaderProps> = ({
     ];
 
     return (
-        <thead className="bg-gray-50">
+        <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
                 {headers.map((header) => (
                     <SortableHeader
@@ -78,7 +80,7 @@ const CandidateTableHeader: React.FC<CandidateTableHeaderProps> = ({
                         handleSort={handleSort}
                     />
                 ))}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Actions
                 </th>
             </tr>
