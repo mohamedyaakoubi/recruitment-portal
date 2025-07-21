@@ -103,6 +103,7 @@ export default function CandidateForm() {
               doubleNationality={doubleNationality} setDoubleNationality={setDoubleNationality}
               isLoading={isLoading}
               isExistingCandidate={isExistingCandidate}
+              calculateAge={calculateAge}
             />
 
             <JobApplicationSection
