@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/hooks/useAuth"; // Import AuthProvider
 import { useState, useEffect } from "react";
 import Loader from "./components/ui/Loader";
+import { ThemeProvider } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,12 +22,19 @@ export default function RootLayout({
   }, []);
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        {loading && <Loader />}
-        <AuthProvider> {/* Wrap children with AuthProvider */}
-          {children}
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {loading && <Loader />}
+          <AuthProvider> {/* Wrap children with AuthProvider */}
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

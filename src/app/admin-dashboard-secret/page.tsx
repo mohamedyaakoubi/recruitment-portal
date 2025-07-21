@@ -117,7 +117,7 @@ function DashboardContent() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 md:p-8">
             <DashboardHeader
                 userEmail={user.email || ''}
                 onManageJobsClick={openJobManagement}

@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { ThemeSwitcher } from './components/ui/ThemeSwitcher';
+import { useTheme } from 'next-themes';
 
 // Helper component for social media icons in the footer
 const SocialIcon = ({ href, children }: { href: string, children: React.ReactNode }) => (
@@ -16,6 +18,7 @@ export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { theme } = useTheme();
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,9 +94,9 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 font-sans">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-20">
+      <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-20">
           <div className="bg-[#003A70] text-white text-xs py-1.5">
               <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex justify-center md:justify-between items-center">
                   <div className="flex items-center">
@@ -115,12 +118,13 @@ export default function LandingPage() {
           <nav className="max-w-screen-xl mx-auto px-4 sm:px-6">
               <div className="flex items-center justify-between py-4">
                   <Image
-                      src="/logo-skills.png"
+                      src={theme === 'dark' ? "/logo-skills-white.png" : "/logo-skills.png"}
                       alt="International Skills Labor Company"
                       width={180}
                       height={45}
                       priority
                   />
+                  <ThemeSwitcher />
               </div>
           </nav>
       </header>
@@ -130,30 +134,30 @@ export default function LandingPage() {
         <div className="w-full max-w-2xl text-center space-y-8">
           {/* Hero Content */}
           <div className="space-y-6">
-            <h1 className="text-4xl sm:text-6xl font-extrabold text-[#003A70] leading-tight">
+            <h1 className="text-4xl sm:text-6xl font-extrabold text-[#003A70] dark:text-blue-400 leading-tight">
               Your Career Journey 
-              <span className="block text-3xl sm:text-5xl text-slate-600 font-semibold mt-2">
+              <span className="block text-3xl sm:text-5xl text-slate-600 dark:text-slate-300 font-semibold mt-2">
                 Starts Here
               </span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
               Connect with international opportunities and take the next step in your professional journey. 
               Join thousands of professionals who have found their dream careers through our platform.
             </p>
           </div>
 
           {/* Email Form */}
-          <div className="bg-white p-8 sm:p-10 rounded-2xl shadow-2xl shadow-slate-200 border border-slate-100">
+          <div className="bg-white dark:bg-gray-800 p-8 sm:p-10 rounded-2xl shadow-2xl shadow-slate-200 dark:shadow-none border border-slate-100 dark:border-gray-700">
             <div className="space-y-6">
               <div className="text-center space-y-2">
-                <h2 className="text-2xl sm:text-3xl font-bold text-[#003A70]">Get Started</h2>
-                <p className="text-slate-500">Enter your email to begin your application or access your dashboard</p>
+                <h2 className="text-2xl sm:text-3xl font-bold text-[#003A70] dark:text-blue-400">Get Started</h2>
+                <p className="text-slate-500 dark:text-slate-400">Enter your email to begin your application or access your dashboard</p>
               </div>
 
               <form onSubmit={handleEmailSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="email" className="block text-sm font-semibold text-slate-600 mb-3">
+                  <label htmlFor="email" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-3">
                     Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -163,15 +167,15 @@ export default function LandingPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-6 py-4 text-lg border border-slate-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] transition-colors"
+                    className="w-full px-6 py-4 text-lg border border-slate-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white transition-colors"
                     placeholder="your.email@example.com"
                     disabled={isLoading}
                   />
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                    <p className="text-sm text-red-600">{error}</p>
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-lg p-4">
+                    <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
                   </div>
                 )}
 
@@ -192,7 +196,7 @@ export default function LandingPage() {
               </form>
 
               <div className="text-center">
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   We'll check if you're an existing candidate or verify your email for new applications.
                 </p>
               </div>
@@ -202,33 +206,33 @@ export default function LandingPage() {
           {/* Features */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-16">
             <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-[#003A70]/10 rounded-full flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8 text-[#003A70]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-[#003A70]/10 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-[#003A70] dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-slate-800">Global Opportunities</h3>
-              <p className="text-sm text-slate-600">Access international job opportunities across various industries</p>
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200">Global Opportunities</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Access international job opportunities across various industries</p>
             </div>
 
             <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-[#003A70]/10 rounded-full flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8 text-[#003A70]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-[#003A70]/10 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-[#003A70] dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-slate-800">Verified Process</h3>
-              <p className="text-sm text-slate-600">Secure and verified application process with real email validation</p>
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200">Verified Process</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Secure and verified application process with real email validation</p>
             </div>
 
             <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-[#003A70]/10 rounded-full flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8 text-[#003A70]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-[#003A70]/10 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto">
+                <svg className="w-8 h-8 text-[#003A70] dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-slate-800">Fast Track</h3>
-              <p className="text-sm text-slate-600">Streamlined application process to get you started quickly</p>
+              <h3 className="font-semibold text-slate-800 dark:text-slate-200">Fast Track</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Streamlined application process to get you started quickly</p>
             </div>
           </div>
         </div>

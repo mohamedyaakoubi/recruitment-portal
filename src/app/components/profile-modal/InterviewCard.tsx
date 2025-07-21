@@ -40,10 +40,10 @@ const InterviewCard: React.FC<InterviewCardProps> = ({
                 </div>
             )}
             <div className="pt-3 flex space-x-2">
-                <button onClick={onScheduleInterview} disabled={statusUpdateLoading} className="flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 rounded-md hover:bg-blue-200 disabled:opacity-50">
+                <button onClick={onScheduleInterview} disabled={statusUpdateLoading} className="flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/50 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/80 disabled:opacity-50">
                     <FiEdit className="mr-2" /> Reschedule
                 </button>
-                <button onClick={() => onCancelInterview(candidate.id, 'Cancelled by admin')} disabled={statusUpdateLoading} className="flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 disabled:opacity-50">
+                <button onClick={() => onCancelInterview(candidate.id, 'Cancelled by admin')} disabled={statusUpdateLoading} className="flex-1 flex items-center justify-center px-3 py-2 text-sm font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/50 rounded-md hover:bg-red-200 dark:hover:bg-red-900/80 disabled:opacity-50">
                     <FiTrash2 className="mr-2" /> Cancel
                 </button>
             </div>

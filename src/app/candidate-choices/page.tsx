@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { ThemeSwitcher } from '@/app/components/ui/ThemeSwitcher';
+import { useTheme } from 'next-themes';
 
 // Helper component for social media icons in the footer
 const SocialIcon = ({ href, children }: { href: string, children: React.ReactNode }) => (
@@ -15,6 +17,7 @@ export default function CandidateChoices() {
   const [candidateEmail, setCandidateEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { theme } = useTheme();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -37,9 +40,9 @@ export default function CandidateChoices() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 font-sans">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-20">
+      <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-20">
           <div className="bg-[#003A70] text-white text-xs py-1.5">
               <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex justify-center md:justify-between items-center">
                   <div className="flex items-center">
@@ -61,18 +64,21 @@ export default function CandidateChoices() {
           <nav className="max-w-screen-xl mx-auto px-4 sm:px-6">
               <div className="flex items-center justify-between py-4">
                   <Image
-                      src="/logo-skills.png"
+                      src={theme === 'dark' ? "/logo-skills-white.png" : "/logo-skills.png"}
                       alt="International Skills Labor Company"
                       width={180}
                       height={45}
                       priority
                   />
-                  <button
-                    onClick={() => router.push('/')}
-                    className="text-[#003A70] hover:text-[#002B54] font-medium"
-                  >
-                    ← Back to Home
-                  </button>
+                  <div className="flex items-center gap-4">
+                      <ThemeSwitcher />
+                      <button
+                        onClick={() => router.push('/')}
+                        className="text-[#003A70] dark:text-gray-200 hover:text-[#002B54] dark:hover:text-white font-medium"
+                      >
+                        ← Back to Home
+                      </button>
+                  </div>
               </div>
           </nav>
       </header>
@@ -82,14 +88,14 @@ export default function CandidateChoices() {
         <div className="w-full max-w-4xl text-center space-y-8">
           {/* Welcome Content */}
           <div className="space-y-6">
-            <h1 className="text-4xl sm:text-6xl font-extrabold text-[#003A70] leading-tight">
+            <h1 className="text-4xl sm:text-6xl font-extrabold text-[#003A70] dark:text-blue-400 leading-tight">
               Welcome Back!
-              <span className="block text-2xl sm:text-3xl text-slate-600 font-semibold mt-2">
+              <span className="block text-2xl sm:text-3xl text-slate-600 dark:text-slate-300 font-semibold mt-2">
                 What would you like to do?
               </span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
               We found existing applications for <strong>{candidateEmail}</strong>. 
               Choose an option below to continue.
             </p>
@@ -98,16 +104,16 @@ export default function CandidateChoices() {
           {/* Choice Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
             {/* New Application Card */}
-            <div className="bg-white p-8 rounded-2xl shadow-2xl shadow-slate-200 border border-slate-100 hover:shadow-3xl transition-shadow">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl shadow-slate-200 dark:shadow-none border border-slate-100 dark:border-gray-700 hover:shadow-3xl transition-shadow">
               <div className="space-y-6">
                 <div className="text-center space-y-4">
-                  <div className="w-20 h-20 bg-[#003A70]/10 rounded-full flex items-center justify-center mx-auto">
-                    <svg className="w-10 h-10 text-[#003A70]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-20 h-20 bg-[#003A70]/10 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto">
+                    <svg className="w-10 h-10 text-[#003A70] dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-bold text-[#003A70]">New Application</h2>
-                  <p className="text-slate-500">
+                  <h2 className="text-2xl font-bold text-[#003A70] dark:text-blue-400">New Application</h2>
+                  <p className="text-slate-500 dark:text-slate-400">
                     Submit a fresh application for a new job opportunity. 
                     Fill out the complete application form with your latest information.
                   </p>
@@ -131,16 +137,16 @@ export default function CandidateChoices() {
             </div>
 
             {/* View Applications Card */}
-            <div className="bg-white p-8 rounded-2xl shadow-2xl shadow-slate-200 border border-slate-100 hover:shadow-3xl transition-shadow">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl shadow-slate-200 dark:shadow-none border border-slate-100 dark:border-gray-700 hover:shadow-3xl transition-shadow">
               <div className="space-y-6">
                 <div className="text-center space-y-4">
-                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                    <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-20 h-20 bg-green-100 dark:bg-green-900/50 rounded-full flex items-center justify-center mx-auto">
+                    <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-bold text-green-600">Review Applications</h2>
-                  <p className="text-slate-500">
+                  <h2 className="text-2xl font-bold text-green-600 dark:text-green-400">Review Applications</h2>
+                  <p className="text-slate-500 dark:text-slate-400">
                     View and manage your existing applications. 
                     Check application status, interview schedules, and download documents.
                   </p>
@@ -165,21 +171,21 @@ export default function CandidateChoices() {
           </div>
 
           {/* Additional Info */}
-          <div className="mt-12 p-6 bg-blue-50 rounded-xl border border-blue-200">
+          <div className="mt-12 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-500/30">
             <div className="flex items-start space-x-3">
-              <svg className="w-6 h-6 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <h3 className="font-semibold text-blue-800 mb-1">Need Help?</h3>
-                <p className="text-sm text-blue-700">
+                <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-1">Need Help?</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300/80">
                   If you have questions about your applications or need assistance, 
                   please contact us at{' '}
-                  <a href="mailto:wassim@internationalskills.fi" className="underline hover:text-blue-800">
+                  <a href="mailto:wassim@internationalskills.fi" className="underline hover:text-blue-800 dark:hover:text-blue-200">
                     wassim@internationalskills.fi
                   </a>{' '}
                   or call{' '}
-                  <a href="tel:+358452644966" className="underline hover:text-blue-800">
+                  <a href="tel:+358452644966" className="underline hover:text-blue-800 dark:hover:text-blue-200">
                     +358 452644966
                   </a>.
                 </p>

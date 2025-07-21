@@ -44,13 +44,13 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
           setShowList(true);
         }}
         onFocus={() => setShowList(true)}
-        className="w-full px-4 py-3 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70]"
+        className="w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
         placeholder={placeholder}
         disabled={disabled}
         autoComplete="off"
       />
       {showList && filteredOptions.length > 0 && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {filteredOptions.map((option, index) => (
             <button
               key={index}
@@ -60,7 +60,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                 setSearch(option);
                 setShowList(false);
               }}
-              className="w-full px-4 py-2 text-left hover:bg-slate-100 focus:bg-slate-100 focus:outline-none"
+              className="w-full px-4 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-600 focus:bg-slate-100 dark:focus:bg-gray-600 focus:outline-none text-gray-900 dark:text-gray-200"
             >
               {option}
             </button>

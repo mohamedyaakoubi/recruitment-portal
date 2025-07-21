@@ -14,7 +14,7 @@ const ApplicationDetailsCard: React.FC<ApplicationDetailsCardProps> = ({ candida
     return (
         <InfoCard title="Application Details" icon={<FiBriefcase size={20} />}>
             <div className="flex items-center">
-                <span className="font-medium text-gray-900 w-32">Status:</span>
+                <span className="font-medium text-gray-900 dark:text-gray-200 w-32">Status:</span>
                 <StatusBadge status={candidate.status} />
             </div>
             <InfoRow label="Category" value={candidate.jobCategory} />

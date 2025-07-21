@@ -14,26 +14,26 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, children, cardType = 'primary' }) => {
   const colorClasses = {
     primary: {
-      iconBg: `bg-${color}-100`,
-      iconText: `text-${color}-600`,
-      valueText: `text-gray-800`,
+      iconBg: `bg-${color}-100 dark:bg-${color}-900/50`,
+      iconText: `text-${color}-600 dark:text-${color}-400`,
+      valueText: `text-gray-800 dark:text-gray-100`,
     },
     secondary: {
       iconBg: `bg-transparent`,
-      iconText: `text-${color}-500`,
-      valueText: `text-${color}-600`,
+      iconText: `text-${color}-500 dark:text-${color}-400`,
+      valueText: `text-${color}-600 dark:text-${color}-400`,
     }
   };
 
   const styles = colorClasses[cardType];
 
   return (
-    <div className={`bg-white p-4 sm:p-5 rounded-xl shadow-md transition-shadow hover:shadow-lg border border-gray-200`}>
+    <div className={`bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-xl shadow-md transition-shadow hover:shadow-lg border border-gray-200 dark:border-gray-700`}>
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-medium text-gray-500">{title}</h3>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
           <p className={`text-2xl sm:text-3xl font-bold mt-1 ${styles.valueText}`}>{value}</p>
-          {children && <div className="text-xs text-gray-400 mt-1">{children}</div>}
+          {children && <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">{children}</div>}
         </div>
         <div className={`p-3 rounded-full ${styles.iconBg}`}>
           {React.cloneElement(icon, { className: `w-6 h-6 ${styles.iconText}` })}

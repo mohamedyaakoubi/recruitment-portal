@@ -20,7 +20,7 @@ const Tab: React.FC<TabProps> = ({ label, active, onClick }) => {
 const Tabs: React.FC<TabsProps> = ({ activeTab, onTabChange, tabs, children }) => {
   return (
     <div className="w-full">
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 dark:border-gray-700">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           {tabs.map((tab) => (
             <Tab

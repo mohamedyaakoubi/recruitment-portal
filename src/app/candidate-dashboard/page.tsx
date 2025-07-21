@@ -31,7 +31,7 @@ export default function CandidateDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 font-sans">
       <DashboardHeader />
       
       <main className="flex min-h-screen flex-col items-center justify-start py-12 px-4 sm:px-6">
