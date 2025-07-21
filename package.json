@@ -22,6 +22,7 @@
     "googleapis": "^150.0.1",
     "next": "15.1.8",
     "nodemailer": "^7.0.4",
+    "pretty-quick": "^4.2.2",
     "react": "^19.0.0",
     "react-big-calendar": "^1.18.0",
     "react-dom": "^19.0.0",

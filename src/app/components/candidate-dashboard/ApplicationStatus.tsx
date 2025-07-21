@@ -29,11 +29,11 @@ const ApplicationStatus: React.FC<ApplicationStatusProps> = ({ applications, for
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {applications.map((app) => (
-            <div key={app.id} className="border border-slate-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-                <div className="space-y-2">
+            <div key={app.id} className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+                <div className="flex-grow space-y-3">
                   <div className="flex items-center space-x-3">
                     <h3 className="text-lg font-semibold text-slate-800">
                       {app.jobTitleText || 'Job Application'}
@@ -41,7 +41,7 @@ const ApplicationStatus: React.FC<ApplicationStatusProps> = ({ applications, for
                     <StatusBadge status={app.status} />
                   </div>
                   
-                  <div className="space-y-1 text-sm text-slate-600">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-sm text-slate-600">
                     <p><strong>Category:</strong> {app.jobCategory || 'N/A'}</p>
                     {app.specialty && <p><strong>Specialty:</strong> {app.specialty}</p>}
                     <p><strong>Submitted:</strong> {formatDate(app.submittedAt)}</p>
@@ -52,7 +52,7 @@ const ApplicationStatus: React.FC<ApplicationStatusProps> = ({ applications, for
                       <p><strong>Interview:</strong> {formatDate(app.interviewDate)}</p>
                     )}
                     {app.meetLink && (
-                      <p>
+                      <p className="md:col-span-2">
                         <strong>Meeting Link:</strong>{' '}
                         <a
                           href={app.meetLink}
@@ -67,28 +67,16 @@ const ApplicationStatus: React.FC<ApplicationStatusProps> = ({ applications, for
                   </div>
                 </div>
 
-                <div className="flex flex-col space-y-2">
+                <div className="flex flex-col space-y-2 flex-shrink-0">
                   {app.cvUrl && (
                     <a
                       href={app.cvUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-[#003A70] bg-[#003A70]/10 rounded-lg hover:bg-[#003A70]/20 transition-colors"
+                      className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-[#003A70] bg-[#003A70]/10 rounded-lg hover:bg-[#003A70]/20 transition-colors"
                     >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      Download CV
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      <span>Download CV</span>
                     </a>
                   )}
                   
@@ -97,22 +85,10 @@ const ApplicationStatus: React.FC<ApplicationStatusProps> = ({ applications, for
                       href={app.passportUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
+                      className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
                     >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
-                        />
-                      </svg>
-                      View Passport
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
+                      <span>View Passport</span>
                     </a>
                   )}
 
@@ -121,22 +97,10 @@ const ApplicationStatus: React.FC<ApplicationStatusProps> = ({ applications, for
                       href={app.photoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg hover:bg-purple-200 transition-colors"
+                      className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg hover:bg-purple-200 transition-colors"
                     >
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      View Photo
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      <span>View Photo</span>
                     </a>
                   )}
                 </div>

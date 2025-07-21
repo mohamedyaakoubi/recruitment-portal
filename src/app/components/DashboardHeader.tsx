@@ -9,18 +9,20 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 }) => {
   return (
     <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-      <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-      <div className="flex items-center gap-4">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Admin Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">Welcome back, {userEmail}</p>
+      </div>
+      <div className="flex items-center gap-2 sm:gap-4">
         <button 
           onClick={onManageJobsClick}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 text-sm"
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-sm font-medium transition-colors"
         >
           Manage Jobs
         </button>
-        <span className="text-sm text-gray-600">Welcome, {userEmail}</span>
         <button 
           onClick={onSignOut} 
-          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-sm"
+          className="px-4 py-2 text-gray-500 rounded-lg hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 text-sm font-medium transition-colors"
         >
           Sign Out
         </button>
