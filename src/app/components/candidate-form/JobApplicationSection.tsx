@@ -97,7 +97,7 @@ const JobApplicationSection: React.FC<JobApplicationSectionProps> = ({
 
         {/* Specialty */}
         <div className="sm:col-span-2 relative" ref={specialtyRef}>
-          <label htmlFor="specialty" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
+          <label htmlFor="specialtySearch" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Specialty <span className="text-red-500">*</span>
           </label>
           <input

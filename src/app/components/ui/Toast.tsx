@@ -53,7 +53,7 @@ const Toast: React.FC<ToastProps> = ({
   };
 
   return (
-    <div className={getToastStyles()}>
+    <div className={getToastStyles()} data-testid="toast">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <span className="text-lg mr-2">{getIcon()}</span>

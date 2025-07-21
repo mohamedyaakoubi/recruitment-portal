@@ -19,10 +19,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         First Name <span className="text-red-500">*</span>
                     </label>
                     <input
+                        id="firstName"
                         type="text"
                         value={formData.firstName}
                         onChange={(e) => handleInputChange('firstName', e.target.value)}
@@ -32,10 +33,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Last Name <span className="text-red-500">*</span>
                     </label>
                     <input
+                        id="lastName"
                         type="text"
                         value={formData.lastName}
                         onChange={(e) => handleInputChange('lastName', e.target.value)}
@@ -45,10 +47,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Email <span className="text-red-500">*</span>
                     </label>
                     <input
+                        id="email"
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
@@ -58,10 +61,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Gender <span className="text-red-500">*</span>
                     </label>
                     <select
+                        id="gender"
                         value={formData.gender}
                         onChange={(e) => handleInputChange('gender', e.target.value)}
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.gender ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200`}
@@ -74,10 +78,11 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     {errors.gender && <p className="text-red-500 text-xs mt-1">{errors.gender}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Date of Birth <span className="text-red-500">*</span>
                     </label>
                     <input
+                        id="dateOfBirth"
                         type="date"
                         value={formData.dateOfBirth}
                         onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
@@ -88,11 +93,12 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     {errors.dateOfBirth && <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Phone Number <span className="text-red-500">*</span>
                     </label>
                     <div className="flex">
                         <select
+                            aria-label="Country Code"
                             value={formData.countryCode}
                             onChange={(e) => handleInputChange('countryCode', e.target.value)}
                             className="w-20 px-2 py-2 border border-r-0 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
@@ -105,6 +111,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                             ))}
                         </select>
                         <input
+                            id="phoneNumber"
                             type="tel"
                             value={formData.phoneNumber}
                             onChange={(e) => handleInputChange('phoneNumber', e.target.value)}

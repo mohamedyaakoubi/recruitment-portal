@@ -19,7 +19,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ candidate, onClose, onEdi
                 {candidate.photoUrl ? (
                     <img src={candidate.photoUrl} alt={candidate.fullName} className="w-12 h-12 rounded-full object-cover mr-4 border-2 border-white dark:border-gray-700 shadow" />
                 ) : (
-                    <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mr-4"><FiUser size={24} className="text-gray-500 dark:text-gray-400" /></div>
+                    <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mr-4" data-testid="icon"><FiUser size={24} className="text-gray-500 dark:text-gray-400" /></div>
                 )}
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-200">{candidate.fullName}</h2>

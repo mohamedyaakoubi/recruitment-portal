@@ -22,7 +22,7 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
     onScoreCandidate,
     onEditCandidate,
 }) => {
-    const { firstName, lastName } = splitName(candidate.fullName);
+    const { firstName, lastName } = splitName(candidate.fullName || '');
     const age = candidate.dateOfBirth ? calculateAge(candidate.dateOfBirth) : null;
 
     return (

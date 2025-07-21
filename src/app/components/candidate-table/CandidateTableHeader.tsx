@@ -56,8 +56,7 @@ const CandidateTableHeader: React.FC<CandidateTableHeaderProps> = ({
     handleSort,
 }) => {
     const headers: { field: SortField; label: string }[] = [
-        { field: 'firstName', label: 'First Name' },
-        { field: 'lastName', label: 'Last Name' },
+        { field: 'firstName', label: 'Name' },
         { field: 'email', label: 'Email' },
         { field: 'age', label: 'Age' },
         { field: 'city', label: 'City' },
@@ -70,14 +69,16 @@ const CandidateTableHeader: React.FC<CandidateTableHeaderProps> = ({
     return (
         <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
             <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Email</th>
-                <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Age</th>
-                <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">City</th>
-                <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Country</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Submitted</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">AI Score</th>
+                {headers.map((header) => (
+                    <SortableHeader
+                        key={header.field}
+                        field={header.field}
+                        label={header.label}
+                        sortField={sortField}
+                        sortDirection={sortDirection}
+                        handleSort={handleSort}
+                    />
+                ))}
                 <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                     Actions
                 </th>

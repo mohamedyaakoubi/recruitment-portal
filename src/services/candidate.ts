@@ -5,7 +5,7 @@ import { sendNotificationEmail, sendRejectionEmail } from './email';
 import { format } from 'date-fns';
 
 // 🔥 NEW: Helper function to calculate age
-const calculateAge = (dateOfBirth: string): number | null => {
+export const calculateAge = (dateOfBirth: string): number | null => {
   if (!dateOfBirth) return null;
   
   try {

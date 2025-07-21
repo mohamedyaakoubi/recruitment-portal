@@ -28,6 +28,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
   setDoubleNationality,
   isLoading,
   isExistingCandidate,
+  calculateAge,
 }) => {
   const countryCodeRef = useRef<HTMLDivElement>(null);
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
@@ -50,28 +51,6 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-    const calculateAge = (dateOfBirth: string): number | null => {
-    if (!dateOfBirth) return null;
-    
-    try {
-      const birthDate = new Date(dateOfBirth);
-      const today = new Date();
-      
-      if (isNaN(birthDate.getTime())) return null;
-      
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      
-      return age;
-    } catch {
-      return null;
-    }
-  };
 
   return (
     <div className="bg-slate-50 dark:bg-gray-800/50 p-5 sm:p-6 rounded-lg">

@@ -299,6 +299,7 @@ export interface PersonalInfoSectionProps {
   setDoubleNationality: (nationality: string) => void;
   isLoading: boolean;
   isExistingCandidate: boolean;
+  calculateAge: (dob: string) => number | null;
 }
 
 export interface FileInputProps {
@@ -317,6 +318,7 @@ export interface SearchableDropdownProps {
   onChange: (value: string) => void;
   placeholder: string;
   disabled?: boolean;
+  id?: string;
 }
 
 export interface StatusBadgeProps {

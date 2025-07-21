@@ -8,6 +8,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   onChange,
   placeholder,
   disabled = false,
+  id,
 }) => {
   const [search, setSearch] = useState(value);
   const [showList, setShowList] = useState(false);
@@ -36,6 +37,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   return (
     <div className="relative" ref={ref}>
       <input
+        id={id}
         type="text"
         value={search}
         onChange={(e) => {
