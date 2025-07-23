@@ -1,10 +1,18 @@
-// src/app/components/candidate-form/PersonalInfoSection.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { countryCodes, countries } from '@/lib/formData';
 import { PersonalInfoSectionProps } from '@/types';
 import SearchableDropdown from '../ui/SearchableDropdown';
 
-const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
+interface PersonalInfoSectionPropsExtended extends PersonalInfoSectionProps {
+  phoneValidation?: {
+    isValid: boolean | null;
+    isValidating: boolean;
+    message: string;
+    warning?: string;
+  };
+}
+
+const PersonalInfoSection: React.FC<PersonalInfoSectionPropsExtended> = ({
   firstName,
   setFirstName,
   lastName,
@@ -29,6 +37,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
   isLoading,
   isExistingCandidate,
   calculateAge,
+  phoneValidation
 }) => {
   const countryCodeRef = useRef<HTMLDivElement>(null);
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
@@ -56,7 +65,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
     <div className="bg-slate-50 dark:bg-gray-800/50 p-5 sm:p-6 rounded-lg">
       <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-200 dark:border-gray-700 pb-3">Personal Information</h2>
       
-      {/* 🔥 NEW: Age requirement notice */}
+      {/* Age requirement notice */}
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4 mb-6">
         <div className="flex items-start space-x-3">
           <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +166,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
           </select>
         </div>
 
-         <div>
+        <div>
           <label htmlFor="dateOfBirth" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Date of Birth <span className="text-red-500">*</span>
             {isExistingCandidate && (
@@ -175,19 +184,18 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
               isExistingCandidate ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''
             }`}
             disabled={isLoading || isExistingCandidate}
-            // 🔥 NEW: Set max date to 18 years ago
             max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
           />
-          {/* 🔥 NEW: Show calculated age with validation */}
+          {/* Show calculated age with validation */}
           {dateOfBirth && (
             <div className="mt-1">
               {(() => {
-                const age = calculateAge(dateOfBirth);
+                const age = calculateAge ? calculateAge(dateOfBirth) : 0;
                 const isValidAge = age !== null && age >= 18;
                 
                 return (
                   <p className={`text-xs mt-1 ${isValidAge ? 'text-gray-600 dark:text-gray-400' : 'text-red-600 font-medium'}`}>
-                    {age !== null ? (
+                    {age !== null && age > 0 ? (
                       isValidAge ? (
                         <>Age: {age} years old</>
                       ) : (
@@ -203,35 +211,61 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
           )}
           {isExistingCandidate && dateOfBirth && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Age: {calculateAge(dateOfBirth)} years old
+              Age: {calculateAge ? calculateAge(dateOfBirth) : 0} years old
             </p>
           )}
         </div>
 
+        {/* 🔥 FIXED: Phone Number Section - Completely different for existing vs new candidates */}
         <div className="sm:col-span-2">
           <label htmlFor="phoneNumber" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Phone Number <span className="text-red-500">*</span>
           </label>
-          <div className="flex">
+          
+          {/* 🔥 CONDITIONAL: Only show validation info for NEW candidates */}
+          {!isExistingCandidate && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 mb-3">
+              <div className="flex items-start space-x-2">
+                <svg className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="text-xs text-amber-700 dark:text-amber-300">
+                  <p className="font-medium mb-1">📞 Phone Verification System</p>
+                  <p>Your phone number will be validated using our secure 3-tier verification system to ensure accuracy and deliverability.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex space-x-2">
+            {/* Country Code Dropdown */}
             <div className="relative" ref={countryCodeRef}>
               <button
                 type="button"
                 onClick={() => {
-                  setShowCountryCodeList(!showCountryCodeList);
-                  setCountryCodeSearch('');
+                  if (!isLoading && !isExistingCandidate) {
+                    setShowCountryCodeList(!showCountryCodeList);
+                    setCountryCodeSearch('');
+                  }
                 }}
-                className="w-32 px-3 py-3 border border-slate-300 dark:border-gray-600 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-slate-100 dark:bg-gray-700 text-sm flex items-center justify-between"
-                disabled={isLoading}
+                className={`w-32 px-3 py-3 border border-slate-300 dark:border-gray-600 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] text-sm flex items-center justify-between ${
+                  isLoading || isExistingCandidate 
+                    ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-75' 
+                    : 'bg-slate-100 dark:bg-gray-700 cursor-pointer hover:bg-slate-200 dark:hover:bg-gray-600'
+                }`}
+                disabled={isLoading || isExistingCandidate}
               >
                 <span className="dark:text-white">
                   {countryCodes.find(item => item.code === countryCode)?.flag} {countryCode}
                 </span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                {!isExistingCandidate && (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                )}
               </button>
               
-              {showCountryCodeList && (
+              {showCountryCodeList && !isLoading && !isExistingCandidate && (
                 <div className="absolute z-20 w-80 mt-1 bg-white dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg shadow-lg">
                   <div className="p-2 border-b border-slate-200 dark:border-gray-600">
                     <input
@@ -269,18 +303,123 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
                 </div>
               )}
             </div>
-            <input
-              type="tel"
-              name="phoneNumber"
-              id="phoneNumber"
-              required
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              className="flex-1 px-4 py-3 border-l-0 border border-slate-300 dark:border-gray-600 rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white"
-              placeholder="123 456 789"
-              disabled={isLoading}
-            />
+            
+            {/* Phone Number Input */}
+            <div className="flex-1">
+              <input
+                type="tel"
+                name="phoneNumber"
+                id="phoneNumber"
+                required
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className={`w-full px-4 py-3 border rounded-r-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white transition-all duration-300 ${
+                  isExistingCandidate 
+                    ? 'border-slate-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 cursor-not-allowed' 
+                    : phoneValidation?.isValid === true 
+                    ? 'border-green-400 dark:border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-200 dark:ring-green-500/30' 
+                    : phoneValidation?.isValid === false 
+                    ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 ring-1 ring-red-200 dark:ring-red-500/30'
+                    : phoneValidation?.isValidating
+                    ? 'border-blue-400 dark:border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-200 dark:ring-blue-500/30'
+                    : 'border-slate-300 dark:border-gray-600'
+                }`}
+                placeholder="Enter your phone number"
+                disabled={isLoading || isExistingCandidate}
+              />
+            </div>
           </div>
+          
+          {/* 🔥 CONDITIONAL: Phone Validation Feedback - ONLY for new candidates */}
+          {!isExistingCandidate && (phoneValidation?.isValidating || phoneValidation?.message) && (
+            <div className="mt-3 p-3 rounded-lg border transition-all duration-300" style={{
+              backgroundColor: phoneValidation.isValid === true 
+                ? 'rgb(240 253 244)' 
+                : phoneValidation.isValid === false 
+                ? 'rgb(254 242 242)'
+                : 'rgb(239 246 255)',
+              borderColor: phoneValidation.isValid === true 
+                ? 'rgb(34 197 94)' 
+                : phoneValidation.isValid === false 
+                ? 'rgb(239 68 68)'
+                : 'rgb(59 130 246)'
+            }}>
+              <div className="flex items-start space-x-3">
+                {phoneValidation.isValidating && (
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+                
+                {!phoneValidation.isValidating && (
+                  <div className="flex-shrink-0 mt-0.5">
+                    {phoneValidation.isValid === true ? (
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : phoneValidation.isValid === false ? (
+                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
+                  </div>
+                )}
+                
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${
+                    phoneValidation.isValid === true 
+                      ? 'text-green-700' 
+                      : phoneValidation.isValid === false 
+                      ? 'text-red-700'
+                      : 'text-blue-700'
+                  }`}>
+                    {phoneValidation.message}
+                  </p>
+                  
+                  {phoneValidation.isValidating && (
+                    <div className="mt-2">
+                      <div className="flex items-center space-x-2 text-xs text-blue-600">
+                        <span>Verifying through secure validation system...</span>
+                      </div>
+                      <div className="mt-1 w-full bg-blue-200 rounded-full h-1">
+                        <div className="bg-blue-600 h-1 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {phoneValidation.warning && (
+                    <div className="mt-2 flex items-start space-x-2">
+                      <svg className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <p className="text-xs text-amber-700 font-medium">
+                        {phoneValidation.warning}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 🔥 CONDITIONAL: Help text based on user type */}
+          {!isExistingCandidate && !phoneValidation?.message && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Enter your phone number without the country code (e.g., for +358 123 456 789, enter "123 456 789")
+            </p>
+          )}
+
+          {isExistingCandidate && (
+            <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-500/30">
+              <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                🔒 Phone number from your previous application (already validated).
+              </p>
+            </div>
+          )}
         </div>
 
         <div>
