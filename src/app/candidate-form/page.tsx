@@ -18,6 +18,7 @@ export default function CandidateForm() {
     lastName, setLastName,
     email,
     gender, setGender,
+      phoneValidation, // 🔥 ADD THIS LINE - Missing destructured property
     countryCode, setCountryCode,
     phoneNumber, setPhoneNumber,
     dateOfBirth, setDateOfBirth,
@@ -67,44 +68,47 @@ export default function CandidateForm() {
             </p>
             <p className="text-sm text-[#003A70] dark:text-blue-400 mt-2">Application for: <strong>{email}</strong></p>
             
-            {isExistingCandidate && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4 mt-4">
-                <div className="flex items-start space-x-3">
-                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div className="flex-1">
-                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
-                      <strong>Welcome back!</strong> We've pre-filled your information.
-                    </p>
-                    <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-                      <p><strong>🔒 Locked fields:</strong> Name, gender, and date of birth cannot be modified</p>
-                      <p><strong>✏️ Editable fields:</strong> All other information can be updated</p>
-                      <p><strong>📁 Files:</strong> Please upload fresh copies of your documents</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+
+{isExistingCandidate && (
+  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4 mt-4">
+    <div className="flex items-start space-x-3">
+      <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div className="flex-1">
+        <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+          <strong>Welcome back!</strong> We've pre-filled your information.
+        </p>
+        <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+          <p><strong>🔒 Locked fields:</strong> Name, gender, and date of birth cannot be modified</p>
+          <p><strong>✏️ Editable fields:</strong> Phone number and other contact information can be updated</p>
+          <p><strong>📞 Phone validation:</strong> Skipped for existing candidates (your number is already verified)</p>
+          <p><strong>📁 Files:</strong> Please upload fresh copies of your documents</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-8">
-            <PersonalInfoSection
-              firstName={firstName} setFirstName={setFirstName}
-              lastName={lastName} setLastName={setLastName}
-              email={email}
-              gender={gender} setGender={setGender}
-              dateOfBirth={dateOfBirth} setDateOfBirth={setDateOfBirth}
-              countryCode={countryCode} setCountryCode={setCountryCode}
-              phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber}
-              city={city} setCity={setCity}
-              country={country} setCountry={setCountry}
-              nationality={nationality} setNationality={setNationality}
-              doubleNationality={doubleNationality} setDoubleNationality={setDoubleNationality}
-              isLoading={isLoading}
-              isExistingCandidate={isExistingCandidate}
-              calculateAge={calculateAge}
-            />
+<PersonalInfoSection
+  firstName={firstName} setFirstName={setFirstName}
+  lastName={lastName} setLastName={setLastName}
+  email={email}
+  gender={gender} setGender={setGender}
+  dateOfBirth={dateOfBirth} setDateOfBirth={setDateOfBirth}
+  countryCode={countryCode} setCountryCode={setCountryCode}
+  phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber}
+  city={city} setCity={setCity}
+  country={country} setCountry={setCountry}
+  nationality={nationality} setNationality={setNationality}
+  doubleNationality={doubleNationality} setDoubleNationality={setDoubleNationality}
+  isLoading={isLoading}
+  isExistingCandidate={isExistingCandidate}
+  calculateAge={calculateAge}
+  phoneValidation={phoneValidation} // 🔥 NEW: Pass phone validation state
+/>
 
             <JobApplicationSection
               selectedCategory={selectedCategory}

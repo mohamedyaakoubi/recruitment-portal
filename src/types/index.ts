@@ -300,6 +300,13 @@ export interface PersonalInfoSectionProps {
   isLoading: boolean;
   isExistingCandidate: boolean;
   calculateAge: (dob: string) => number | null;
+  // 🔥 NEW: Phone validation props
+  phoneValidation?: {
+    isValid: boolean | null;
+    isValidating: boolean;
+    message: string;
+    warning?: string;
+  };
 }
 
 export interface FileInputProps {

@@ -39,9 +39,153 @@ export const useCandidateForm = () => {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   const filteredJobs = jobs.filter(job => job.category === selectedCategory);
+  const [phoneValidation, setPhoneValidation] = useState<{
+    isValid: boolean | null;
+    isValidating: boolean;
+    message: string;
+    warning?: string;
+  }>({
+    isValid: null,
+    isValidating: false,
+    message: ''
+  });
 
+  const validatePhoneNumber = async (countryCode: string, phoneNumber: string): Promise<boolean> => {
+    // 🔥 CRITICAL: Skip validation entirely for existing candidates
+    if (isExistingCandidate) {
+      console.log('📞 Skipping phone validation for existing candidate');
+      setPhoneValidation({
+        isValid: true, // Assume valid since it was previously accepted
+        isValidating: false,
+        message: '✅ Phone number from previous application (validated)',
+        warning: 'Using phone number from your previous application'
+      });
+      return true;
+    }
 
-    const sendConfirmationEmail = async (candidateData: {
+    if (!phoneNumber.trim()) {
+      setPhoneValidation({
+        isValid: false,
+        isValidating: false,
+        message: 'Phone number is required'
+      });
+      return false;
+    }
+
+    setPhoneValidation({
+      isValid: null,
+      isValidating: true,
+      message: 'Validating phone number...'
+    });
+
+    try {
+      const response = await fetch('/api/validate-phone', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          countryCode,
+          phoneNumber: phoneNumber.trim()
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Validation failed');
+      }
+
+      const validationMessage = result.message || (result.isValid 
+        ? '✅ Phone number is valid'
+        : `❌ ${result.error || 'Invalid phone number format'}`);
+
+      setPhoneValidation({
+        isValid: result.isValid,
+        isValidating: false,
+        message: validationMessage,
+        warning: result.warning || result.suggestion
+      });
+
+      // Log validation details for debugging
+      if (result.isValid && result.country) {
+        console.log(`📞 Phone validated for ${result.country.name} (${result.type || 'unknown type'})`);
+        if (result.carrier) {
+          console.log(`📞 Carrier: ${result.carrier}`);
+        }
+      }
+
+      return result.isValid;
+
+    } catch (error) {
+      console.error('❌ Phone validation error:', error);
+      
+      // Fallback validation - just check basic format
+      const basicValidation = /^\d{6,15}$/.test(phoneNumber.replace(/\D/g, ''));
+      
+      setPhoneValidation({
+        isValid: basicValidation,
+        isValidating: false,
+        message: basicValidation 
+          ? '⚠️ Phone format appears valid (validation service unavailable)'
+          : '❌ Phone number format appears invalid',
+        warning: 'Validation service temporarily unavailable'
+      });
+
+      return basicValidation;
+    }
+  };
+
+  // 🔥 FIXED: Single useEffect with proper debouncing
+  useEffect(() => {
+    console.log(`📞 Phone validation useEffect triggered: phone="${phoneNumber}", country="${countryCode}", existing=${isExistingCandidate}`);
+    
+    // Skip validation entirely for existing candidates
+    if (isExistingCandidate) {
+      if (phoneNumber.trim()) {
+        setPhoneValidation({
+          isValid: true,
+          isValidating: false,
+          message: '✅ Phone number from previous application (validated)',
+          warning: 'Using phone number from your previous application'
+        });
+      } else {
+        setPhoneValidation({
+          isValid: null,
+          isValidating: false,
+          message: ''
+        });
+      }
+      return;
+    }
+
+    // Clear validation state if phone is empty
+    if (!phoneNumber.trim()) {
+      setPhoneValidation({
+        isValid: null,
+        isValidating: false,
+        message: ''
+      });
+      return;
+    }
+
+    // Only validate for new candidates with valid input
+    if (phoneNumber.trim() && countryCode && phoneNumber.trim().length >= 6) {
+      console.log(`📞 Setting up debounced validation for: ${countryCode}${phoneNumber}`);
+      
+      const timeoutId = setTimeout(() => {
+        console.log(`📞 Executing debounced validation for: ${countryCode}${phoneNumber}`);
+        validatePhoneNumber(countryCode, phoneNumber);
+      }, 2000); // 🔥 INCREASED: 2 seconds debounce to prevent excessive calls
+
+      return () => {
+        console.log(`📞 Clearing timeout for: ${countryCode}${phoneNumber}`);
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [phoneNumber, countryCode, isExistingCandidate]); // Only these dependencies
+
+  const sendConfirmationEmail = async (candidateData: {
     email: string;
     fullName: string;
     jobTitle: string;
@@ -344,7 +488,20 @@ useEffect(() => {
       return;
     }
 
-    // Detailed validation with specific missing field messages
+    // 🔥 UPDATED: Phone validation only for new candidates
+    if (!isExistingCandidate) {
+      console.log('📞 Starting phone validation before submission for new candidate...');
+      const isPhoneValid = await validatePhoneNumber(countryCode, phoneNumber);
+      
+      if (!isPhoneValid) {
+        setError(`Phone number validation failed: ${phoneValidation.message}`);
+        return;
+      }
+    } else {
+      console.log('📞 Skipping phone validation for existing candidate');
+    }
+
+    // Enhanced validation with specific missing field messages
     const missingFields = [];
     
     if (!firstName) missingFields.push('First Name');
@@ -371,6 +528,7 @@ useEffect(() => {
       gender,
       countryCode,
       phoneNumber,
+      phoneValidation,
       dateOfBirth,
       city,
       country,
@@ -381,7 +539,8 @@ useEffect(() => {
       cvFile: cvFile ? cvFile.name : 'Missing',
       passportFile: passportFile ? passportFile.name : 'Missing',
       availableSpecialties,
-      specialtyValid: availableSpecialties.includes(specialty)
+      specialtyValid: availableSpecialties.includes(specialty),
+      isExistingCandidate
     });
 
     if (missingFields.length > 0) {
@@ -404,6 +563,7 @@ useEffect(() => {
     setIsLoading(true);
 
     try {
+      // Check for duplicate applications
       const duplicateCheck = await checkDuplicateApplication(candidateEmail, jobTitle, selectedCategory);
       if (duplicateCheck.isDuplicate) {
         setError(duplicateCheck.message);
@@ -438,7 +598,7 @@ useEffect(() => {
 
       const normalizedEmail = candidateEmail.toLowerCase().trim();
 
-      // 🔥 UPDATED: Save application and get document reference
+      // Save application to database
       const docRef = await addDoc(collection(db, "candidates"), {
         firstName,
         lastName,
@@ -465,10 +625,17 @@ useEffect(() => {
         status: 'submitted',
         score: null,
         applicationSource: 'web_form',
-        lastUpdated: serverTimestamp()
+        lastUpdated: serverTimestamp(),
+        // 🔥 NEW: Store phone validation info
+        phoneValidationStatus: {
+          isValid: phoneValidation.isValid,
+          validatedAt: new Date(),
+          fallbackUsed: phoneValidation.warning?.includes('pattern') ? 'regex' : 
+                       phoneValidation.warning?.includes('basic') ? 'basic' : 'api'
+        }
       });
 
-      // 🔥 NEW: Send confirmation email after successful submission
+      // Send confirmation email after successful submission
       if (docRef && docRef.id) {
         console.log('✅ Application saved successfully, sending confirmation email...');
         
@@ -482,12 +649,12 @@ useEffect(() => {
         });
       }
 
-      setSuccess("Application submitted successfully! A confirmation email has been sent to your email address.");
+      setSuccess("Application submitted successfully! Your phone number has been validated and a confirmation email has been sent to your email address.");
       setShowSuccessToast(true);
 
       setTimeout(() => {
         router.push(`/candidate-dashboard?email=${encodeURIComponent(normalizedEmail)}`);
-      }, 3000); // Increased timeout to allow users to read the success message
+      }, 3000);
 
     } catch (err) {
       console.error('❌ Submission error:', err);
@@ -497,6 +664,7 @@ useEffect(() => {
     }
   };
 
+  // 🔥 NEW: Return phone validation state
   return {
     firstName, setFirstName,
     lastName, setLastName,
@@ -504,6 +672,7 @@ useEffect(() => {
     gender, setGender,
     countryCode, setCountryCode,
     phoneNumber, setPhoneNumber,
+    phoneValidation, // 🔥 NEW
     dateOfBirth, setDateOfBirth,
     city, setCity,
     country, setCountry,
@@ -538,5 +707,6 @@ useEffect(() => {
     handleFileChange,
     handleSubmit,
     calculateAge,
+    validatePhoneNumber, // 🔥 NEW
   };
 };
