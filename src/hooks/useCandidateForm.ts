@@ -40,6 +40,47 @@ export const useCandidateForm = () => {
 
   const filteredJobs = jobs.filter(job => job.category === selectedCategory);
 
+
+    const sendConfirmationEmail = async (candidateData: {
+    email: string;
+    fullName: string;
+    jobTitle: string;
+    jobCategory?: string;
+    specialty?: string;
+    applicationId: string;
+  }) => {
+    try {
+      console.log('📧 Attempting to send confirmation email...', candidateData);
+      
+      const response = await fetch('/api/send-confirmation-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          candidateEmail: candidateData.email,
+          candidateName: candidateData.fullName,
+          jobTitle: candidateData.jobTitle,
+          jobCategory: candidateData.jobCategory,
+          specialty: candidateData.specialty,
+          applicationId: candidateData.applicationId
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        console.error('❌ Failed to send confirmation email:', result.error);
+        // Don't throw error - we don't want to fail the entire submission if email fails
+      } else {
+        console.log('✅ Confirmation email sent successfully');
+      }
+    } catch (error) {
+      console.error('❌ Error sending confirmation email:', error);
+      // Don't throw error - we don't want to fail the entire submission if email fails
+    }
+  };
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const email = urlParams.get('email');
@@ -275,6 +316,7 @@ useEffect(() => {
     return age;
   };
 
+  
   const validateAge = (dateOfBirth: string): { isValid: boolean; age: number; message?: string } => {
     if (!dateOfBirth) {
       return { isValid: false, age: 0, message: 'Date of birth is required' };
@@ -290,19 +332,19 @@ useEffect(() => {
     return { isValid: true, age, message: '' };
   };
 
- const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    // 🔥 ENHANCED: Age validation first
+    // Age validation first
     const ageValidation = validateAge(dateOfBirth);
     if (!ageValidation.isValid) {
       setError(ageValidation.message || 'Age validation failed.');
       return;
     }
 
-    // 🔥 ENHANCED: Detailed validation with specific missing field messages
+    // Detailed validation with specific missing field messages
     const missingFields = [];
     
     if (!firstName) missingFields.push('First Name');
@@ -321,7 +363,7 @@ useEffect(() => {
     if (!cvFile) missingFields.push('CV/Resume');
     if (!passportFile) missingFields.push('Passport/ID');
 
-    // 🔥 DEBUG: Log all field values for debugging
+    // Debug log
     console.log('🔍 Form validation debug:', {
       firstName,
       lastName,
@@ -347,13 +389,13 @@ useEffect(() => {
       return;
     }
 
-    // 🔥 ENHANCED: Specialty validation with better error message
+    // Specialty validation
     if (!availableSpecialties.includes(specialty)) {
       setError(`Please select a valid specialty from the available options. Selected: "${specialty}". Available: ${availableSpecialties.join(', ')}`);
       return;
     }
 
-    // 🔥 FIXED: Add null checks for file operations
+    // File validation
     if (!cvFile || !passportFile) {
       setError('CV/Resume and Passport/ID files are required.');
       return;
@@ -369,7 +411,7 @@ useEffect(() => {
         return;
       }
 
-      // 🔥 FIXED: Safe file name access with null checks
+      // File uploads
       const cvFileName = `cv_${Date.now()}_${cvFile.name}`;
       const passportFileName = `passport_${Date.now()}_${passportFile.name}`;
       
@@ -387,7 +429,6 @@ useEffect(() => {
       ]);
       
       let photoUrl = null;
-      // 🔥 FIXED: Safe photo file handling
       if (photoFile) {
         const photoFileName = `photo_${Date.now()}_${photoFile.name}`;
         const photoStorageRef = ref(storage, `candidate_files/${photoFileName}`);
@@ -397,7 +438,8 @@ useEffect(() => {
 
       const normalizedEmail = candidateEmail.toLowerCase().trim();
 
-      await addDoc(collection(db, "candidates"), {
+      // 🔥 UPDATED: Save application and get document reference
+      const docRef = await addDoc(collection(db, "candidates"), {
         firstName,
         lastName,
         fullName: `${firstName} ${lastName}`,
@@ -426,12 +468,26 @@ useEffect(() => {
         lastUpdated: serverTimestamp()
       });
 
-      setSuccess("Application submitted successfully!");
+      // 🔥 NEW: Send confirmation email after successful submission
+      if (docRef && docRef.id) {
+        console.log('✅ Application saved successfully, sending confirmation email...');
+        
+        await sendConfirmationEmail({
+          email: normalizedEmail,
+          fullName: `${firstName} ${lastName}`,
+          jobTitle: selectedJob?.title || '',
+          jobCategory: selectedCategory,
+          specialty: specialty,
+          applicationId: docRef.id
+        });
+      }
+
+      setSuccess("Application submitted successfully! A confirmation email has been sent to your email address.");
       setShowSuccessToast(true);
 
       setTimeout(() => {
         router.push(`/candidate-dashboard?email=${encodeURIComponent(normalizedEmail)}`);
-      }, 2000);
+      }, 3000); // Increased timeout to allow users to read the success message
 
     } catch (err) {
       console.error('❌ Submission error:', err);
@@ -442,47 +498,45 @@ useEffect(() => {
   };
 
   return {
-  firstName, setFirstName,
-  lastName, setLastName,
-  email: candidateEmail,
-  gender, setGender,
-  countryCode, setCountryCode,
-  phoneNumber, setPhoneNumber,
-  dateOfBirth, setDateOfBirth,
-  city, setCity,
-  country, setCountry,
-  nationality, setNationality,
-  doubleNationality, setDoubleNationality,
-  jobTitle, setJobTitle,
-  specialty, setSpecialty,
-  specialtySearch, setSpecialtySearch,
-  websites, setWebsites,
-  additionalInfo, setAdditionalInfo,
-  // 🔥 ADD: Missing file state variables
-  cvFile, setCvFile,
-  passportFile, setPassportFile,
-  photoFile, setPhotoFile,
-  jobs,
-  selectedCategory,
-  filteredJobs,
-  selectedJob,
-  availableSpecialties,
-  isLoading,
-  error,
-  success,
-  showSuccessToast, setShowSuccessToast,
-  isExistingCandidate,
-  addAdditionalInfo,
-  removeAdditionalInfo,
-  updateAdditionalInfo,
-  addWebsite,
-  removeWebsite,
-  updateWebsite,
-  handleCategorySelection,
-  handleJobSelection,
-  handleFileChange,
-  handleSubmit,
-  // 🔥 ADD: Missing calculate age function
-  calculateAge,
-};
+    firstName, setFirstName,
+    lastName, setLastName,
+    email: candidateEmail,
+    gender, setGender,
+    countryCode, setCountryCode,
+    phoneNumber, setPhoneNumber,
+    dateOfBirth, setDateOfBirth,
+    city, setCity,
+    country, setCountry,
+    nationality, setNationality,
+    doubleNationality, setDoubleNationality,
+    jobTitle, setJobTitle,
+    specialty, setSpecialty,
+    specialtySearch, setSpecialtySearch,
+    websites, setWebsites,
+    additionalInfo, setAdditionalInfo,
+    cvFile, setCvFile,
+    passportFile, setPassportFile,
+    photoFile, setPhotoFile,
+    jobs,
+    selectedCategory,
+    filteredJobs,
+    selectedJob,
+    availableSpecialties,
+    isLoading,
+    error,
+    success,
+    showSuccessToast, setShowSuccessToast,
+    isExistingCandidate,
+    addAdditionalInfo,
+    removeAdditionalInfo,
+    updateAdditionalInfo,
+    addWebsite,
+    removeWebsite,
+    updateWebsite,
+    handleCategorySelection,
+    handleJobSelection,
+    handleFileChange,
+    handleSubmit,
+    calculateAge,
+  };
 };
