@@ -42,6 +42,107 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionPropsExtended> = ({
   const countryCodeRef = useRef<HTMLDivElement>(null);
   const [showCountryCodeList, setShowCountryCodeList] = useState(false);
   const [countryCodeSearch, setCountryCodeSearch] = useState('');
+  
+  // 🔥 NEW: Name validation states
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
+
+  // 🔥 NEW: Name validation function
+  const validateName = (name: string, fieldName: string): string => {
+    if (!name.trim()) {
+      return `${fieldName} is required`;
+    }
+    
+    // Check for numbers
+    if (/\d/.test(name)) {
+      return `${fieldName} cannot contain numbers`;
+    }
+    
+    // Check for special characters (allow only letters, spaces, hyphens, and apostrophes)
+    if (!/^[a-zA-ZÀ-ÿĀ-žА-я\s'-]+$/.test(name)) {
+      return `${fieldName} can only contain letters, spaces, hyphens, and apostrophes`;
+    }
+    
+    // Check for dots
+    if (/\./.test(name)) {
+      return `${fieldName} cannot contain dots`;
+    }
+    
+    // Check minimum length
+    if (name.trim().length < 2) {
+      return `${fieldName} must be at least 2 characters long`;
+    }
+    
+    // Check maximum length
+    if (name.trim().length > 50) {
+      return `${fieldName} cannot exceed 50 characters`;
+    }
+    
+    // Check for excessive spaces
+    if (/\s{2,}/.test(name)) {
+      return `${fieldName} cannot contain multiple consecutive spaces`;
+    }
+    
+    // Check if starts or ends with space/hyphen/apostrophe
+    if (/^[\s'-]|[\s'-]$/.test(name)) {
+      return `${fieldName} cannot start or end with spaces, hyphens, or apostrophes`;
+    }
+    
+    return '';
+  };
+
+  // 🔥 NEW: Handle first name change with validation
+  const handleFirstNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Allow typing but validate after
+    setFirstName(value);
+    
+    // Real-time validation
+    const error = validateName(value, 'First name');
+    setFirstNameError(error);
+  };
+
+  // 🔥 NEW: Handle last name change with validation
+  const handleLastNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Allow typing but validate after
+    setLastName(value);
+    
+    // Real-time validation
+    const error = validateName(value, 'Last name');
+    setLastNameError(error);
+  };
+
+  // 🔥 NEW: Handle input key press (prevent certain characters)
+  const handleNameKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const char = e.key;
+    
+    // Prevent numbers and common special characters from being typed
+    if (/[0-9!@#$%^&*()_+=\[\]{};:"\\|,.<>?/~`]/.test(char)) {
+      e.preventDefault();
+      return;
+    }
+  };
+
+  // 🔥 NEW: Handle paste event to prevent pasting invalid content
+  const handleNamePaste = (e: React.ClipboardEvent<HTMLInputElement>, fieldName: string) => {
+    e.preventDefault();
+    
+    const pastedText = e.clipboardData.getData('text');
+    const cleanedText = pastedText.replace(/[^a-zA-ZÀ-ÿĀ-žА-я\s'-]/g, '');
+    
+    if (fieldName === 'firstName') {
+      setFirstName(cleanedText);
+      const error = validateName(cleanedText, 'First name');
+      setFirstNameError(error);
+    } else {
+      setLastName(cleanedText);
+      const error = validateName(cleanedText, 'Last name');
+      setLastNameError(error);
+    }
+  };
 
   const filteredCountryCodes = countryCodes.filter(item => 
     item.country.toLowerCase().includes(countryCodeSearch.toLowerCase()) ||
@@ -82,6 +183,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionPropsExtended> = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* 🔥 UPDATED: First Name with validation */}
         <div>
           <label htmlFor="firstName" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             First Name <span className="text-red-500">*</span>
@@ -95,15 +197,51 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionPropsExtended> = ({
             id="firstName"
             required
             value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className={`w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white ${
-              isExistingCandidate ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''
+            onChange={handleFirstNameChange}
+            onKeyPress={handleNameKeyPress}
+            onPaste={(e) => handleNamePaste(e, 'firstName')}
+            className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white transition-all duration-300 ${
+              isExistingCandidate 
+                ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed border-slate-300 dark:border-gray-600' 
+                : firstNameError
+                ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 ring-1 ring-red-200 dark:ring-red-500/30'
+                : firstName && !firstNameError
+                ? 'border-green-400 dark:border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-200 dark:ring-green-500/30'
+                : 'border-slate-300 dark:border-gray-600'
             }`}
             placeholder="Enter your first name"
             disabled={isLoading || isExistingCandidate}
+            autoComplete="given-name"
+            maxLength={50}
           />
+          
+          {/* 🔥 NEW: First name validation feedback */}
+          {!isExistingCandidate && firstNameError && (
+            <div className="mt-2 flex items-start space-x-2">
+              <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-red-600 dark:text-red-400">{firstNameError}</p>
+            </div>
+          )}
+          
+          {!isExistingCandidate && firstName && !firstNameError && (
+            <div className="mt-2 flex items-start space-x-2">
+              <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-green-600 dark:text-green-400">Valid first name</p>
+            </div>
+          )}
+          
+          {!isExistingCandidate && !firstName && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Only letters, spaces, hyphens, and apostrophes allowed
+            </p>
+          )}
         </div>
 
+        {/* 🔥 UPDATED: Last Name with validation */}
         <div>
           <label htmlFor="lastName" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Last Name <span className="text-red-500">*</span>
@@ -117,13 +255,48 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionPropsExtended> = ({
             id="lastName"
             required
             value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className={`w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white ${
-              isExistingCandidate ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' : ''
+            onChange={handleLastNameChange}
+            onKeyPress={handleNameKeyPress}
+            onPaste={(e) => handleNamePaste(e, 'lastName')}
+            className={`w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white transition-all duration-300 ${
+              isExistingCandidate 
+                ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed border-slate-300 dark:border-gray-600' 
+                : lastNameError
+                ? 'border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20 ring-1 ring-red-200 dark:ring-red-500/30'
+                : lastName && !lastNameError
+                ? 'border-green-400 dark:border-green-500 bg-green-50 dark:bg-green-900/20 ring-1 ring-green-200 dark:ring-green-500/30'
+                : 'border-slate-300 dark:border-gray-600'
             }`}
             placeholder="Enter your last name"
             disabled={isLoading || isExistingCandidate}
+            autoComplete="family-name"
+            maxLength={50}
           />
+          
+          {/* 🔥 NEW: Last name validation feedback */}
+          {!isExistingCandidate && lastNameError && (
+            <div className="mt-2 flex items-start space-x-2">
+              <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-red-600 dark:text-red-400">{lastNameError}</p>
+            </div>
+          )}
+          
+          {!isExistingCandidate && lastName && !lastNameError && (
+            <div className="mt-2 flex items-start space-x-2">
+              <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-sm text-green-600 dark:text-green-400">Valid last name</p>
+            </div>
+          )}
+          
+          {!isExistingCandidate && !lastName && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Only letters, spaces, hyphens, and apostrophes allowed
+            </p>
+          )}
         </div>
 
         <div className="sm:col-span-2">

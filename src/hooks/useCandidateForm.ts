@@ -477,193 +477,247 @@ useEffect(() => {
   };
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
+  e.preventDefault();
+  setError(null);
+  setSuccess(null);
 
-    // Age validation first
-    const ageValidation = validateAge(dateOfBirth);
-    if (!ageValidation.isValid) {
-      setError(ageValidation.message || 'Age validation failed.');
+  // 🔥 NEW: Name validation before other checks
+  const validateName = (name: string, fieldName: string): string => {
+    if (!name.trim()) {
+      return `${fieldName} is required`;
+    }
+    
+    if (/\d/.test(name)) {
+      return `${fieldName} cannot contain numbers`;
+    }
+    
+    if (!/^[a-zA-ZÀ-ÿĀ-žА-я\s'-]+$/.test(name)) {
+      return `${fieldName} can only contain letters, spaces, hyphens, and apostrophes`;
+    }
+    
+    if (/\./.test(name)) {
+      return `${fieldName} cannot contain dots`;
+    }
+    
+    if (name.trim().length < 2) {
+      return `${fieldName} must be at least 2 characters long`;
+    }
+    
+    if (name.trim().length > 50) {
+      return `${fieldName} cannot exceed 50 characters`;
+    }
+    
+    if (/\s{2,}/.test(name)) {
+      return `${fieldName} cannot contain multiple consecutive spaces`;
+    }
+    
+    if (/^[\s'-]|[\s'-]$/.test(name)) {
+      return `${fieldName} cannot start or end with spaces, hyphens, or apostrophes`;
+    }
+    
+    return '';
+  };
+
+  // 🔥 NEW: Validate names first
+  const firstNameError = validateName(firstName, 'First name');
+  if (firstNameError) {
+    setError(firstNameError);
+    return;
+  }
+
+  const lastNameError = validateName(lastName, 'Last name');
+  if (lastNameError) {
+    setError(lastNameError);
+    return;
+  }
+
+  // Age validation
+  const ageValidation = validateAge(dateOfBirth);
+  if (!ageValidation.isValid) {
+    setError(ageValidation.message || 'Age validation failed.');
+    return;
+  }
+
+  // Phone validation only for new candidates
+  if (!isExistingCandidate) {
+    console.log('📞 Starting phone validation before submission for new candidate...');
+    const isPhoneValid = await validatePhoneNumber(countryCode, phoneNumber);
+    
+    if (!isPhoneValid) {
+      setError(`Phone number validation failed: ${phoneValidation.message}`);
+      return;
+    }
+  } else {
+    console.log('📞 Skipping phone validation for existing candidate');
+  }
+
+  // Enhanced validation with specific missing field messages
+  const missingFields = [];
+  
+  if (!firstName) missingFields.push('First Name');
+  if (!lastName) missingFields.push('Last Name');
+  if (!candidateEmail) missingFields.push('Email');
+  if (!gender) missingFields.push('Gender');
+  if (!countryCode) missingFields.push('Country Code');
+  if (!phoneNumber) missingFields.push('Phone Number');
+  if (!dateOfBirth) missingFields.push('Date of Birth');
+  if (!city) missingFields.push('City');
+  if (!country) missingFields.push('Country');
+  if (!nationality) missingFields.push('Nationality');
+  if (!selectedCategory) missingFields.push('Job Category');
+  if (!jobTitle) missingFields.push('Job Position');
+  if (!specialty) missingFields.push('Specialty');
+  if (!cvFile) missingFields.push('CV/Resume');
+  if (!passportFile) missingFields.push('Passport/ID');
+
+  // Debug log
+  console.log('🔍 Form validation debug:', {
+    firstName,
+    lastName,
+    firstNameValid: !firstNameError,
+    lastNameValid: !lastNameError,
+    candidateEmail,
+    gender,
+    countryCode,
+    phoneNumber,
+    phoneValidation,
+    dateOfBirth,
+    city,
+    country,
+    nationality,
+    selectedCategory,
+    jobTitle,
+    specialty,
+    cvFile: cvFile ? cvFile.name : 'Missing',
+    passportFile: passportFile ? passportFile.name : 'Missing',
+    availableSpecialties,
+    specialtyValid: availableSpecialties.includes(specialty),
+    isExistingCandidate
+  });
+
+  if (missingFields.length > 0) {
+    setError(`Missing required fields: ${missingFields.join(', ')}`);
+    return;
+  }
+
+  // Specialty validation
+  if (!availableSpecialties.includes(specialty)) {
+    setError(`Please select a valid specialty from the available options. Selected: "${specialty}". Available: ${availableSpecialties.join(', ')}`);
+    return;
+  }
+
+  // File validation
+  if (!cvFile || !passportFile) {
+    setError('CV/Resume and Passport/ID files are required.');
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    // 🔥 NEW: Clean and trim names before saving
+    const cleanFirstName = firstName.trim().replace(/\s+/g, ' ');
+    const cleanLastName = lastName.trim().replace(/\s+/g, ' ');
+
+    // Check for duplicate applications
+    const duplicateCheck = await checkDuplicateApplication(candidateEmail, jobTitle, selectedCategory);
+    if (duplicateCheck.isDuplicate) {
+      setError(duplicateCheck.message);
+      setIsLoading(false);
       return;
     }
 
-    // 🔥 UPDATED: Phone validation only for new candidates
-    if (!isExistingCandidate) {
-      console.log('📞 Starting phone validation before submission for new candidate...');
-      const isPhoneValid = await validatePhoneNumber(countryCode, phoneNumber);
-      
-      if (!isPhoneValid) {
-        setError(`Phone number validation failed: ${phoneValidation.message}`);
-        return;
-      }
-    } else {
-      console.log('📞 Skipping phone validation for existing candidate');
+    // File uploads
+    const cvFileName = `cv_${Date.now()}_${cvFile.name}`;
+    const passportFileName = `passport_${Date.now()}_${passportFile.name}`;
+    
+    const cvStorageRef = ref(storage, `candidate_files/${cvFileName}`);
+    const passportStorageRef = ref(storage, `candidate_files/${passportFileName}`);
+
+    const [cvUploadTask, passportUploadTask] = await Promise.all([
+      uploadBytes(cvStorageRef, cvFile),
+      uploadBytes(passportStorageRef, passportFile)
+    ]);
+
+    const [cvUrl, passportUrl] = await Promise.all([
+      getDownloadURL(cvUploadTask.ref),
+      getDownloadURL(passportUploadTask.ref)
+    ]);
+    
+    let photoUrl = null;
+    if (photoFile) {
+      const photoFileName = `photo_${Date.now()}_${photoFile.name}`;
+      const photoStorageRef = ref(storage, `candidate_files/${photoFileName}`);
+      const photoUploadTask = await uploadBytes(photoStorageRef, photoFile);
+      photoUrl = await getDownloadURL(photoUploadTask.ref);
     }
 
-    // Enhanced validation with specific missing field messages
-    const missingFields = [];
-    
-    if (!firstName) missingFields.push('First Name');
-    if (!lastName) missingFields.push('Last Name');
-    if (!candidateEmail) missingFields.push('Email');
-    if (!gender) missingFields.push('Gender');
-    if (!countryCode) missingFields.push('Country Code');
-    if (!phoneNumber) missingFields.push('Phone Number');
-    if (!dateOfBirth) missingFields.push('Date of Birth');
-    if (!city) missingFields.push('City');
-    if (!country) missingFields.push('Country');
-    if (!nationality) missingFields.push('Nationality');
-    if (!selectedCategory) missingFields.push('Job Category');
-    if (!jobTitle) missingFields.push('Job Position');
-    if (!specialty) missingFields.push('Specialty');
-    if (!cvFile) missingFields.push('CV/Resume');
-    if (!passportFile) missingFields.push('Passport/ID');
+    const normalizedEmail = candidateEmail.toLowerCase().trim();
 
-    // Debug log
-    console.log('🔍 Form validation debug:', {
-      firstName,
-      lastName,
-      candidateEmail,
+    // Save application to database with cleaned names
+    const docRef = await addDoc(collection(db, "candidates"), {
+      firstName: cleanFirstName, // 🔥 NEW: Use cleaned name
+      lastName: cleanLastName,   // 🔥 NEW: Use cleaned name
+      fullName: `${cleanFirstName} ${cleanLastName}`, // 🔥 NEW: Use cleaned names
+      email: normalizedEmail,
       gender,
       countryCode,
-      phoneNumber,
-      phoneValidation,
+      phoneNumber: `${countryCode} ${phoneNumber}`,
       dateOfBirth,
+      age: ageValidation.age,
       city,
       country,
       nationality,
-      selectedCategory,
-      jobTitle,
+      doubleNationality: doubleNationality || null,
+      jobCategory: selectedCategory,
       specialty,
-      cvFile: cvFile ? cvFile.name : 'Missing',
-      passportFile: passportFile ? passportFile.name : 'Missing',
-      availableSpecialties,
-      specialtyValid: availableSpecialties.includes(specialty),
-      isExistingCandidate
+      jobTitle,
+      jobTitleText: selectedJob?.title || '',
+      websites: websites.filter(w => w.trim() !== ''),
+      cvUrl,
+      passportUrl,
+      photoUrl,
+      submittedAt: serverTimestamp(),
+      status: 'submitted',
+      score: null,
+      applicationSource: 'web_form',
+      lastUpdated: serverTimestamp(),
+      phoneValidationStatus: {
+        isValid: phoneValidation.isValid,
+        validatedAt: new Date(),
+        fallbackUsed: phoneValidation.warning?.includes('pattern') ? 'regex' : 
+                     phoneValidation.warning?.includes('basic') ? 'basic' : 'api'
+      }
     });
 
-    if (missingFields.length > 0) {
-      setError(`Missing required fields: ${missingFields.join(', ')}`);
-      return;
-    }
-
-    // Specialty validation
-    if (!availableSpecialties.includes(specialty)) {
-      setError(`Please select a valid specialty from the available options. Selected: "${specialty}". Available: ${availableSpecialties.join(', ')}`);
-      return;
-    }
-
-    // File validation
-    if (!cvFile || !passportFile) {
-      setError('CV/Resume and Passport/ID files are required.');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Check for duplicate applications
-      const duplicateCheck = await checkDuplicateApplication(candidateEmail, jobTitle, selectedCategory);
-      if (duplicateCheck.isDuplicate) {
-        setError(duplicateCheck.message);
-        setIsLoading(false);
-        return;
-      }
-
-      // File uploads
-      const cvFileName = `cv_${Date.now()}_${cvFile.name}`;
-      const passportFileName = `passport_${Date.now()}_${passportFile.name}`;
+    // Send confirmation email after successful submission
+    if (docRef && docRef.id) {
+      console.log('✅ Application saved successfully, sending confirmation email...');
       
-      const cvStorageRef = ref(storage, `candidate_files/${cvFileName}`);
-      const passportStorageRef = ref(storage, `candidate_files/${passportFileName}`);
-
-      const [cvUploadTask, passportUploadTask] = await Promise.all([
-        uploadBytes(cvStorageRef, cvFile),
-        uploadBytes(passportStorageRef, passportFile)
-      ]);
-
-      const [cvUrl, passportUrl] = await Promise.all([
-        getDownloadURL(cvUploadTask.ref),
-        getDownloadURL(passportUploadTask.ref)
-      ]);
-      
-      let photoUrl = null;
-      if (photoFile) {
-        const photoFileName = `photo_${Date.now()}_${photoFile.name}`;
-        const photoStorageRef = ref(storage, `candidate_files/${photoFileName}`);
-        const photoUploadTask = await uploadBytes(photoStorageRef, photoFile);
-        photoUrl = await getDownloadURL(photoUploadTask.ref);
-      }
-
-      const normalizedEmail = candidateEmail.toLowerCase().trim();
-
-      // Save application to database
-      const docRef = await addDoc(collection(db, "candidates"), {
-        firstName,
-        lastName,
-        fullName: `${firstName} ${lastName}`,
+      await sendConfirmationEmail({
         email: normalizedEmail,
-        gender,
-        countryCode,
-        phoneNumber: `${countryCode} ${phoneNumber}`,
-        dateOfBirth,
-        age: ageValidation.age,
-        city,
-        country,
-        nationality,
-        doubleNationality: doubleNationality || null,
+        fullName: `${cleanFirstName} ${cleanLastName}`, // 🔥 NEW: Use cleaned names
+        jobTitle: selectedJob?.title || '',
         jobCategory: selectedCategory,
-        specialty,
-        jobTitle,
-        jobTitleText: selectedJob?.title || '',
-        websites: websites.filter(w => w.trim() !== ''),
-        cvUrl,
-        passportUrl,
-        photoUrl,
-        submittedAt: serverTimestamp(),
-        status: 'submitted',
-        score: null,
-        applicationSource: 'web_form',
-        lastUpdated: serverTimestamp(),
-        // 🔥 NEW: Store phone validation info
-        phoneValidationStatus: {
-          isValid: phoneValidation.isValid,
-          validatedAt: new Date(),
-          fallbackUsed: phoneValidation.warning?.includes('pattern') ? 'regex' : 
-                       phoneValidation.warning?.includes('basic') ? 'basic' : 'api'
-        }
+        specialty: specialty,
+        applicationId: docRef.id
       });
-
-      // Send confirmation email after successful submission
-      if (docRef && docRef.id) {
-        console.log('✅ Application saved successfully, sending confirmation email...');
-        
-        await sendConfirmationEmail({
-          email: normalizedEmail,
-          fullName: `${firstName} ${lastName}`,
-          jobTitle: selectedJob?.title || '',
-          jobCategory: selectedCategory,
-          specialty: specialty,
-          applicationId: docRef.id
-        });
-      }
-
-      setSuccess("Application submitted successfully! Your phone number has been validated and a confirmation email has been sent to your email address.");
-      setShowSuccessToast(true);
-
-      setTimeout(() => {
-        router.push(`/candidate-dashboard?email=${encodeURIComponent(normalizedEmail)}`);
-      }, 3000);
-
-    } catch (err) {
-      console.error('❌ Submission error:', err);
-      setError(err instanceof Error ? `Submission failed: ${err.message}` : 'An unknown error occurred');
-    } finally {
-      setIsLoading(false);
     }
-  };
 
+    setSuccess("Application submitted successfully! Your information has been validated and a confirmation email has been sent to your email address.");
+    setShowSuccessToast(true);
+
+    setTimeout(() => {
+      router.push(`/candidate-dashboard?email=${encodeURIComponent(normalizedEmail)}`);
+    }, 3000);
+
+  } catch (err) {
+    console.error('❌ Submission error:', err);
+    setError(err instanceof Error ? `Submission failed: ${err.message}` : 'An unknown error occurred');
+  } finally {
+    setIsLoading(false);
+  }
+};
   // 🔥 NEW: Return phone validation state
   return {
     firstName, setFirstName,
