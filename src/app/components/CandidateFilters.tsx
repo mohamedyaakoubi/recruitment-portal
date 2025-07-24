@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Candidate, CandidateFiltersProps } from '@/types';
 import SearchableFilterDropdown from './common/SearchableFilterDropdown';
+import QuickFilterButtons from '@/app/components/common/QuickFilterButtons';
 
 const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   candidates,
@@ -316,5 +317,8 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
           />
         )}
       </div>
+    </div>
+  );
+};
 
 export default CandidateFilters;
