@@ -116,14 +116,16 @@ export const useEditCandidateForm = (
         }
     }, [candidate, jobs]);
 
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-        if (errors[field]) {
-            setErrors(prev => ({ ...prev, [field]: '' }));
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
 
-    const handleCategoryChange = (category: string) => {
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const category = e.target.value;
         setFormData(prev => ({
             ...prev,
             jobCategory: category,
@@ -134,7 +136,8 @@ export const useEditCandidateForm = (
         setAvailableSpecialties([]);
     };
 
-    const handleJobChange = (jobId: string) => {
+    const handleJobChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const jobId = e.target.value;
         const job = jobs.find(j => j.id === jobId);
         if (job) {
             setSelectedJob(job);

@@ -1,0 +1,10 @@
+Dear ${candidateName},
+
+Thank you for your interest in ${companyName} and for taking the time to apply.
+
+We received a large number of applications, and after careful consideration, we have decided not to move forward with your candidacy at this time.
+
+This was a difficult decision due to the high caliber of applicants. We wish you the best in your job search.
+
+Sincerely,
+The ${companyName} Hiring Team

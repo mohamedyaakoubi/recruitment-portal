@@ -8,9 +8,9 @@ interface JobInfoFormProps {
     jobCategories: string[];
     filteredJobs: any[];
     availableSpecialties: string[];
-    handleCategoryChange: (category: string) => void;
-    handleJobChange: (jobId: string) => void;
-    handleInputChange: (field: string, value: string) => void;
+    handleCategoryChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    handleJobChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
     isLoading: boolean;
     loadingJobs: boolean;
 }
@@ -46,8 +46,9 @@ const JobInfoForm: React.FC<JobInfoFormProps> = ({
                     </label>
                     <select
                         id="jobCategory"
+                        name="jobCategory"
                         value={formData.jobCategory}
-                        onChange={(e) => handleCategoryChange(e.target.value)}
+                        onChange={handleCategoryChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
                         disabled={isLoading || loadingJobs}
                     >
@@ -65,8 +66,9 @@ const JobInfoForm: React.FC<JobInfoFormProps> = ({
                     </label>
                     <select
                         id="jobTitle"
+                        name="jobTitle"
                         value={formData.jobTitle}
-                        onChange={(e) => handleJobChange(e.target.value)}
+                        onChange={handleJobChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
                         disabled={isLoading || loadingJobs || !formData.jobCategory}
                     >
@@ -94,8 +96,9 @@ const JobInfoForm: React.FC<JobInfoFormProps> = ({
                     </label>
                     <select
                         id="specialty"
+                        name="specialty"
                         value={formData.specialty}
-                        onChange={(e) => handleInputChange('specialty', e.target.value)}
+                        onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
                         disabled={isLoading || !formData.jobTitle}
                     >
@@ -124,6 +127,7 @@ const JobInfoForm: React.FC<JobInfoFormProps> = ({
                         </label>
                         <input
                             id="jobTitleText"
+                            name="jobTitleText"
                             type="text"
                             value={formData.jobTitleText}
                             className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400"

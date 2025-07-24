@@ -5,7 +5,7 @@ import { useCandidateDashboard } from '@/hooks/useCandidateDashboard';
 import ApplicationStatus from '../components/candidate-dashboard/ApplicationStatus';
 import InterviewDetails from '../components/candidate-dashboard/InterviewDetails';
 import DashboardHeader from '../components/candidate-dashboard/DashboardHeader';
-import DashboardFooter from '../components/candidate-dashboard/DashboardFooter';
+import DashboardFooter from '../components/common/Footer';
 import WelcomeSection from '../components/candidate-dashboard/WelcomeSection';
 import HelpSection from '../components/candidate-dashboard/HelpSection';
 

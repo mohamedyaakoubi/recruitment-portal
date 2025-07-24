@@ -8,7 +8,7 @@ import { countries } from '@/lib/formData';
 interface LocationInfoFormProps {
     formData: any;
     errors: any;
-    handleInputChange: (field: string, value: string) => void;
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
     isLoading: boolean;
 }
 
@@ -25,9 +25,10 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({ formData, errors, h
                     </label>
                     <input
                         id="city"
+                        name="city"
                         type="text"
                         value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
+                        onChange={handleInputChange}
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.city ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200`}
                         disabled={isLoading}
                     />
@@ -41,7 +42,7 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({ formData, errors, h
                         id="country"
                         options={countries}
                         value={formData.country}
-                        onChange={(value) => handleInputChange('country', value)}
+                        onChange={(value) => handleInputChange({ target: { name: 'country', value } } as React.ChangeEvent<HTMLSelectElement>)}
                         placeholder="Search and select country"
                         disabled={isLoading}
                     />
@@ -55,7 +56,7 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({ formData, errors, h
                         id="nationality"
                         options={countries}
                         value={formData.nationality}
-                        onChange={(value) => handleInputChange('nationality', value)}
+                        onChange={(value) => handleInputChange({ target: { name: 'nationality', value } } as React.ChangeEvent<HTMLSelectElement>)}
                         placeholder="Search and select nationality"
                         disabled={isLoading}
                     />
@@ -69,7 +70,7 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({ formData, errors, h
                         id="doubleNationality"
                         options={countries}
                         value={formData.doubleNationality}
-                        onChange={(value) => handleInputChange('doubleNationality', value)}
+                        onChange={(value) => handleInputChange({ target: { name: 'doubleNationality', value } } as React.ChangeEvent<HTMLSelectElement>)}
                         placeholder="Search and select second nationality"
                         disabled={isLoading}
                     />

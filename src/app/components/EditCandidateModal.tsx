@@ -5,9 +5,7 @@ import { useEditCandidateForm } from '@/hooks/useEditCandidateForm';
 import type { Candidate } from '@/types';
 import EditModalHeader from './edit-candidate-modal/EditModalHeader';
 import EditModalFooter from './edit-candidate-modal/EditModalFooter';
-import PersonalInfoForm from './edit-candidate-modal/PersonalInfoForm';
-import LocationInfoForm from './edit-candidate-modal/LocationInfoForm';
-import JobInfoForm from './edit-candidate-modal/JobInfoForm';
+import EditCandidateForm from './edit-candidate-modal/EditCandidateForm';
 
 interface EditCandidateModalProps {
   isOpen: boolean;
@@ -44,31 +42,19 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col">
         <EditModalHeader onClose={onClose} isLoading={isLoading} />
         <div className="p-6 overflow-y-auto flex-grow">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <PersonalInfoForm
-              formData={formData}
-              errors={errors}
-              handleInputChange={handleInputChange}
-              isLoading={isLoading}
-            />
-            <LocationInfoForm
-              formData={formData}
-              errors={errors}
-              handleInputChange={handleInputChange}
-              isLoading={isLoading}
-            />
-            <JobInfoForm
-              formData={formData}
-              jobCategories={jobCategories}
-              filteredJobs={filteredJobs}
-              availableSpecialties={availableSpecialties}
-              handleCategoryChange={handleCategoryChange}
-              handleJobChange={handleJobChange}
-              handleInputChange={handleInputChange}
-              isLoading={isLoading}
-              loadingJobs={loadingJobs}
-            />
-          </form>
+          <EditCandidateForm
+            formData={formData}
+            errors={errors}
+            jobCategories={jobCategories}
+            loadingJobs={loadingJobs}
+            availableSpecialties={availableSpecialties}
+            filteredJobs={filteredJobs}
+            handleInputChange={handleInputChange}
+            handleCategoryChange={handleCategoryChange}
+            handleJobChange={handleJobChange}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
         </div>
         <EditModalFooter
           onClose={onClose}

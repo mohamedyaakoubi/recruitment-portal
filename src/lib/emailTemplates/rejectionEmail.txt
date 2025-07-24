@@ -1,0 +1,22 @@
+Dear ${candidateName},
+
+Thank you for your interest in ${jobTitle ? `the ${jobTitle} position` : 'opportunities'} at International Skills Labor Company and for taking the time to submit your application.
+
+After careful consideration of your qualifications and experience, we have decided to move forward with other candidates whose background more closely aligns with our current requirements.
+
+We appreciate the time and effort you invested in the application process. Your skills and experience are valuable, and we encourage you to apply for future positions that match your qualifications.
+
+We will keep your resume on file and may contact you if a suitable opportunity arises in the future.
+
+Thank you again for your interest in International Skills Labor Company. We wish you the best of luck in your job search.
+
+Contact Information:
+Email: Apply@internationalskills.fi
+Phone: +358 452644966 | +216 29 581 180
+Website: internationalskills.fi
+
+Best regards,
+International Skills Labor Company
+Human Resources Department
+
+This is an automated message. Please do not reply to this email.

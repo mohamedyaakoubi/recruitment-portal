@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-
 import type { Candidate, CandidateFiltersProps } from '@/types';
+import SearchableFilterDropdown from './common/SearchableFilterDropdown';
 
 const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   candidates,
@@ -11,7 +11,7 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   filterNationality,
   filterJobTitle,
   filterCategory,
-  filterSpecialty, // ✅ Add to destructuring
+  filterSpecialty,
   filterAgeMin,
   filterAgeMax,
   onFilterStatusChange,
@@ -21,97 +21,19 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
   onFilterNationalityChange,
   onFilterJobTitleChange,
   onFilterCategoryChange,
-  onFilterSpecialtyChange, // ✅ Add to destructuring
+  onFilterSpecialtyChange,
   onFilterAgeMinChange,
   onFilterAgeMaxChange,
   onClearAllFilters
 }) => {
 
   // Search states for interactive dropdowns
-  const [citySearch, setCitySearch] = useState('');
-  const [countrySearch, setCountrySearch] = useState('');
-  const [jobTitleSearch, setJobTitleSearch] = useState('');
-  const [categorySearch, setCategorySearch] = useState('');
-  const [nationalitySearch, setNationalitySearch] = useState('');
-  const [specialtySearch, setSpecialtySearch] = useState(''); // ✅ Add specialty search
-
-  // Dropdown visibility states
-  const [showCityList, setShowCityList] = useState(false);
-  const [showCountryList, setShowCountryList] = useState(false);
-  const [showJobTitleList, setShowJobTitleList] = useState(false);
-  const [showCategoryList, setShowCategoryList] = useState(false);
-  const [showNationalityList, setShowNationalityList] = useState(false);
-  const [showSpecialtyList, setShowSpecialtyList] = useState(false); // ✅ Add specialty list state
-
-  // Refs for click outside detection
-  const cityRef = useRef<HTMLDivElement>(null);
-  const countryRef = useRef<HTMLDivElement>(null);
-  const jobTitleRef = useRef<HTMLDivElement>(null);
-  const categoryRef = useRef<HTMLDivElement>(null);
-  const nationalityRef = useRef<HTMLDivElement>(null);
-  const specialtyRef = useRef<HTMLDivElement>(null); // ✅ Add specialty ref
-
-  // Extract unique values from candidates
-  const uniqueCities = Array.from(new Set(candidates.map(c => c.city).filter((c): c is string => !!c))).sort();
-  const uniqueCountries = Array.from(new Set(candidates.map(c => c.country).filter((c): c is string => !!c))).sort();
-  const uniqueJobTitles = Array.from(new Set(candidates.map(c => c.jobTitleText).filter((c): c is string => !!c))).sort();
-  const uniqueCategories = Array.from(new Set(candidates.map(c => c.jobCategory).filter((c): c is string => !!c))).sort();
-  const uniqueNationalities = Array.from(new Set(candidates.map(c => c.nationality).filter((n): n is string => !!n))).sort();
-  const uniqueSpecialties = Array.from(new Set(candidates.map(c => c.specialty).filter((s): s is string => !!s))).sort(); // ✅ Add unique specialties
-
-  // Filtered options based on search
-  const filteredCities = uniqueCities.filter(city => 
-    city.toLowerCase().includes(citySearch.toLowerCase())
-  );
-  const filteredCountries = uniqueCountries.filter(country => 
-    country.toLowerCase().includes(countrySearch.toLowerCase())
-  );
-  const filteredJobTitles = uniqueJobTitles.filter(jobTitle => 
-    jobTitle.toLowerCase().includes(jobTitleSearch.toLowerCase())
-  );
-  const filteredCategories = uniqueCategories.filter(category => 
-    category.toLowerCase().includes(categorySearch.toLowerCase())
-  );
-  const filteredNationalities = uniqueNationalities.filter(nationality => 
-    nationality.toLowerCase().includes(nationalitySearch.toLowerCase())
-  );
-  const filteredSpecialties = uniqueSpecialties.filter(specialty => 
-    specialty.toLowerCase().includes(specialtySearch.toLowerCase())
-  ); // ✅ Add filtered specialties
-
-  // ✅ Update click outside handlers to include specialty
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (cityRef.current && !cityRef.current.contains(event.target as Node)) {
-        setShowCityList(false);
-      }
-      if (countryRef.current && !countryRef.current.contains(event.target as Node)) {
-        setShowCountryList(false);
-      }
-      if (jobTitleRef.current && !jobTitleRef.current.contains(event.target as Node)) {
-        setShowJobTitleList(false);
-      }
-      if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
-        setShowCategoryList(false);
-      }
-      if (nationalityRef.current && !nationalityRef.current.contains(event.target as Node)) {
-        setShowNationalityList(false);
-      }
-      if (specialtyRef.current && !specialtyRef.current.contains(event.target as Node)) {
-        setShowSpecialtyList(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-    // ✅ Update search states when filters change externally to include specialty
-  useEffect(() => {
-    setSpecialtySearch(filterSpecialty);
-  }, [filterSpecialty]);
+  const [citySearch, setCitySearch] = useState(filterCity);
+  const [countrySearch, setCountrySearch] = useState(filterCountry);
+  const [jobTitleSearch, setJobTitleSearch] = useState(filterJobTitle);
+  const [categorySearch, setCategorySearch] = useState(filterCategory);
+  const [nationalitySearch, setNationalitySearch] = useState(filterNationality);
+  const [specialtySearch, setSpecialtySearch] = useState(filterSpecialty);
 
   // Update search states when filters change externally
   useEffect(() => {
@@ -134,15 +56,25 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
     setNationalitySearch(filterNationality);
   }, [filterNationality]);
 
+  useEffect(() => {
+    setSpecialtySearch(filterSpecialty);
+  }, [filterSpecialty]);
 
-  // ✅ Update clear all filters to include specialty
+  // Extract unique values from candidates
+  const uniqueCities = Array.from(new Set(candidates.map(c => c.city).filter((c): c is string => !!c))).sort();
+  const uniqueCountries = Array.from(new Set(candidates.map(c => c.country).filter((c): c is string => !!c))).sort();
+  const uniqueJobTitles = Array.from(new Set(candidates.map(c => c.jobTitleText).filter((c): c is string => !!c))).sort();
+  const uniqueCategories = Array.from(new Set(candidates.map(c => c.jobCategory).filter((c): c is string => !!c))).sort();
+  const uniqueNationalities = Array.from(new Set(candidates.map(c => c.nationality).filter((n): n is string => !!n))).sort();
+  const uniqueSpecialties = Array.from(new Set(candidates.map(c => c.specialty).filter((s): s is string => !!s))).sort();
+
   const handleClearAllFilters = () => {
     setCitySearch('');
     setCountrySearch('');
     setJobTitleSearch('');
     setCategorySearch('');
     setNationalitySearch('');
-    setSpecialtySearch(''); // ✅ Clear specialty search
+    setSpecialtySearch('');
     onClearAllFilters();
   };
 
@@ -165,238 +97,82 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
         </div>
         
         {/* City Filter with Dropdown */}
-        <div className="relative" ref={cityRef}>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by City</label>
-          <input
-            type="text"
-            placeholder="Search and select city..."
-            value={citySearch}
-            onChange={(e) => {
-              setCitySearch(e.target.value);
-              onFilterCityChange(''); // Clear selection when typing
-              setShowCityList(true);
-            }}
-            onFocus={() => setShowCityList(true)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-            autoComplete="off"
-          />
-          {showCityList && filteredCities.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {filteredCities.map((city, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    onFilterCityChange(city);
-                    setCitySearch(city);
-                    setShowCityList(false);
-                  }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
-                >
-                  <span>{city}</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({candidates.filter(c => c.city === city).length})
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <SearchableFilterDropdown
+          label="Filter by City"
+          placeholder="Search and select city..."
+          filterValue={filterCity}
+          onFilterChange={onFilterCityChange}
+          searchValue={citySearch}
+          onSearchChange={setCitySearch}
+          options={uniqueCities}
+          candidates={candidates}
+          filterKey="city"
+        />
         
         {/* Country Filter with Dropdown */}
-        <div className="relative" ref={countryRef}>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Country</label>
-          <input
-            type="text"
-            placeholder="Search and select country..."
-            value={countrySearch}
-            onChange={(e) => {
-              setCountrySearch(e.target.value);
-              onFilterCountryChange(''); // Clear selection when typing
-              setShowCountryList(true);
-            }}
-            onFocus={() => setShowCountryList(true)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-            autoComplete="off"
-          />
-          {showCountryList && filteredCountries.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {filteredCountries.map((country, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    onFilterCountryChange(country);
-                    setCountrySearch(country);
-                    setShowCountryList(false);
-                  }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
-                >
-                  <span>{country}</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({candidates.filter(c => c.country === country).length})
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <SearchableFilterDropdown
+          label="Filter by Country"
+          placeholder="Search and select country..."
+          filterValue={filterCountry}
+          onFilterChange={onFilterCountryChange}
+          searchValue={countrySearch}
+          onSearchChange={setCountrySearch}
+          options={uniqueCountries}
+          candidates={candidates}
+          filterKey="country"
+        />
         
-        {/* ✅ Nationality Filter with Dropdown */}
-        <div className="relative" ref={nationalityRef}>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Nationality</label>
-          <input
-            type="text"
-            placeholder="Search and select nationality..."
-            value={nationalitySearch}
-            onChange={(e) => {
-              setNationalitySearch(e.target.value);
-              onFilterNationalityChange(''); // Clear selection when typing
-              setShowNationalityList(true);
-            }}
-            onFocus={() => setShowNationalityList(true)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-            autoComplete="off"
-          />
-          {showNationalityList && filteredNationalities.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {filteredNationalities.map((nationality, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    onFilterNationalityChange(nationality);
-                    setNationalitySearch(nationality);
-                    setShowNationalityList(false);
-                  }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
-                >
-                  <span>{nationality}</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({candidates.filter(c => c.nationality === nationality).length})
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Nationality Filter with Dropdown */}
+        <SearchableFilterDropdown
+          label="Filter by Nationality"
+          placeholder="Search and select nationality..."
+          filterValue={filterNationality}
+          onFilterChange={onFilterNationalityChange}
+          searchValue={nationalitySearch}
+          onSearchChange={setNationalitySearch}
+          options={uniqueNationalities}
+          candidates={candidates}
+          filterKey="nationality"
+        />
         
         {/* Category Filter with Dropdown */}
-        <div className="relative" ref={categoryRef}>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Category</label>
-          <input
-            type="text"
-            placeholder="Search and select category..."
-            value={categorySearch}
-            onChange={(e) => {
-              setCategorySearch(e.target.value);
-              onFilterCategoryChange(''); // Clear selection when typing
-              setShowCategoryList(true);
-            }}
-            onFocus={() => setShowCategoryList(true)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-            autoComplete="off"
-          />
-          {showCategoryList && filteredCategories.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {filteredCategories.map((category, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    onFilterCategoryChange(category);
-                    setCategorySearch(category);
-                    setShowCategoryList(false);
-                  }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
-                >
-                  <span>{category}</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({candidates.filter(c => c.jobCategory === category).length})
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <SearchableFilterDropdown
+          label="Filter by Category"
+          placeholder="Search and select category..."
+          filterValue={filterCategory}
+          onFilterChange={onFilterCategoryChange}
+          searchValue={categorySearch}
+          onSearchChange={setCategorySearch}
+          options={uniqueCategories}
+          candidates={candidates}
+          filterKey="jobCategory"
+        />
 
-        {/* ✅ New Specialty Filter with Dropdown */}
-        <div className="relative" ref={specialtyRef}>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Specialty</label>
-          <input
-            type="text"
-            placeholder="Search and select specialty..."
-            value={specialtySearch}
-            onChange={(e) => {
-              setSpecialtySearch(e.target.value);
-              onFilterSpecialtyChange('');
-              setShowSpecialtyList(true);
-            }}
-            onFocus={() => setShowSpecialtyList(true)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-            autoComplete="off"
-          />
-          {showSpecialtyList && filteredSpecialties.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {filteredSpecialties.map((specialty, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    onFilterSpecialtyChange(specialty);
-                    setSpecialtySearch(specialty);
-                    setShowSpecialtyList(false);
-                  }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
-                >
-                  <span>{specialty}</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({candidates.filter(c => c.specialty === specialty).length})
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Specialty Filter with Dropdown */}
+        <SearchableFilterDropdown
+          label="Filter by Specialty"
+          placeholder="Search and select specialty..."
+          filterValue={filterSpecialty}
+          onFilterChange={onFilterSpecialtyChange}
+          searchValue={specialtySearch}
+          onSearchChange={setSpecialtySearch}
+          options={uniqueSpecialties}
+          candidates={candidates}
+          filterKey="specialty"
+        />
 
         {/* Job Title Filter with Dropdown */}
-        <div className="relative" ref={jobTitleRef}>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Job Title</label>
-          <input
-            type="text"
-            placeholder="Search and select job title..."
-            value={jobTitleSearch}
-            onChange={(e) => {
-              setJobTitleSearch(e.target.value);
-              onFilterJobTitleChange(''); // Clear selection when typing
-              setShowJobTitleList(true);
-            }}
-            onFocus={() => setShowJobTitleList(true)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-            autoComplete="off"
-          />
-          {showJobTitleList && filteredJobTitles.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {filteredJobTitles.map((jobTitle, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    onFilterJobTitleChange(jobTitle);
-                    setJobTitleSearch(jobTitle);
-                    setShowJobTitleList(false);
-                  }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
-                >
-                  <span>{jobTitle}</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({candidates.filter(c => c.jobTitleText === jobTitle).length})
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <SearchableFilterDropdown
+          label="Filter by Job Title"
+          placeholder="Search and select job title..."
+          filterValue={filterJobTitle}
+          onFilterChange={onFilterJobTitleChange}
+          searchValue={jobTitleSearch}
+          onSearchChange={setJobTitleSearch}
+          options={uniqueJobTitles}
+          candidates={candidates}
+          filterKey="jobTitleText"
+        />
       </div>
 
       {/* Age and Status Filters */}
@@ -452,245 +228,93 @@ const CandidateFilters: React.FC<CandidateFiltersProps> = ({
 
       {/* Quick Filters */}
       <div className="space-y-4">
-        {/* Status Quick Filters */}
-        <div>
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Status:</span>
-          <div className="inline-flex flex-wrap gap-2">
-            <button
-              onClick={() => onFilterStatusChange('all')}
-              className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                filterStatus === 'all' 
-                  ? 'bg-gray-600 text-white border-gray-600' 
-                  : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => onFilterStatusChange('submitted')}
-              className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                filterStatus === 'submitted' 
-                  ? 'bg-blue-600 text-white border-blue-600' 
-                  : 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-300 border-blue-300 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/50'
-              }`}
-            >
-              Submitted ({candidates.filter(c => c.status === 'submitted').length})
-            </button>
-            <button
-              onClick={() => onFilterStatusChange('interview_scheduled')}
-              className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                filterStatus === 'interview_scheduled' 
-                  ? 'bg-green-600 text-white border-green-600' 
-                  : 'bg-white dark:bg-gray-700 text-green-600 dark:text-green-300 border-green-300 dark:border-green-600 hover:bg-green-50 dark:hover:bg-green-900/50'
-              }`}
-            >
-              Scheduled ({candidates.filter(c => c.status === 'interview_scheduled').length})
-            </button>
-            <button
-              onClick={() => onFilterStatusChange('rejected')}
-              className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                filterStatus === 'rejected' 
-                  ? 'bg-red-600 text-white border-red-600' 
-                  : 'bg-white dark:bg-gray-700 text-red-600 dark:text-red-300 border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/50'
-              }`}
-            >
-              Rejected ({candidates.filter(c => c.status === 'rejected').length})
-            </button>
-            <button
-              onClick={() => onFilterStatusChange('approved')}
-              className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                filterStatus === 'approved' 
-                  ? 'bg-purple-600 text-white border-purple-600' 
-                  : 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-300 border-purple-300 dark:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/50'
-              }`}
-            >
-              Approved ({candidates.filter(c => c.status === 'approved').length})
-            </button>
-          </div>
-        </div>
+        <QuickFilterButtons
+          label="Status"
+          options={['all', 'submitted', 'interview_scheduled', 'rejected', 'approved']}
+          filterValue={filterStatus}
+          onFilterChange={onFilterStatusChange}
+          candidates={candidates}
+          filterKey="status"
+          colorClass="gray"
+        />
 
-   {/* ✅ Specialties Quick Filters */}
         {candidates.length > 0 && uniqueSpecialties.length > 0 && (
-          <div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Popular Specialties:</span>
-            <div className="inline-flex flex-wrap gap-2">
-              {uniqueSpecialties.slice(0, 8).map(specialty => (
-                <button
-                  key={specialty}
-                  onClick={() => {
-                    if (filterSpecialty === specialty) {
-                      onFilterSpecialtyChange('');
-                      setSpecialtySearch('');
-                    } else {
-                      onFilterSpecialtyChange(specialty);
-                      setSpecialtySearch(specialty);
-                    }
-                  }}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                    filterSpecialty === specialty 
-                      ? 'bg-emerald-600 text-white border-emerald-600' 
-                      : 'bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-300 border-emerald-300 dark:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/50'
-                  }`}
-                >
-                  {specialty} ({candidates.filter(c => c.specialty === specialty).length})
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuickFilterButtons
+            label="Popular Specialties"
+            options={uniqueSpecialties}
+            filterValue={filterSpecialty}
+            onFilterChange={onFilterSpecialtyChange}
+            candidates={candidates}
+            filterKey="specialty"
+            colorClass="emerald"
+            sliceLimit={8}
+          />
         )}
         
-        {/* Nationalities Quick Filters */}
         {candidates.length > 0 && uniqueNationalities.length > 0 && (
-          <div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Nationalities:</span>
-            <div className="inline-flex flex-wrap gap-2">
-              {uniqueNationalities.slice(0, 5).map(nationality => (
-                <button
-                  key={nationality}
-                  onClick={() => {
-                    if (filterNationality === nationality) {
-                      onFilterNationalityChange('');
-                      setNationalitySearch('');
-                    } else {
-                      onFilterNationalityChange(nationality);
-                      setNationalitySearch(nationality);
-                    }
-                  }}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                    filterNationality === nationality 
-                      ? 'bg-pink-600 text-white border-pink-600' 
-                      : 'bg-white dark:bg-gray-700 text-pink-600 dark:text-pink-300 border-pink-300 dark:border-pink-600 hover:bg-pink-50 dark:hover:bg-pink-900/50'
-                  }`}
-                >
-                  {nationality} ({candidates.filter(c => c.nationality === nationality).length})
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuickFilterButtons
+            label="Nationalities"
+            options={uniqueNationalities}
+            filterValue={filterNationality}
+            onFilterChange={onFilterNationalityChange}
+            candidates={candidates}
+            filterKey="nationality"
+            colorClass="pink"
+            sliceLimit={5}
+          />
         )}
 
-        {/* Popular Cities Quick Filters */}
         {candidates.length > 0 && (
-          <div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Popular Cities:</span>
-            <div className="inline-flex flex-wrap gap-2">
-              {uniqueCities.slice(0, 5).map(city => (
-                <button
-                  key={city}
-                  onClick={() => {
-                    if (filterCity === city) {
-                      onFilterCityChange('');
-                      setCitySearch('');
-                    } else {
-                      onFilterCityChange(city);
-                      setCitySearch(city);
-                    }
-                  }}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                    filterCity === city 
-                      ? 'bg-indigo-600 text-white border-indigo-600' 
-                      : 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-300 border-indigo-300 dark:border-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/50'
-                  }`}
-                >
-                  {city} ({candidates.filter(c => c.city === city).length})
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuickFilterButtons
+            label="Popular Cities"
+            options={uniqueCities}
+            filterValue={filterCity}
+            onFilterChange={onFilterCityChange}
+            candidates={candidates}
+            filterKey="city"
+            colorClass="indigo"
+            sliceLimit={5}
+          />
         )}
 
-        {/* Popular Countries Quick Filters */}
         {candidates.length > 0 && (
-          <div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Popular Countries:</span>
-            <div className="inline-flex flex-wrap gap-2">
-              {uniqueCountries.slice(0, 5).map(country => (
-                <button
-                  key={country}
-                  onClick={() => {
-                    if (filterCountry === country) {
-                      onFilterCountryChange('');
-                      setCountrySearch('');
-                    } else {
-                      onFilterCountryChange(country);
-                      setCountrySearch(country);
-                    }
-                  }}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                    filterCountry === country 
-                      ? 'bg-purple-600 text-white border-purple-600' 
-                      : 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-300 border-purple-300 dark:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/50'
-                  }`}
-                >
-                  {country} ({candidates.filter(c => c.country === country).length})
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuickFilterButtons
+            label="Popular Countries"
+            options={uniqueCountries}
+            filterValue={filterCountry}
+            onFilterChange={onFilterCountryChange}
+            candidates={candidates}
+            filterKey="country"
+            colorClass="purple"
+            sliceLimit={5}
+          />
         )}
 
-        {/* Job Categories Quick Filters */}
         {candidates.length > 0 && (
-          <div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Job Categories:</span>
-            <div className="inline-flex flex-wrap gap-2">
-              {uniqueCategories.slice(0, 5).map(category => (
-                <button
-                  key={category}
-                  onClick={() => {
-                    if (filterCategory === category) {
-                      onFilterCategoryChange('');
-                      setCategorySearch('');
-                    } else {
-                      onFilterCategoryChange(category);
-                      setCategorySearch(category);
-                    }
-                  }}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                    filterCategory === category 
-                      ? 'bg-orange-600 text-white border-orange-600' 
-                      : 'bg-white dark:bg-gray-700 text-orange-600 dark:text-orange-300 border-orange-300 dark:border-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/50'
-                  }`}
-                >
-                  {category} ({candidates.filter(c => c.jobCategory === category).length})
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuickFilterButtons
+            label="Job Categories"
+            options={uniqueCategories}
+            filterValue={filterCategory}
+            onFilterChange={onFilterCategoryChange}
+            candidates={candidates}
+            filterKey="jobCategory"
+            colorClass="orange"
+            sliceLimit={5}
+          />
         )}
 
-        {/* Job Titles Quick Filters */}
         {candidates.length > 0 && (
-          <div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400 mr-3">Job Positions:</span>
-            <div className="inline-flex flex-wrap gap-2">
-              {uniqueJobTitles.slice(0, 5).map(jobTitle => (
-                <button
-                  key={jobTitle}
-                  onClick={() => {
-                    if (filterJobTitle === jobTitle) {
-                      onFilterJobTitleChange('');
-                      setJobTitleSearch('');
-                    } else {
-                      onFilterJobTitleChange(jobTitle);
-                      setJobTitleSearch(jobTitle);
-                    }
-                  }}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                    filterJobTitle === jobTitle 
-                      ? 'bg-teal-600 text-white border-teal-600' 
-                      : 'bg-white dark:bg-gray-700 text-teal-600 dark:text-teal-300 border-teal-300 dark:border-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/50'
-                  }`}
-                >
-                  {jobTitle} ({candidates.filter(c => c.jobTitleText === jobTitle).length})
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuickFilterButtons
+            label="Job Positions"
+            options={uniqueJobTitles}
+            filterValue={filterJobTitle}
+            onFilterChange={onFilterJobTitleChange}
+            candidates={candidates}
+            filterKey="jobTitleText"
+            colorClass="teal"
+            sliceLimit={5}
+          />
         )}
       </div>
-    </div>
-  );
-};
 
 export default CandidateFilters;
