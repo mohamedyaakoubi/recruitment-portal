@@ -14,7 +14,7 @@ import {
   YAxis,
   CartesianGrid
 } from 'recharts';
-import { DashboardChartsProps, ScoreDistributionData, StatusChartData } from '@/types';
+import { DashboardChartsProps } from '@/types';
 
 const STATUS_COLORS = ['#3B82F6', '#10B981', '#EF4444']; // Blue, Green, Red
 const SCORE_COLORS = ['#EF4444', '#F59E0B', '#FCD34D', '#A7F3D0', '#10B981']; // Red to Green gradient

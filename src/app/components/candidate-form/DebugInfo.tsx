@@ -20,7 +20,7 @@ interface DebugInfoProps {
     cvFile: File | null;
     passportFile: File | null;
     photoFile: File | null;
-    calculateAge: (dob: string) => number;
+    calculateAge: (dob: string) => number | null;
 }
 
 const DebugInfo: React.FC<DebugInfoProps> = ({
@@ -69,7 +69,7 @@ const DebugInfo: React.FC<DebugInfoProps> = ({
                 <p>CV File: {cvFile ? `${cvFile.name} ✅` : 'Missing ❌'}</p>
                 <p>Passport File: {passportFile ? `${passportFile.name} ✅` : 'Missing ❌'}</p>
                 <p>Photo File: {photoFile ? `${photoFile.name} ✅` : 'Not provided'}</p>
-                <p>Age Valid: {dateOfBirth && calculateAge(dateOfBirth) >= 18 ? '✅' : '❌'}</p>
+                <p>Age Valid: {dateOfBirth && (calculateAge(dateOfBirth) ?? 0) >= 18 ? '✅' : '❌'}</p>
                 {dateOfBirth && (
                     <p>Calculated Age: {calculateAge(dateOfBirth)} years</p>
                 )}

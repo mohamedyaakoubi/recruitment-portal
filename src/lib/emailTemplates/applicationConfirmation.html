@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Confirmation - International Skills</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 0;
+            background-color: #f5f7fa;
+        }
+        .container {
+            background-color: white;
+            margin: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #003A70 0%, #004080 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 10px solid #004080;
+        }
+        .logo {
+            max-width: 220px;
+            height: auto;
+            margin-bottom: 15px;
+            filter: brightness(1.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .header .subtitle {
+            margin: 8px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        .content {
+            padding: 35px 30px;
+        }
+        .success-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+        }
+        .success-badge svg {
+            margin-right: 8px;
+        }
+        .application-details {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 5px solid #003A70;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #475569;
+            font-size: 14px;
+        }
+        .detail-value {
+            color: #1e293b;
+            font-weight: 500;
+            text-align: right;
+            flex: 1;
+            margin-left: 15px;
+        }
+        .next-steps {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 5px solid #3b82f6;
+        }
+        .next-steps h3 {
+            margin: 0 0 15px 0;
+            color: #1e40af;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        .next-steps h3 svg {
+            margin-right: 10px;
+        }
+        .step-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .step-list li {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+        .step-list li::before {
+            content: '✓';
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .contact-section {
+            background: linear-gradient(135deg, #fef3e2 0%, #fed7aa 100%);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 5px solid #f59e0b;
+        }
+        .contact-section h3 {
+            margin: 0 0 15px 0;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+        }
+        .contact-section h3 svg {
+            margin-right: 10px;
+        }
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .contact-item {
+            display: flex;
+            align-items: center;
+            color: #92400e;
+            font-size: 14px;
+        }
+        .contact-item svg {
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        .footer {
+            background: #f8fafc;
+            padding: 25px 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer p {
+            margin: 5px 0;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .disclaimer {
+            font-style: italic;
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+            }
+            .content {
+                padding: 25px 20px;
+            }
+            .detail-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .detail-value {
+                text-align: left;
+                margin-left: 0;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://internationalskills.fi/wp-content/uploads/2023/07/logo-skills.png" alt="International Skills" class="logo">
+            <h1>✅ Application Received!</h1>
+            <p class="subtitle">Thank you for applying to join our team</p>
+        </div>
+        
+        <div class="content">
+            <div class="success-badge">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Application Successfully Submitted
+            </div>
+            
+            <p>Dear <strong>${candidateName}</strong>,</p>
+            
+            <p>We have successfully received your application for the <strong>${jobTitle}</strong> position at International Skills Labor Company. Thank you for your interest in joining our team!</p>
+            
+            <div class="application-details">
+                <h3 style="margin: 0 0 20px 0; color: #003A70; font-size: 18px;">📋 Application Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Application ID:</span>
+                    <span class="detail-value"><strong>#${applicationId}</strong></span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Position Applied:</span>
+                    <span class="detail-value">${jobTitle}</span>
+                </div>
+                <!-- JOB_CATEGORY_PLACEHOLDER -->
+                <!-- SPECIALTY_PLACEHOLDER -->
+                <div class="detail-row">
+                    <span class="detail-label">Submission Date:</span>
+                    <span class="detail-value">${formattedDate}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value" style="color: #10b981; font-weight: 700;">Under Review</span>
+                </div>
+            </div>
+            
+            <div class="next-steps">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    What Happens Next?
+                </h3>
+                <ul class="step-list">
+                    <li>Our recruitment team will carefully review your application and documents</li>
+                    <li>We will assess your qualifications against our job requirements</li>
+                    <li>If your profile matches our needs, we will contact you for an interview</li>
+                    <li>You will receive email updates about your application status</li>
+                    <li>The entire process typically takes 1-2 weeks</li>
+                </ul>
+            </div>
+            
+            <div class="contact-section">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 8l7.89 7.89a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    Need Help? Contact Us
+                </h3>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        Apply@internationalskills.fi
+                    </div>
+                    <div class="contact-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                        </svg>
+                        +358 452644966
+                    </div>
+                    <div class="contact-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                        </svg>
+                        +216 29 581 180
+                    </div>
+                    <div class="contact-item">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                        </svg>
+                        internationalskills.fi
+                    </div>
+                </div>
+            </div>
+            
+            <p><strong>Important:</strong> Please keep this confirmation email for your records. You may need the Application ID for future reference.</p>
+            
+            <p>We appreciate your interest in International Skills Labor Company and look forward to potentially welcoming you to our team!</p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>International Skills Labor Company</strong></p>
+            <p>Human Resources Department</p>
+            <p class="disclaimer">This is an automated confirmation email. Please do not reply to this message. For inquiries, please use the contact information provided above.</p>
+        </div>
+    </div>
+</body>
+</html>

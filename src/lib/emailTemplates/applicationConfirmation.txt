@@ -1,0 +1,35 @@
+Dear ${candidateName},
+
+✅ APPLICATION SUCCESSFULLY RECEIVED!
+
+We have successfully received your application for the ${jobTitle} position at International Skills Labor Company. Thank you for your interest in joining our team!
+
+APPLICATION DETAILS:
+- Application ID: #${applicationId}
+- Position Applied: ${jobTitle}
+<!-- JOB_CATEGORY_PLACEHOLDER -->
+<!-- SPECIALTY_PLACEHOLDER -->
+- Submission Date: ${formattedDate}
+- Status: Under Review
+
+WHAT HAPPENS NEXT?
+✓ Our recruitment team will carefully review your application and documents
+✓ We will assess your qualifications against our job requirements  
+✓ If your profile matches our needs, we will contact you for an interview
+✓ You will receive email updates about your application status
+✓ The entire process typically takes 1-2 weeks
+
+NEED HELP? CONTACT US:
+📧 Email: Apply@internationalskills.fi
+📱 Phone: +358 452644966 | +216 29 581 180
+🌐 Website: internationalskills.fi
+
+IMPORTANT: Please keep this confirmation email for your records. You may need the Application ID for future reference.
+
+We appreciate your interest in International Skills Labor Company and look forward to potentially welcoming you to our team!
+
+Best regards,
+International Skills Labor Company
+Human Resources Department
+
+This is an automated confirmation email. Please do not reply to this message. For inquiries, please use the contact information provided above.

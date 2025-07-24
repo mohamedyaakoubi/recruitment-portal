@@ -5,13 +5,7 @@ import { useProfileModal } from '@/hooks/useProfileModal';
 import type { CandidateProfileModalProps } from '@/types';
 import EditCandidateModal from './EditCandidateModal';
 import ProfileHeader from './profile-modal/ProfileHeader';
-import PersonalInfoCard from './profile-modal/PersonalInfoCard';
-import ApplicationDetailsCard from './profile-modal/ApplicationDetailsCard';
-import DocumentsAndLinksCard from './profile-modal/DocumentsAndLinksCard';
-import SystemDetailsCard from './profile-modal/SystemDetailsCard';
-import ScoringCard from './profile-modal/ScoringCard';
-import InterviewCard from './profile-modal/InterviewCard';
-import ActionsCard from './profile-modal/ActionsCard';
+import ProfileModalContent from './profile-modal/ProfileModalContent';
 
 const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
     isOpen,
@@ -46,33 +40,14 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
                         isUpdating={isUpdating}
                         statusUpdateLoading={statusUpdateLoading}
                     />
-
-                    <div className="p-5 overflow-y-auto flex-grow">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-2 space-y-6">
-                                <PersonalInfoCard candidate={candidate} age={age} />
-                                <ApplicationDetailsCard candidate={candidate} />
-                                <DocumentsAndLinksCard candidate={candidate} />
-                                <SystemDetailsCard candidate={candidate} />
-                            </div>
-
-                            <div className="space-y-6">
-                                <ScoringCard candidate={candidate} />
-                                <InterviewCard
-                                    candidate={candidate}
-                                    onScheduleInterview={onScheduleInterview}
-                                    onCancelInterview={onCancelInterview}
-                                    statusUpdateLoading={statusUpdateLoading}
-                                />
-                                <ActionsCard
-                                    candidate={candidate}
-                                    onStatusChange={onStatusChange}
-                                    onScheduleInterview={onScheduleInterview}
-                                    statusUpdateLoading={statusUpdateLoading}
-                                />
-                            </div>
-                        </div>
-                    </div>
+                    <ProfileModalContent
+                        candidate={candidate}
+                        age={age}
+                        onStatusChange={onStatusChange}
+                        onCancelInterview={onCancelInterview}
+                        statusUpdateLoading={statusUpdateLoading}
+                        onScheduleInterview={onScheduleInterview}
+                    />
                 </div>
             </div>
             <EditCandidateModal

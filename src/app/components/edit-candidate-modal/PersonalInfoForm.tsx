@@ -7,7 +7,7 @@ import { countryCodes } from '@/lib/formData';
 interface PersonalInfoFormProps {
     formData: any;
     errors: any;
-    handleInputChange: (field: string, value: string) => void;
+    handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
     isLoading: boolean;
 }
 
@@ -24,9 +24,10 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     </label>
                     <input
                         id="firstName"
+                        name="firstName"
                         type="text"
                         value={formData.firstName}
-                        onChange={(e) => handleInputChange('firstName', e.target.value)}
+                        onChange={handleInputChange}
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.firstName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200`}
                         disabled={isLoading}
                     />
@@ -38,9 +39,10 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     </label>
                     <input
                         id="lastName"
+                        name="lastName"
                         type="text"
                         value={formData.lastName}
-                        onChange={(e) => handleInputChange('lastName', e.target.value)}
+                        onChange={handleInputChange}
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.lastName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200`}
                         disabled={isLoading}
                     />
@@ -52,9 +54,10 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     </label>
                     <input
                         id="email"
+                        name="email"
                         type="email"
                         value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        onChange={handleInputChange}
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200`}
                         disabled={isLoading}
                     />
@@ -66,8 +69,9 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     </label>
                     <select
                         id="gender"
+                        name="gender"
                         value={formData.gender}
-                        onChange={(e) => handleInputChange('gender', e.target.value)}
+                        onChange={handleInputChange}
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.gender ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200`}
                         disabled={isLoading}
                     >
@@ -83,9 +87,10 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     </label>
                     <input
                         id="dateOfBirth"
+                        name="dateOfBirth"
                         type="date"
                         value={formData.dateOfBirth}
-                        onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                        onChange={handleInputChange}
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200`}
                         disabled={isLoading}
                         max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
@@ -99,8 +104,9 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                     <div className="flex">
                         <select
                             aria-label="Country Code"
+                            name="countryCode"
                             value={formData.countryCode}
-                            onChange={(e) => handleInputChange('countryCode', e.target.value)}
+                            onChange={handleInputChange}
                             className="w-20 px-2 py-2 border border-r-0 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
                             disabled={isLoading}
                         >
@@ -112,9 +118,10 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ formData, errors, h
                         </select>
                         <input
                             id="phoneNumber"
+                            name="phoneNumber"
                             type="tel"
                             value={formData.phoneNumber}
-                            onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                            onChange={handleInputChange}
                             className={`flex-1 px-3 py-2 border rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.phoneNumber ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200`}
                             placeholder="123 456 789"
                             disabled={isLoading}

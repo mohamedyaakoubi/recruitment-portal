@@ -1,106 +1,8 @@
-// src/app/api/export-candidates/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { exportCandidates } from '@/services/candidate';
+import { generateCSV } from '@/lib/csvUtils';
 import { format } from 'date-fns';
 
-// 🔥 UPDATED: Generate CSV with complete candidate information
-function generateCSV(candidates: any[]): string {
-  if (candidates.length === 0) {
-    return 'No candidates found';
-  }
-
-  const headers = [
-    'Application ID',
-    'Full Name',
-    'First Name',
-    'Last Name',
-    'Email',
-    'Gender',
-    'Phone Number',
-    'Country Code',
-    'Date of Birth',
-    'Age',
-    'City',
-    'Country',
-    'Nationality',
-    'Second Nationality',
-    'Job Category',
-    'Job ID',
-    'Job Title',
-    'Specialty',
-    'Websites',
-    'Status',
-    'AI Score',
-    'Score Analysis',
-    'Submitted At',
-    'Interview Date',
-    'Meet Link',
-    'Calendar Event ID',
-    'Meet Space ID',
-    'Duration (minutes)',
-    'Last Scored At',
-    'Last Updated',
-    'Application Source',
-    'CV URL',
-    'Passport URL',
-    'Photo URL'
-  ];
-
-  const csvRows = [
-    headers.join(','),
-    ...candidates.map(candidate => [
-      escapeCSV(candidate.id),
-      escapeCSV(candidate.fullName),
-      escapeCSV(candidate.firstName),
-      escapeCSV(candidate.lastName),
-      escapeCSV(candidate.email),
-      escapeCSV(candidate.gender),
-      escapeCSV(candidate.phoneNumber),
-      escapeCSV(candidate.countryCode),
-      escapeCSV(candidate.dateOfBirth),
-      candidate.age || '',
-      escapeCSV(candidate.city),
-      escapeCSV(candidate.country),
-      escapeCSV(candidate.nationality),
-      escapeCSV(candidate.doubleNationality),
-      escapeCSV(candidate.jobCategory),
-      escapeCSV(candidate.jobTitle),
-      escapeCSV(candidate.jobTitleText),
-      escapeCSV(candidate.specialty),
-      escapeCSV(candidate.websites),
-      escapeCSV(candidate.status),
-      candidate.score || '',
-      escapeCSV(candidate.scoreAnalysis),
-      escapeCSV(candidate.submittedAt),
-      escapeCSV(candidate.interviewDate),
-      escapeCSV(candidate.meetLink),
-      escapeCSV(candidate.calendarEventId),
-      escapeCSV(candidate.meetSpaceId),
-      candidate.duration || '',
-      escapeCSV(candidate.lastScoredAt),
-      escapeCSV(candidate.lastUpdated),
-      escapeCSV(candidate.applicationSource),
-      escapeCSV(candidate.cvUrl),
-      escapeCSV(candidate.passportUrl),
-      escapeCSV(candidate.photoUrl)
-    ].join(','))
-  ];
-
-  return csvRows.join('\n');
-}
-
-function escapeCSV(value: string): string {
-  if (value === null || value === undefined) {
-    return '';
-  }
-  const stringValue = String(value);
-  if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-    return `"${stringValue.replace(/"/g, '""')}"`;
-  }
-  return stringValue;
-}
-
-// 🔥 UPDATED: Handle all filter parameters
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -112,7 +14,7 @@ export async function GET(request: NextRequest) {
     const filterNationality = searchParams.get('nationality') || '';
     const filterJobTitle = searchParams.get('jobTitle') || '';
     const filterCategory = searchParams.get('category') || '';
-    const filterSpecialty = searchParams.get('specialty') || ''; // 🔥 ADD: Handle specialty filter
+    const filterSpecialty = searchParams.get('specialty') || '';
     const filterAgeMin = searchParams.get('ageMin') || '';
     const filterAgeMax = searchParams.get('ageMax') || '';
 
@@ -125,12 +27,11 @@ export async function GET(request: NextRequest) {
       nationality: filterNationality,
       jobTitle: filterJobTitle,
       category: filterCategory,
-      specialty: filterSpecialty, // 🔥 ADD: Log specialty filter
+      specialty: filterSpecialty,
       ageMin: filterAgeMin,
       ageMax: filterAgeMax
     });
 
-    // 🔥 UPDATE: Pass specialty filter to exportCandidates function
     const candidates = await exportCandidates(
       filterStatus,
       filterName,
@@ -139,7 +40,7 @@ export async function GET(request: NextRequest) {
       filterCountry,
       filterJobTitle,
       filterCategory,
-      filterSpecialty, // 🔥 ADD: Pass specialty filter
+      filterSpecialty,
       filterAgeMin,
       filterAgeMax
     );
@@ -184,7 +85,7 @@ export async function GET(request: NextRequest) {
               nationality: filterNationality,
               jobTitle: filterJobTitle,
               category: filterCategory,
-              specialty: filterSpecialty, // 🔥 ADD: Include specialty in metadata
+              specialty: filterSpecialty,
               ageRange: filterAgeMin || filterAgeMax ? `${filterAgeMin || '0'}-${filterAgeMax || '∞'}` : null
             },
             format: 'json'

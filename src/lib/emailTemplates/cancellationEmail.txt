@@ -1,0 +1,27 @@
+Dear ${candidateName},
+
+⚠️ INTERVIEW CANCELLED
+
+We regret to inform you that your scheduled interview for ${jobTitle || 'the position'} at International Skills Labor Company has been cancelled.
+
+Reason: ${reason}
+
+We apologize for any inconvenience this may cause. Our hiring process is dynamic, and sometimes we need to make adjustments to our interview schedule.
+
+What happens next:
+- Your application remains active in our system
+- We may reschedule the interview at a later date
+- You may apply for other suitable positions
+- We will contact you if there are new opportunities that match your profile
+
+Contact Us:
+If you have any questions or concerns, please don't hesitate to contact us:
+Email: Apply@internationalskills.fi
+Phone: +358 452644966 | +216 29 581 180
+Company: International Skills Labor Company
+
+Thank you for your understanding, and we appreciate your continued interest in International Skills Labor Company.
+
+Best regards,
+International Skills Labor Company
+Human Resources Department

@@ -156,8 +156,8 @@ export interface ScoreDistributionData {
 }
 
 export interface DashboardChartsProps {
-  statusChartData: StatusChartData[];
-  scoreDistributionData: ScoreDistributionData[];
+  statusChartData: { name: string; value: number; }[];
+  scoreDistributionData: { name: string; count: number; }[];
 }
 
 export interface DashboardHeaderProps {

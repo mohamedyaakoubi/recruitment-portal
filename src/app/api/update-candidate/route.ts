@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import admin from 'firebase-admin';
+import { calculateAge } from '@/lib/dateUtils';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -35,24 +36,15 @@ export async function PUT(request: NextRequest) {
     }
 
     // Prepare update data with timestamp
-    const updatePayload = {
+    const updatePayload: any = {
       ...updatedData,
       lastUpdated: admin.firestore.FieldValue.serverTimestamp()
     };
 
     // Calculate age if dateOfBirth is being updated
     if (updatedData.dateOfBirth) {
-      const birthDate = new Date(updatedData.dateOfBirth);
-      const today = new Date();
-      
-      if (!isNaN(birthDate.getTime())) {
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-          age--;
-        }
-        
+      const age = calculateAge(updatedData.dateOfBirth);
+      if (age !== null) {
         updatePayload.age = age;
       }
     }
