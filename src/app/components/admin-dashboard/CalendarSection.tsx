@@ -9,6 +9,7 @@ import { getDay } from 'date-fns/getDay';
 import { enUS } from 'date-fns/locale/en-US';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import type { InterviewEvent } from '@/types';
+import GoogleAuthManager from './GoogleAuthManager'; // 👈 Import the new component
 
 const locales = { 'en-US': enUS };
 const localizer = dateFnsLocalizer({ format, parse, startOfWeek, getDay, locales });
@@ -53,8 +54,10 @@ const CalendarSection: React.FC<CalendarSectionProps> = ({
 }) => {
     return (
         <section className="mt-8">
+            <GoogleAuthManager /> {/* 👈 Include the GoogleAuthManager component here */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                
                     <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Interview Schedule</h3>
                     
                     <div className="flex items-center space-x-2">
