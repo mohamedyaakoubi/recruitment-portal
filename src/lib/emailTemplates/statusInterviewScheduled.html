@@ -1,9 +1,33 @@
-<p>Dear ${candidateName},</p>
-<p>Thank you for your application to ${companyName}. We were impressed with your background and would like to invite you for an interview.</p>
-<p>Your interview is scheduled for:</p>
-<p><b>Date:</b> ${formattedDate}</p>
-<p><b>Time:</b> ${formattedTime}</p>
-<p>Please confirm if this time works for you. If not, please let us know your availability.</p>
-<p>We look forward to speaking with you.</p>
-<p>Sincerely,</p>
-<p>The ${companyName} Hiring Team</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .header { font-size: 1.2em; font-weight: bold; color: #1a1a1a; }
+        .details { background-color: #f9f9f9; border: 1px solid #eee; padding: 15px; margin: 15px 0; border-radius: 5px; }
+        .footer { font-size: 0.9em; color: #777; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p class="header">Interview Invitation from ${companyName}</p>
+        <p>Dear ${candidateName},</p>
+        <p>Following up on your application, we were very impressed with your background and would like to invite you for an interview to discuss your qualifications further.</p>
+        <div class="details">
+            <p>We have scheduled it for:</p>
+            <p><b>Date:</b> ${formattedDate}</p>
+            <p><b>Time:</b> ${formattedTime}</p>
+        </div>
+        <p><b>Important:</b> A separate Google Calendar invitation with the Google Meet link has been sent to your email. Please accept that invitation to confirm your attendance.</p>
+        <p>If this time is not suitable, please reply directly to this email so we can coordinate an alternative.</p>
+        <p>We look forward to speaking with you.</p>
+        <p class="footer">
+            Sincerely,<br>
+            The ${companyName} Hiring Team
+        </p>
+    </div>
+</body>
+</html>

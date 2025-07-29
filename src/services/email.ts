@@ -51,7 +51,7 @@ const getTemplate = (templateName: string, type: 'html' | 'txt') => {
     return readFileSync(filePath, 'utf8');
 };
 
-export const sendNotificationEmail = async (to: string, status: string, candidateName: string, interviewDate?: Date) => {
+export const sendNotificationEmail = async (to: string, status: string, candidateName: string, interviewDate?: Date, meetLink?: string) => {
     if (!transporter) {
         console.log("SMTP not configured, skipping email notification.");
         return;
@@ -61,6 +61,8 @@ export const sendNotificationEmail = async (to: string, status: string, candidat
     let htmlBody = '';
     let textBody = '';
     const companyName = "International Skills Labor Company";
+    let fromAddress = SMTP_FROM || 'noreply@internationalskills.fi';
+    let replyToAddress = 'Apply@internationalskills.fi';
 
     if (status === 'rejected') {
         subject = `Application Status Update - ${companyName}`;
@@ -68,6 +70,8 @@ export const sendNotificationEmail = async (to: string, status: string, candidat
         textBody = getTemplate('statusRejected', 'txt').replace(/\${companyName}/g, companyName).replace(/\${candidateName}/g, candidateName);
     } else if (status === 'interview_scheduled' && interviewDate) {
         subject = `Interview Invitation from ${companyName}`;
+        fromAddress = 'recruit@internationalskills.fi';
+        replyToAddress = 'recruit@internationalskills.fi';
         const formattedDate = interviewDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         const formattedTime = interviewDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
         htmlBody = getTemplate('statusInterviewScheduled', 'html')
@@ -88,13 +92,13 @@ export const sendNotificationEmail = async (to: string, status: string, candidat
     const mailOptions = {
         from: {
             name: 'International Skills Labor Company',
-            address: SMTP_FROM || 'noreply@internationalskills.fi'
+            address: fromAddress
         },
         to: to,
         subject: subject,
         html: htmlBody,
         text: textBody,
-        replyTo: 'Apply@internationalskills.fi'
+        replyTo: replyToAddress
     };
 
     try {

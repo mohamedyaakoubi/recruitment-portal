@@ -2,7 +2,7 @@
 import { google } from 'googleapis';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { getGoogleAuth } from './google';
+import { getAuthenticatedClient } from '@/lib/googleOAuth'; // 👈 CHANGE
 import { sendCancellationEmail } from './email';
 
 const generateMeetLink = () => {
@@ -26,7 +26,7 @@ export const scheduleInterview = async (
   notes: string,
   origin: string
 ) => {
-  if (!candidateEmail || !candidateName || !interviewDate || !interviewTime) {
+ if (!candidateEmail || !candidateName || !interviewDate || !interviewTime) {
     throw new Error('Missing required fields');
   }
 
@@ -42,7 +42,10 @@ export const scheduleInterview = async (
   let calendarEventId = '';
 
   try {
-    const auth = getGoogleAuth();
+    const auth = await getAuthenticatedClient(); // 👈 CHANGE
+    if (!auth) {
+      throw new Error('Google Calendar is not connected. Please connect an account in the admin settings.');
+    }
     const calendar = google.calendar({ version: 'v3', auth });
 
     const eventDetails = {
@@ -106,7 +109,12 @@ export const scheduleInterview = async (
 
   } catch (googleError) {
     console.error('Google Calendar API error:', googleError);
+    // Fallback to manual link generation if API fails but we don't want to block the whole process
     meetLink = generateMeetLink();
+    // Re-throw if it's an auth error
+    if (googleError instanceof Error && googleError.message.includes('not connected')) {
+        throw googleError;
+    }
   }
 
   try {
@@ -116,7 +124,10 @@ export const scheduleInterview = async (
       body: JSON.stringify({ 
         candidateId, 
         newStatus: 'interview_scheduled', 
-        interviewTimestampISO: interviewDateTime.toISOString()
+        interviewTimestampISO: interviewDateTime.toISOString(),
+        meetLink: meetLink, // 👈 ADD THIS
+        calendarEventId: calendarEventId, // 👈 ADD THIS
+        duration: duration // 👈 ADD THIS
       }),
     });
 
@@ -158,16 +169,20 @@ export const cancelInterview = async (candidateId: string, reason: string) => {
   
   if (candidateData.calendarEventId) {
     try {
-      const auth = getGoogleAuth();
-      const calendar = google.calendar({ version: 'v3', auth });
-      
-      await calendar.events.delete({
-        calendarId: 'primary',
-        eventId: candidateData.calendarEventId,
-        sendUpdates: 'all'
-      });
-      
-      console.log('Google Calendar event deleted successfully:', candidateData.calendarEventId);
+      const auth = await getAuthenticatedClient(); // 👈 CHANGE
+      if (auth) { // Only try to delete if authenticated
+        const calendar = google.calendar({ version: 'v3', auth });
+        
+        await calendar.events.delete({
+          calendarId: 'primary',
+          eventId: candidateData.calendarEventId,
+          sendUpdates: 'all'
+        });
+        
+        console.log('Google Calendar event deleted successfully:', candidateData.calendarEventId);
+      } else {
+        console.warn('Could not delete Google Calendar event: User is not authenticated.');
+      }
     } catch (googleError) {
       console.error('Failed to delete Google Calendar event:', googleError);
     }
