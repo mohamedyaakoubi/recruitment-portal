@@ -1,6 +1,6 @@
 Dear ${candidateName},
 
-Thank you for your interest in ${jobTitle ? `the ${jobTitle} position` : 'opportunities'} at International Skills Labor Company and for taking the time to submit your application.
+Thank you for your interest in ${jobTitleText} at International Skills Labor Company and for taking the time to submit your application.
 
 After careful consideration of your qualifications and experience, we have decided to move forward with other candidates whose background more closely aligns with our current requirements.
 

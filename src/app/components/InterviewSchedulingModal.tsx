@@ -241,7 +241,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
                 <div className="ml-3">
                   <p className="text-sm text-yellow-800 dark:text-yellow-300">
                     <strong>Note:</strong> This candidate already has an interview scheduled. 
-                    Scheduling a new interview will cancel the existing one and create a new Google Meet event.
+                    Submitting a new time will update the existing Google Calendar event and notify all attendees.
                   </p>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 // src/services/interview.ts
 import { google } from 'googleapis';
 import { db } from '@/lib/firebase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import { getAuthenticatedClient } from '@/lib/googleOAuth'; // 👈 CHANGE
 import { sendCancellationEmail } from './email';
 
@@ -26,7 +26,7 @@ export const scheduleInterview = async (
   notes: string,
   origin: string
 ) => {
- if (!candidateEmail || !candidateName || !interviewDate || !interviewTime) {
+  if (!candidateEmail || !candidateName || !interviewDate || !interviewTime) {
     throw new Error('Missing required fields');
   }
 
@@ -38,11 +38,17 @@ export const scheduleInterview = async (
 
   const endDateTime = new Date(interviewDateTime.getTime() + (duration * 60 * 1000));
 
+  // Fetch the candidate document to check for an existing event
+  const db = getFirestoreAdmin(); // 👈 CHANGE: Get Admin DB instance
+  const candidateRef = db.collection('candidates').doc(candidateId); // 👈 CHANGE: Use Admin SDK syntax
+  const candidateDoc = await candidateRef.get(); // 👈 CHANGE: Use Admin SDK syntax
+  const existingEventId = candidateDoc.exists ? candidateDoc.data()?.calendarEventId : null; // 👈 CHANGE: Use Admin SDK syntax
+
   let meetLink = '';
   let calendarEventId = '';
 
   try {
-    const auth = await getAuthenticatedClient(); // 👈 CHANGE
+    const auth = await getAuthenticatedClient();
     if (!auth) {
       throw new Error('Google Calendar is not connected. Please connect an account in the admin settings.');
     }
@@ -67,7 +73,7 @@ export const scheduleInterview = async (
         },
         { 
           email: adminEmail || 'wassim@internationalskills.fi', 
-          displayName: 'Interviewer',
+          displayName: 'International Skills Hiring',
           responseStatus: 'accepted'
         }
       ],
@@ -93,12 +99,25 @@ export const scheduleInterview = async (
       sendUpdates: 'all'
     };
 
-    const response = await calendar.events.insert({
-      calendarId: 'primary',
-      conferenceDataVersion: 1,
-      sendUpdates: 'all',
-      requestBody: eventDetails
-    });
+    let response;
+    if (existingEventId) {
+      console.log(`Updating existing Google Calendar event: ${existingEventId}`);
+      response = await calendar.events.update({
+        calendarId: 'primary',
+        eventId: existingEventId,
+        sendUpdates: 'all',
+        conferenceDataVersion: 1,
+        requestBody: eventDetails,
+      });
+    } else {
+      console.log('Inserting new Google Calendar event.');
+      response = await calendar.events.insert({
+        calendarId: 'primary',
+        conferenceDataVersion: 1,
+        sendUpdates: 'all',
+        requestBody: eventDetails
+      });
+    }
 
     if (response.data) {
       calendarEventId = response.data.id || '';
@@ -158,19 +177,23 @@ export const cancelInterview = async (candidateId: string, reason: string) => {
     throw new Error('Candidate ID is required');
   }
 
-  const candidateRef = doc(db, 'candidates', candidateId);
-  const candidateDoc = await getDoc(candidateRef);
+  const db = getFirestoreAdmin(); // 👈 CHANGE: Get Admin DB instance
+  const candidateRef = db.collection('candidates').doc(candidateId); // 👈 CHANGE: Use Admin SDK syntax
+  const candidateDoc = await candidateRef.get(); // 👈 CHANGE: Use Admin SDK syntax
   
-  if (!candidateDoc.exists()) {
+  if (!candidateDoc.exists) {
     throw new Error('Candidate not found');
   }
 
   const candidateData = candidateDoc.data();
+  if (!candidateData) {
+      throw new Error('Candidate data not found');
+  }
   
   if (candidateData.calendarEventId) {
     try {
-      const auth = await getAuthenticatedClient(); // 👈 CHANGE
-      if (auth) { // Only try to delete if authenticated
+      const auth = await getAuthenticatedClient();
+      if (auth) {
         const calendar = google.calendar({ version: 'v3', auth });
         
         await calendar.events.delete({
@@ -188,7 +211,7 @@ export const cancelInterview = async (candidateId: string, reason: string) => {
     }
   }
 
-  await updateDoc(candidateRef, {
+  await candidateRef.update({ // 👈 CHANGE: Use Admin SDK syntax
     status: 'submitted',
     interviewDate: null,
     calendarEventId: null,
