@@ -2,7 +2,7 @@ Dear ${candidateName},
 
 ⚠️ INTERVIEW CANCELLED
 
-We regret to inform you that your scheduled interview for ${jobTitle || 'the position'} at International Skills Labor Company has been cancelled.
+We regret to inform you that your scheduled interview for ${jobTitleText} at International Skills Labor Company has been cancelled.
 
 Reason: ${reason}
 

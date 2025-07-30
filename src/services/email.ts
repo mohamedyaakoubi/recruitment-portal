@@ -215,18 +215,21 @@ export const sendRejectionEmail = async (candidateEmail: string, candidateName: 
     return;
   }
 
+  const jobTitleText = jobTitle ? `the ${jobTitle} position` : 'opportunities';
+
   const htmlTemplate = getTemplate('rejectionEmail', 'html')
     .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitle ? `the ${jobTitle} position` : 'opportunities'}/g, jobTitle ? `the ${jobTitle} position` : 'opportunities');
+    .replace(/\${jobTitleText}/g, jobTitleText);
 
   const textTemplate = getTemplate('rejectionEmail', 'txt')
     .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitle ? `the ${jobTitle} position` : 'opportunities'}/g, jobTitle ? `the ${jobTitle} position` : 'opportunities');
+    .replace(/\${jobTitleText}/g, jobTitleText);
 
   const mailOptions = {
     from: {
       name: 'International Skills Labor Company',
       address: SMTP_FROM || 'noreply@internationalskills.fi'
+      
     },
     to: candidateEmail,
     subject: `Application Status Update - International Skills Labor Company`,
@@ -262,14 +265,16 @@ export const sendCancellationEmail = async ({
     return;
   }
 
+  const jobTitleText = jobTitle || 'the position';
+
   const htmlTemplate = getTemplate('cancellationEmail', 'html')
     .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitle || 'the position'}/g, jobTitle || 'the position')
+    .replace(/\${jobTitleText}/g, jobTitleText)
     .replace(/\${reason}/g, reason);
 
   const textTemplate = getTemplate('cancellationEmail', 'txt')
     .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitle || 'the position'}/g, jobTitle || 'the position')
+    .replace(/\${jobTitleText}/g, jobTitleText)
     .replace(/\${reason}/g, reason);
 
   const mailOptions = {
