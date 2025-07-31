@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from './components/ui/ThemeSwitcher';
 import { useTheme } from 'next-themes';
+import { useEffect } from 'react';
 
 // Helper component for social media icons in the footer
 const SocialIcon = ({ href, children }: { href: string, children: React.ReactNode }) => (
@@ -19,6 +20,11 @@ export default function LandingPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,13 +123,17 @@ export default function LandingPage() {
           </div>
           <nav className="max-w-screen-xl mx-auto px-4 sm:px-6">
               <div className="flex items-center justify-between py-4">
-                  <Image
-                      src={theme === 'dark' ? "/logo-skills-white.png" : "/logo-skills.png"}
-                      alt="International Skills Labor Company"
-                      width={180}
-                      height={45}
-                      priority
-                  />
+                  {mounted ? (
+                    <Image
+                        src={theme === 'dark' ? "/logo-skills-white.png" : "/logo-skills.png"}
+                        alt="International Skills Labor Company"
+                        width={180}
+                        height={45}
+                        priority
+                    />
+                  ) : (
+                    <div style={{ width: 180, height: 45 }} />
+                  )}
                   <ThemeSwitcher />
               </div>
           </nav>
