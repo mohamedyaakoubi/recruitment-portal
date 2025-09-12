@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": "t",
+    "skipLibCheck": "t",
+    "strict": "t",
+    "noEmit": "t",
+    "esModuleInterop": "t",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": "t",
+    "isolatedModules": "t",
+    "jsx": "preserve",
+    "incremental": "t",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

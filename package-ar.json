@@ -1,0 +1,43 @@
+{
+  "name": "بوابة candidate",
+  "version": "0.1.0",
+  "private": "t",
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "reset-db": "tsx scripts/reset-database.ts",
+    "reset-db:confirm": "echo ”هل أنت متأكد؟ سيؤدي هذا إلى حذف جميع البيانات!“ && read -p ”اكتب YES للمتابعة:“ confirm && [ ”$confirm“ = ”YES“ ] && npm run reset-db"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@headlessui/react": "^2.2.4",
+    "@types/nodemailer": "^6.4.17",
+    "date-fns": "^4.1.0",
+    "firebase": "^11.8.1",
+    "firebase-admin": "^13.4.0",
+    "google-auth-library": "^10.1.0",
+    "googleapis": "^150.0.1",
+    "next": "15.1.8",
+    "nodemailer": "^7.0.4",
+    "react": "^19.0.0",
+    "react-big-calendar": "^1.18.0",
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
+    "recharts": "^2.15.3",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20.19.2",
+    "@types/react": "^19",
+    "@types/react-big-calendar": "^1.16.1",
+    "@types/react-dom": "^19",
+    "dotenv": "^17.2.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5"
+  }
+}
