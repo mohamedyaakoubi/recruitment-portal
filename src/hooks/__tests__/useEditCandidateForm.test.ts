@@ -1,11 +1,12 @@
+import { vi } from 'vitest';
 
 import { renderHook, act } from '@testing-library/react';
 import { useEditCandidateForm } from '../useEditCandidateForm';
 import { Candidate, Job } from '@/types';
 
 // Mock fetch
-global.fetch = jest.fn();
-const mockFetch = fetch as jest.Mock;
+global.fetch = vi.fn();
+const mockFetch = fetch as vi.Mock;
 
 const mockJobs: Job[] = [
     { id: 'job1', title: 'Frontend Dev', category: 'Engineering', specialties: ['React', 'Vue'], isActive: true, description: '', requirements: [], responsibilities: [], department: '', location: '' },
@@ -45,8 +46,8 @@ const mockCandidate: Candidate = {
 };
 
 describe('useEditCandidateForm', () => {
-    const onSave = jest.fn().mockResolvedValue(undefined);
-    const onClose = jest.fn();
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    const onClose = vi.fn();
 
     beforeEach(() => {
         mockFetch.mockResolvedValue({
@@ -67,49 +68,49 @@ describe('useEditCandidateForm', () => {
             initialProps: { isOpen: false },
         });
         expect(mockFetch).not.toHaveBeenCalled();
-        
+
         rerender({ isOpen: true });
-        
-        await act(async () => {}); // Wait for fetch
+
+        await act(async () => { }); // Wait for fetch
         expect(mockFetch).toHaveBeenCalledWith('/api/jobs?activeOnly=true');
     });
 
     it('should populate form with candidate data', async () => {
         const { result } = renderHook(() => useEditCandidateForm(mockCandidate, true, onSave, onClose));
-        await act(async () => {});
+        await act(async () => { });
         expect(result.current.formData.email).toBe(mockCandidate.email);
         expect(result.current.formData.firstName).toBe('Test');
     });
 
     it('should update form data on input change', async () => {
         const { result } = renderHook(() => useEditCandidateForm(mockCandidate, true, onSave, onClose));
-        await act(async () => {});
+        await act(async () => { });
         act(() => {
-            result.current.handleInputChange('firstName', 'Updated');
+            result.current.handleInputChange({ target: { name: 'firstName', value: 'Updated' } } as any);
         });
         expect(result.current.formData.firstName).toBe('Updated');
     });
 
     it('should filter jobs on category change', async () => {
         const { result } = renderHook(() => useEditCandidateForm(mockCandidate, true, onSave, onClose));
-        await act(async () => {}); // initial fetch
-        
+        await act(async () => { }); // initial fetch
+
         act(() => {
-            result.current.handleCategoryChange('Engineering');
+            result.current.handleCategoryChange({ target: { value: 'Engineering' } } as any);
         });
-        
+
         expect(result.current.filteredJobs.length).toBe(2);
     });
 
     it('should update specialties on job change', async () => {
         const { result } = renderHook(() => useEditCandidateForm(mockCandidate, true, onSave, onClose));
-        await act(async () => {});
-        
+        await act(async () => { });
+
         act(() => {
-            result.current.handleCategoryChange('Engineering');
+            result.current.handleCategoryChange({ target: { value: 'Engineering' } } as any);
         });
         act(() => {
-            result.current.handleJobChange('job1');
+            result.current.handleJobChange({ target: { value: 'job1' } } as any);
         });
 
         expect(result.current.availableSpecialties).toEqual(['React', 'Vue']);
@@ -118,11 +119,11 @@ describe('useEditCandidateForm', () => {
     it('should validate the form and show errors', async () => {
         const emptyCandidate = { ...mockCandidate, fullName: '', email: '' };
         const { result } = renderHook(() => useEditCandidateForm(emptyCandidate, true, onSave, onClose));
-        await act(async () => {});
-        
+        await act(async () => { });
+
         let isValid = false;
         await act(async () => {
-           const form = await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
+            const form = await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
         });
 
         // This hook doesn't return validation status from handleSubmit directly
@@ -134,22 +135,22 @@ describe('useEditCandidateForm', () => {
 
     it('should call onSave with updated data on successful submission', async () => {
         const { result } = renderHook(() => useEditCandidateForm(mockCandidate, true, onSave, onClose));
-        await act(async () => {});
+        await act(async () => { });
 
         act(() => {
-            result.current.handleInputChange('firstName', 'Valid');
-            result.current.handleInputChange('lastName', 'User');
-            result.current.handleInputChange('email', 'valid@email.com');
-            result.current.handleInputChange('gender', 'Female');
-            result.current.handleInputChange('phoneNumber', '12345');
-            result.current.handleInputChange('dateOfBirth', '1990-01-01');
-            result.current.handleInputChange('city', 'Test City');
-            result.current.handleInputChange('country', 'Test Country');
-            result.current.handleInputChange('nationality', 'Testizen');
+            result.current.handleInputChange({ target: { name: 'firstName', value: 'Valid' } } as any);
+            result.current.handleInputChange({ target: { name: 'lastName', value: 'User' } } as any);
+            result.current.handleInputChange({ target: { name: 'email', value: 'valid@email.com' } } as any);
+            result.current.handleInputChange({ target: { name: 'gender', value: 'Female' } } as any);
+            result.current.handleInputChange({ target: { name: 'phoneNumber', value: '12345' } } as any);
+            result.current.handleInputChange({ target: { name: 'dateOfBirth', value: '1990-01-01' } } as any);
+            result.current.handleInputChange({ target: { name: 'city', value: 'Test City' } } as any);
+            result.current.handleInputChange({ target: { name: 'country', value: 'Test Country' } } as any);
+            result.current.handleInputChange({ target: { name: 'nationality', value: 'Testizen' } } as any);
         });
 
         await act(async () => {
-            await result.current.handleSubmit({ preventDefault: jest.fn() } as any);
+            await result.current.handleSubmit({ preventDefault: vi.fn() } as any);
         });
 
         expect(onSave).toHaveBeenCalled();

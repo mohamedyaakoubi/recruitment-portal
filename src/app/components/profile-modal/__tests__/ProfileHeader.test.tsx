@@ -1,12 +1,13 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ProfileHeader from '../ProfileHeader';
 import '@testing-library/jest-dom';
 
 describe('ProfileHeader', () => {
-  const onEditMock = jest.fn();
-  const onCloseMock = jest.fn();
+  const onEditMock = vi.fn();
+  const onCloseMock = vi.fn();
 
   const candidate = {
     id: '1',

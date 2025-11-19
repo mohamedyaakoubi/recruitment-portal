@@ -1,10 +1,11 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import DashboardCharts from '../DashboardCharts';
 import { ScoreDistributionData, StatusChartData } from '@/types';
 
 // Mock the recharts library
-jest.mock('recharts', () => ({
+vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
   PieChart: ({ children }: any) => <div data-testid="pie-chart">{children}</div>,
   Pie: ({ children }: any) => <div data-testid="pie">{children}</div>,

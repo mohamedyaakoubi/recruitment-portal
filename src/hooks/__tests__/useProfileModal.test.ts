@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 
 import { renderHook, act } from '@testing-library/react';
 import { useProfileModal } from '../useProfileModal';
@@ -36,7 +37,7 @@ const mockCandidate: Candidate = {
 };
 
 describe('useProfileModal', () => {
-    const onEditCandidate = jest.fn();
+    const onEditCandidate = vi.fn();
 
     beforeEach(() => {
         onEditCandidate.mockClear();
@@ -74,7 +75,7 @@ describe('useProfileModal', () => {
     });
 
     it('should handle errors during candidate update', async () => {
-        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         const errorMessage = 'Update failed';
         onEditCandidate.mockRejectedValue(new Error(errorMessage));
         const { result } = renderHook(() => useProfileModal(mockCandidate, onEditCandidate));

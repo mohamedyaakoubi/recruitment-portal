@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 
 import { renderHook } from '@testing-library/react';
 import { useInterviewEvents } from '../useInterviewEvents';
@@ -5,7 +6,7 @@ import { Candidate } from '@/types';
 
 // Mock current date to be July 21, 2025
 const MOCK_NOW = new Date('2025-07-21T12:00:00Z');
-jest.useFakeTimers().setSystemTime(MOCK_NOW);
+vi.useFakeTimers().setSystemTime(MOCK_NOW);
 
 const mockCandidates: Candidate[] = [
   // Upcoming interview

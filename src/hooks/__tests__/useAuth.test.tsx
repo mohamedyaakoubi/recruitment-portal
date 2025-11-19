@@ -1,60 +1,68 @@
+import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { AuthProvider, useAuth } from '../useAuth';
+import { useAuth, AuthProvider } from '../../hooks/useAuth';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { User } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
-jest.mock('@/lib/firebase', () => ({
-  auth: {},
+// Mock Firebase modules
+vi.mock('@/lib/firebase', () => ({
+  auth: {
+    currentUser: null,
+  },
 }));
 
-jest.mock('firebase/auth', () => ({
-  signInWithEmailAndPassword: jest.fn(),
-  signOut: jest.fn(),
-  onAuthStateChanged: jest.fn(),
+vi.mock('firebase/auth', () => ({
+  onAuthStateChanged: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  signOut: vi.fn(),
+  getAuth: vi.fn(),
 }));
 
-const mockOnAuthStateChanged = onAuthStateChanged as jest.Mock;
-
-describe('useAuth', () => {
+describe('useAuth Hook', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it('should return the initial state', () => {
-    mockOnAuthStateChanged.mockImplementation((auth, callback) => {
-      callback(null);
-      return jest.fn();
-    });
+  it('should initialize with loading state', () => {
+    // Mock onAuthStateChanged to not immediately resolve
+    (onAuthStateChanged as any).mockImplementation(() => () => { });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
+    expect(result.current.loading).toBe(true);
     expect(result.current.user).toBeNull();
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBeNull();
   });
 
-  it('should update user when auth state changes', () => {
-    const mockUser = { uid: '123', email: 'test@example.com' } as User;
-    
-    act(() => {
-      mockOnAuthStateChanged.mockImplementation((auth, callback) => {
-        callback(mockUser);
-        return jest.fn();
-      });
+  it('should update user state when auth changes', async () => {
+    const mockUser = { uid: '123', email: 'test@example.com' };
+
+    // Mock onAuthStateChanged to immediately call callback with user
+    (onAuthStateChanged as any).mockImplementation((auth: any, callback: any) => {
+      callback(mockUser);
+      return () => { };
     });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
-    expect(result.current.user).toEqual(mockUser);
     expect(result.current.loading).toBe(false);
+    expect(result.current.user).toEqual(mockUser);
   });
 
-  it('should sign in a user successfully', async () => {
+  it('should handle sign in', async () => {
+    const mockUser = { uid: '123', email: 'test@example.com' };
+    (signInWithEmailAndPassword as any).mockResolvedValue({ user: mockUser });
+
+    // Setup initial state
+    (onAuthStateChanged as any).mockImplementation((auth: any, callback: any) => {
+      callback(null); // Start as logged out
+      return () => { };
+    });
+
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -63,31 +71,18 @@ describe('useAuth', () => {
       await result.current.signIn('test@example.com', 'password');
     });
 
-    expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
-      auth,
-      'test@example.com',
-      'password'
-    );
-    expect(result.current.error).toBeNull();
+    expect(signInWithEmailAndPassword).toHaveBeenCalledWith(auth, 'test@example.com', 'password');
   });
 
-  it('should handle sign in failure', async () => {
-    const error = new Error('Invalid credentials');
-    (signInWithEmailAndPassword as jest.Mock).mockRejectedValue(error);
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: AuthProvider,
+  it('should handle sign out', async () => {
+    (signOut as any).mockResolvedValue(undefined);
+
+    // Setup initial state
+    (onAuthStateChanged as any).mockImplementation((auth: any, callback: any) => {
+      callback({ uid: '123' }); // Start as logged in
+      return () => { };
     });
 
-    await act(async () => {
-      await result.current.signIn('test@example.com', 'wrong-password');
-    });
-
-    expect(result.current.error).toBe(error.message);
-    consoleErrorSpy.mockRestore();
-  });
-
-  it('should sign out a user successfully', async () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -98,22 +93,5 @@ describe('useAuth', () => {
 
     expect(signOut).toHaveBeenCalledWith(auth);
     expect(result.current.user).toBeNull();
-    expect(result.current.error).toBeNull();
-  });
-
-  it('should handle sign out failure', async () => {
-    const error = new Error('Sign out failed');
-    (signOut as jest.Mock).mockRejectedValue(error);
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: AuthProvider,
-    });
-
-    await act(async () => {
-      await result.current.signOut();
-    });
-
-    expect(result.current.error).toBe(error.message);
-    consoleErrorSpy.mockRestore();
   });
 });

@@ -1,11 +1,12 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import FileInput from '../FileInput';
 import '@testing-library/jest-dom';
 
 describe('FileInput', () => {
-  const onChangeMock = jest.fn();
+  const onChangeMock = vi.fn();
 
   const defaultProps = {
     name: 'test-file',

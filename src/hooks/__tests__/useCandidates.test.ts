@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 
 import { renderHook, act } from '@testing-library/react';
 import { useCandidates } from '../useCandidates';
@@ -5,12 +6,12 @@ import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Candidate } from '@/types';
 
 // Mock Firebase
-jest.mock('@/lib/firebase', () => ({
-  db: jest.fn(),
+vi.mock('@/lib/firebase', () => ({
+  db: vi.fn(),
 }));
-jest.mock('firebase/firestore');
+vi.mock('firebase/firestore');
 
-const mockOnSnapshot = onSnapshot as jest.Mock;
+const mockOnSnapshot = onSnapshot as vi.Mock;
 
 describe('useCandidates', () => {
   it('should not fetch candidates if user is null', () => {
@@ -30,7 +31,7 @@ describe('useCandidates', () => {
     let onSnapshotCallback: (snapshot: any) => void;
     mockOnSnapshot.mockImplementation((q, callback) => {
       onSnapshotCallback = callback;
-      return jest.fn(); // Unsubscribe function
+      return vi.fn(); // Unsubscribe function
     });
 
     const { result } = renderHook(() => useCandidates(mockUser));
@@ -62,10 +63,10 @@ describe('useCandidates', () => {
     let onErrorCallback: (error: Error) => void;
     mockOnSnapshot.mockImplementation((q, successCb, errorCb) => {
       onErrorCallback = errorCb;
-      return jest.fn();
+      return vi.fn();
     });
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { result } = renderHook(() => useCandidates(mockUser));
 
     await act(async () => {
@@ -80,7 +81,7 @@ describe('useCandidates', () => {
 
   it('should unsubscribe on unmount', () => {
     const mockUser = { uid: 'test-user' };
-    const unsubscribe = jest.fn();
+    const unsubscribe = vi.fn();
     mockOnSnapshot.mockReturnValue(unsubscribe);
 
     const { unmount } = renderHook(() => useCandidates(mockUser));

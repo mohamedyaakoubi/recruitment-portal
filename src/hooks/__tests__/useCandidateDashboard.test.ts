@@ -1,17 +1,18 @@
+import { vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCandidateDashboard } from '../useCandidateDashboard';
 import { useRouter } from 'next/navigation';
 import { Candidate } from '@/types';
 
 // Mock next/navigation
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
 }));
 
-const mockUseRouter = useRouter as jest.Mock;
-const mockPush = jest.fn();
+const mockUseRouter = useRouter as vi.Mock;
+const mockPush = vi.fn();
 
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 describe('useCandidateDashboard', () => {
@@ -24,7 +25,7 @@ describe('useCandidateDashboard', () => {
     });
 
   it('should redirect to home if email is not in URL params', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     await act(async () => {
       renderHook(() => useCandidateDashboard());
     });
@@ -41,7 +42,7 @@ describe('useCandidateDashboard', () => {
       json: async () => ({ applications: mockApplications }),
     });
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     let result: any;
     await act(async () => {
         const url = new URL(window.location.href);
@@ -64,7 +65,7 @@ describe('useCandidateDashboard', () => {
       json: async () => ({ error: errorMessage }),
     });
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     let result: any;
     await act(async () => {
         const url = new URL(window.location.href);
@@ -81,7 +82,7 @@ describe('useCandidateDashboard', () => {
   });
 
   it('handleNewApplication should redirect to candidate form with email', async () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     let result: any;
     await act(async () => {
       const { result: r } = renderHook(() => useCandidateDashboard());

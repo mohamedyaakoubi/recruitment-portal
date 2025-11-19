@@ -1,14 +1,15 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ScoringModal from '../ScoringModal';
 import { Candidate, Job } from '@/types';
 
 // Mock the fetch API
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('ScoringModal', () => {
-  const onClose = jest.fn();
-  const onSubmit = jest.fn();
+  const onClose = vi.fn();
+  const onSubmit = vi.fn();
 
   const mockCandidate: Candidate = {
     id: '1',
@@ -22,12 +23,12 @@ describe('ScoringModal', () => {
   ];
 
   beforeEach(() => {
-    (fetch as jest.Mock).mockClear();
-    jest.clearAllMocks();
+    (fetch as vi.Mock).mockClear();
+    vi.clearAllMocks();
   });
 
   it('renders the modal with the candidate name', async () => {
-    (fetch as jest.Mock).mockResolvedValueOnce({
+    (fetch as vi.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ jobs: mockJobs }),
     });
@@ -39,7 +40,7 @@ describe('ScoringModal', () => {
   });
 
   it('shows the job description when a job is selected', async () => {
-    (fetch as jest.Mock).mockResolvedValueOnce({
+    (fetch as vi.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ jobs: mockJobs }),
     });
@@ -53,7 +54,7 @@ describe('ScoringModal', () => {
   });
 
   it('calls onSubmit with the correct job details when the form is submitted', async () => {
-    (fetch as jest.Mock).mockResolvedValueOnce({
+    (fetch as vi.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ jobs: mockJobs }),
     });

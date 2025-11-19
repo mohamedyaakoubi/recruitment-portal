@@ -1,12 +1,13 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CalendarSection from '../CalendarSection';
 import '@testing-library/jest-dom';
 import type { InterviewEvent } from '@/types';
 
 // Mock react-big-calendar
-jest.mock('react-big-calendar', () => ({
+vi.mock('react-big-calendar', () => ({
   Calendar: ({ events, onSelectEvent }: { events: InterviewEvent[], onSelectEvent: (event: InterviewEvent) => void }) => (
     <div data-testid="mock-calendar">
       {events.map(event => (
@@ -16,11 +17,11 @@ jest.mock('react-big-calendar', () => ({
       ))}
     </div>
   ),
-  dateFnsLocalizer: jest.fn(),
+  dateFnsLocalizer: vi.fn(),
 }));
 
-const mockOpenProfileModal = jest.fn();
-const mockSetCalendarFilter = jest.fn();
+const mockOpenProfileModal = vi.fn();
+const mockSetCalendarFilter = vi.fn();
 
 const mockAllInterviewEvents: InterviewEvent[] = [
   {
@@ -49,7 +50,7 @@ const defaultProps = {
 
 describe('CalendarSection', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should render the calendar with events', () => {

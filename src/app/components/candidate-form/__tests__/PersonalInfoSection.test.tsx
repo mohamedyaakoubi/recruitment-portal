@@ -1,10 +1,11 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import PersonalInfoSection from '../PersonalInfoSection';
 import '@testing-library/jest-dom';
 
-jest.mock('../../ui/SearchableDropdown', () => ({
+vi.mock('../../ui/SearchableDropdown', () => ({
     __esModule: true,
     default: ({ value, onChange, placeholder, disabled }: any) => (
         <input
@@ -18,17 +19,17 @@ jest.mock('../../ui/SearchableDropdown', () => ({
 }));
 
 describe('PersonalInfoSection', () => {
-  const setFirstNameMock = jest.fn();
-  const setLastNameMock = jest.fn();
-  const setGenderMock = jest.fn();
-  const setDateOfBirthMock = jest.fn();
-  const setCountryCodeMock = jest.fn();
-  const setPhoneNumberMock = jest.fn();
-  const setCityMock = jest.fn();
-  const setCountryMock = jest.fn();
-  const setNationalityMock = jest.fn();
-  const setDoubleNationalityMock = jest.fn();
-  const calculateAgeMock = jest.fn(() => 33);
+  const setFirstNameMock = vi.fn();
+  const setLastNameMock = vi.fn();
+  const setGenderMock = vi.fn();
+  const setDateOfBirthMock = vi.fn();
+  const setCountryCodeMock = vi.fn();
+  const setPhoneNumberMock = vi.fn();
+  const setCityMock = vi.fn();
+  const setCountryMock = vi.fn();
+  const setNationalityMock = vi.fn();
+  const setDoubleNationalityMock = vi.fn();
+  const calculateAgeMock = vi.fn(() => 33);
 
   const defaultProps = {
     firstName: 'Test',
@@ -58,7 +59,7 @@ describe('PersonalInfoSection', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should render the form with the correct initial values', () => {

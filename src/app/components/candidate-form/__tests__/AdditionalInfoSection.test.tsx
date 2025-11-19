@@ -1,12 +1,13 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import AdditionalInfoSection from '../AdditionalInfoSection';
 import '@testing-library/jest-dom';
 
 describe('AdditionalInfoSection', () => {
-  const addAdditionalInfoMock = jest.fn();
-  const removeAdditionalInfoMock = jest.fn();
-  const updateAdditionalInfoMock = jest.fn();
+  const addAdditionalInfoMock = vi.fn();
+  const removeAdditionalInfoMock = vi.fn();
+  const updateAdditionalInfoMock = vi.fn();
 
   const defaultProps = {
     additionalInfo: [

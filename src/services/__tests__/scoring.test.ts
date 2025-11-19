@@ -1,121 +1,156 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockDoc = {
-    get: jest.fn(),
-    update: jest.fn(),
+// Mock Firebase Admin
+const mockFirestore = {
+    collection: vi.fn(),
+    doc: vi.fn(),
 };
-const mockCollection = {
-    doc: jest.fn(() => mockDoc),
+
+const mockDocRef = {
+    get: vi.fn(),
+    update: vi.fn(),
 };
-const mockDb = {
-    collection: jest.fn(() => mockCollection),
-};
-const mockFileManager = {
-    uploadFile: jest.fn(),
-    getFile: jest.fn(),
-    deleteFile: jest.fn(),
-};
+
+vi.mock('@/lib/firebase-admin', () => ({
+    getFirestoreAdmin: () => mockFirestore,
+}));
+
+vi.mock('firebase-admin', () => ({
+    default: {
+        firestore: {
+            Timestamp: {
+                now: () => 'mock-timestamp',
+            },
+        },
+    },
+}));
+
+// Mock Google Generative AI
 const mockGenerativeModel = {
-    generateContent: jest.fn(),
+    generateContent: vi.fn(),
 };
 
-jest.mock('@/lib/firebase-admin', () => ({
-    getFirestoreAdmin: () => mockDb,
-}));
-jest.mock('@google/generative-ai', () => ({
-    GoogleGenerativeAI: jest.fn(() => ({
-        getGenerativeModel: () => mockGenerativeModel,
-    })),
-}));
-jest.mock('@google/generative-ai/server', () => ({
-    GoogleAIFileManager: jest.fn(() => mockFileManager),
+const mockGoogleGenerativeAI = {
+    getGenerativeModel: vi.fn(() => mockGenerativeModel),
+};
+
+const mockFileManager = {
+    uploadFile: vi.fn(),
+    getFile: vi.fn(),
+    deleteFile: vi.fn(),
+};
+
+vi.mock('@google/generative-ai', () => ({
+    GoogleGenerativeAI: vi.fn(() => mockGoogleGenerativeAI),
 }));
 
-global.fetch = jest.fn();
+vi.mock('@google/generative-ai/server', () => ({
+    GoogleAIFileManager: vi.fn(() => mockFileManager),
+}));
 
-describe('Scoring Service', () => {
+// Mock global fetch
+global.fetch = vi.fn();
+
+describe('scoring service', () => {
     let scoreCandidate: any;
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        scoreCandidate = require('../scoring').scoreCandidate;
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        vi.resetModules();
+        process.env.GEMINI_API_KEY = 'mock-api-key';
+
+        // Re-import module to pick up env var
+        const scoring = await import('../scoring');
+        scoreCandidate = scoring.scoreCandidate;
+
+        // Setup Firestore mocks
+        mockFirestore.collection.mockReturnValue(mockFirestore);
+        mockFirestore.doc.mockReturnValue(mockDocRef);
     });
 
-    describe('scoreCandidate', () => {
-        it('should score a candidate and update firestore', async () => {
-            const candidateId = 'candidate-1';
-            const jobId = 'job-1';
-            const jobTitle = 'Software Engineer';
-            const jobDescription = 'Develop amazing things.';
+    it('should throw error if candidate not found', async () => {
+        mockDocRef.get.mockResolvedValue({ exists: false });
 
-            const candidateData = {
+        await expect(scoreCandidate('invalid-id', 'job-1', 'Dev', 'Desc'))
+            .rejects.toThrow('Candidate not found');
+    });
+
+    it('should successfully score a candidate', async () => {
+        // Mock candidate data
+        mockDocRef.get.mockResolvedValue({
+            exists: true,
+            data: () => ({
                 fullName: 'John Doe',
                 cvUrl: 'http://example.com/cv.pdf',
-                email: 'john.doe@example.com',
-            };
-            mockDoc.get.mockResolvedValue({ exists: true, data: () => candidateData });
-
-            const mockFile = {
-                name: 'file-123',
-                uri: 'file-uri',
-                mimeType: 'application/pdf',
-                state: 'ACTIVE',
-            };
-            (mockFileManager.uploadFile as jest.Mock).mockResolvedValue({ file: mockFile });
-            (mockFileManager.getFile as jest.Mock).mockResolvedValue({ file: mockFile });
-
-            const mockApiResponse = {
-                score: 85,
-                analysis: 'Great candidate',
-                keyStrengths: ['React', 'Node.js'],
-                areasForImprovement: ['Testing'],
-                recommendation: 'recommended',
-            };
-            mockGenerativeModel.generateContent.mockResolvedValue({
-                response: {
-                    text: () => JSON.stringify(mockApiResponse),
-                },
-            });
-
-            (global.fetch as jest.Mock).mockResolvedValue({
-                ok: true,
-                arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
-            });
-
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-            const result = await scoreCandidate(candidateId, jobId, jobTitle, jobDescription);
-
-            expect(result).toEqual(mockApiResponse);
-            expect(mockDoc.update).toHaveBeenCalledWith(expect.objectContaining({
-                score: mockApiResponse.score,
-                scoreAnalysis: mockApiResponse.analysis,
-            }));
-            consoleLogSpy.mockRestore();
+                email: 'john@example.com',
+            }),
         });
 
-        it('should throw an error if candidate not found', async () => {
-            mockDoc.get.mockResolvedValue({ exists: false });
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-            await expect(scoreCandidate('1', '1', 't', 'd')).rejects.toThrow('Candidate not found');
-            consoleLogSpy.mockRestore();
+        // Mock file upload
+        (global.fetch as any).mockResolvedValue({
+            ok: true,
+            arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
         });
 
-        it('should throw an error if AI scoring fails', async () => {
-            mockDoc.get.mockResolvedValue({ exists: true, data: () => ({ cvUrl: 'url' }) });
-            (global.fetch as jest.Mock).mockResolvedValue({
-                ok: true,
-                arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
-            });
-            (mockFileManager.uploadFile as jest.Mock).mockResolvedValue({ file: { state: 'ACTIVE' } });
-            mockGenerativeModel.generateContent.mockResolvedValue({
-                response: {
-                    text: () => 'invalid json',
-                },
-            });
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-            await expect(scoreCandidate('1', '1', 't', 'd')).rejects.toThrow('Failed to get AI score and analysis from Gemini 2.5 Pro');
-            consoleLogSpy.mockRestore();
-            consoleErrorSpy.mockRestore();
+        mockFileManager.uploadFile.mockResolvedValue({
+            file: { uri: 'mock-uri', state: 'ACTIVE', name: 'mock-file-name' }
         });
+
+        // Mock Gemini response
+        const mockAnalysis = {
+            score: 85,
+            analysis: 'Good fit',
+            keyStrengths: ['Coding', 'Testing'],
+            areasForImprovement: ['Design'],
+            recommendation: 'recommended'
+        };
+
+        mockGenerativeModel.generateContent.mockResolvedValue({
+            response: {
+                text: () => JSON.stringify(mockAnalysis)
+            }
+        });
+
+        const result = await scoreCandidate('cand-1', 'job-1', 'Dev', 'Desc');
+
+        expect(result).toEqual(mockAnalysis);
+        expect(mockDocRef.update).toHaveBeenCalledWith(expect.objectContaining({
+            score: 85,
+            aiRecommendation: 'recommended'
+        }));
+    });
+
+    it('should handle JSON parsing errors gracefully', async () => {
+        // Mock candidate data
+        mockDocRef.get.mockResolvedValue({
+            exists: true,
+            data: () => ({
+                fullName: 'John Doe',
+                cvUrl: 'http://example.com/cv.pdf',
+            }),
+        });
+
+        // Mock file upload
+        (global.fetch as any).mockResolvedValue({
+            ok: true,
+            arrayBuffer: () => Promise.resolve(new ArrayBuffer(8)),
+        });
+
+        mockFileManager.uploadFile.mockResolvedValue({
+            file: { uri: 'mock-uri', state: 'ACTIVE', name: 'mock-file-name' }
+        });
+
+        // Mock Malformed JSON response but with a score
+        mockGenerativeModel.generateContent.mockResolvedValue({
+            response: {
+                text: () => "Here is the score: 75. Analysis: Good."
+            }
+        });
+
+        const result = await scoreCandidate('cand-1', 'job-1', 'Dev', 'Desc');
+
+        // Should use fallback scoring
+        expect(result.score).toBe(75);
+        expect(result.recommendation).toBe('conditional');
     });
 });

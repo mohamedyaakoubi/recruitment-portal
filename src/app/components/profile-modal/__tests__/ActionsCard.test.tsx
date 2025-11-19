@@ -1,12 +1,13 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ActionsCard from '../ActionsCard';
 import '@testing-library/jest-dom';
 
 describe('ActionsCard', () => {
-  const onStatusChangeMock = jest.fn();
-  const onScheduleInterviewMock = jest.fn();
+  const onStatusChangeMock = vi.fn();
+  const onScheduleInterviewMock = vi.fn();
 
   const candidate = {
     id: '1',

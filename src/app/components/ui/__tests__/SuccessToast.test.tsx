@@ -1,12 +1,13 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import SuccessToast from '../SuccessToast';
 import '@testing-library/jest-dom';
 
-jest.useFakeTimers();
+vi.useFakeTimers();
 
 describe('SuccessToast', () => {
-  const onCloseMock = jest.fn();
+  const onCloseMock = vi.fn();
 
   const defaultProps = {
     message: 'Test Message',
@@ -33,7 +34,7 @@ describe('SuccessToast', () => {
   it('should call onClose after the duration', () => {
     render(<SuccessToast {...defaultProps} />);
     act(() => {
-      jest.advanceTimersByTime(3300);
+      vi.advanceTimersByTime(3300);
     });
     expect(onCloseMock).toHaveBeenCalledTimes(1);
   });
@@ -42,7 +43,7 @@ describe('SuccessToast', () => {
     render(<SuccessToast {...defaultProps} />);
     fireEvent.click(screen.getByText(/Close/));
     act(() => {
-        jest.advanceTimersByTime(300); // for fade out animation
+        vi.advanceTimersByTime(300); // for fade out animation
     });
     expect(onCloseMock).toHaveBeenCalledTimes(1);
   });

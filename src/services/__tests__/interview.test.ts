@@ -1,38 +1,80 @@
-/**
- * @jest-environment node
- */
-
+import { vi } from 'vitest';
 import { scheduleInterview, cancelInterview } from '../interview';
 import { google } from 'googleapis';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { getGoogleAuth } from '../google';
+import { getAuthenticatedClient } from '@/lib/googleOAuth';
 import * as emailService from '../email';
 
-jest.mock('googleapis', () => ({
+vi.mock('googleapis', () => ({
   google: {
-    calendar: jest.fn(),
+    calendar: vi.fn(),
   },
 }));
-jest.mock('firebase/firestore');
-jest.mock('../google');
-jest.mock('../email');
+vi.mock('firebase/firestore', () => ({
+  getFirestore: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  updateDoc: vi.fn(),
+  collection: vi.fn(),
+  addDoc: vi.fn(),
+}));
+vi.mock('@/lib/googleOAuth');
+vi.mock('../email');
+const mockDoc = {
+  exists: true,
+  data: () => ({ calendarEventId: 'existing-event-id', email: 'test@example.com', fullName: 'John Doe', jobTitleText: 'Developer' }),
+};
 
-const mockEventsInsert = jest.fn();
-const mockEventsDelete = jest.fn();
+const mockCollection = {
+  doc: vi.fn().mockReturnValue({
+    get: vi.fn().mockResolvedValue(mockDoc),
+    update: vi.fn(),
+  }),
+};
+
+const mockFirestore = {
+  collection: vi.fn().mockReturnValue(mockCollection),
+};
+
+const { mockAdminGet, mockAdminUpdate } = vi.hoisted(() => {
+  return {
+    mockAdminGet: vi.fn(),
+    mockAdminUpdate: vi.fn(),
+  };
+});
+
+vi.mock('@/lib/firebase-admin', () => ({
+  getFirestoreAdmin: vi.fn().mockReturnValue({
+    collection: vi.fn().mockReturnValue({
+      doc: vi.fn().mockReturnValue({
+        get: mockAdminGet,
+        update: mockAdminUpdate,
+      })
+    }),
+  }),
+}));
+
+const mockEventsInsert = vi.fn();
+const mockEventsDelete = vi.fn();
 const mockCalendar = {
   events: {
     insert: mockEventsInsert,
+    update: mockEventsInsert, // Added update mock
     delete: mockEventsDelete,
   },
 };
-(google.calendar as jest.Mock).mockReturnValue(mockCalendar);
-(getGoogleAuth as jest.Mock).mockReturnValue({});
+(google.calendar as vi.Mock).mockReturnValue(mockCalendar);
+(getAuthenticatedClient as vi.Mock).mockResolvedValue({});
 
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('Interview Service', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
+    mockAdminGet.mockResolvedValue({
+      exists: true,
+      data: () => ({ calendarEventId: 'existing-event-id', email: 'test@example.com', fullName: 'John Doe', jobTitleText: 'Developer' }),
+    });
   });
 
   describe('scheduleInterview', () => {
@@ -43,7 +85,7 @@ describe('Interview Service', () => {
           hangoutLink: 'https://meet.google.com/test-link',
         },
       });
-      (fetch as jest.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+      (fetch as vi.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
 
       const result = await scheduleInterview(
         'c1', 'c@test.com', 'C Name', '2025-12-25', '10:00', 30, 'Dev', 'a@test.com', 'notes', 'http://localhost'
@@ -58,20 +100,15 @@ describe('Interview Service', () => {
 
   describe('cancelInterview', () => {
     it('should cancel an interview and send an email', async () => {
-        (getDoc as jest.Mock).mockResolvedValue({
-            exists: () => true,
-            data: () => ({ calendarEventId: 'test-event-id', email: 'c@test.com', fullName: 'C Name' }),
-          });
-        
-        const sendCancellationEmailSpy = jest.spyOn(emailService, 'sendCancellationEmail');
-        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const sendCancellationEmailSpy = vi.spyOn(emailService, 'sendCancellationEmail');
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
 
-        await cancelInterview('c1', 'reason');
+      await cancelInterview('c1', 'reason');
 
-        expect(mockEventsDelete).toHaveBeenCalledWith({ calendarId: 'primary', eventId: 'test-event-id', sendUpdates: 'all' });
-        expect(updateDoc).toHaveBeenCalled();
-        expect(sendCancellationEmailSpy).toHaveBeenCalled();
-        consoleLogSpy.mockRestore();
+      expect(mockEventsDelete).toHaveBeenCalledWith({ calendarId: 'primary', eventId: 'existing-event-id', sendUpdates: 'all' });
+      expect(mockAdminUpdate).toHaveBeenCalled();
+      expect(sendCancellationEmailSpy).toHaveBeenCalled();
+      consoleLogSpy.mockRestore();
     });
   });
 });

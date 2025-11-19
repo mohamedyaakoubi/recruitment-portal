@@ -1,12 +1,13 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CandidateTableActions from '../CandidateTableActions';
 import '@testing-library/jest-dom';
 
 describe('CandidateTableActions', () => {
-  const onViewCandidateMock = jest.fn();
-  const onScoreCandidateMock = jest.fn();
-  const onEditCandidateMock = jest.fn();
+  const onViewCandidateMock = vi.fn();
+  const onScoreCandidateMock = vi.fn();
+  const onEditCandidateMock = vi.fn();
 
   const candidate = { id: '1', fullName: 'Test User', email: 'test@test.com', status: 'submitted', submittedAt: { toDate: () => new Date() } };
 

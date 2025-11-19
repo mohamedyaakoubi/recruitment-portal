@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 
 /**
  * @jest-environment node
@@ -7,33 +8,33 @@ import { calculateAge, updateCandidateStatus, exportCandidates } from '../candid
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import * as emailService from '../email';
 
-jest.mock('@/lib/firebase-admin');
-jest.mock('../email');
+vi.mock('@/lib/firebase-admin');
+vi.mock('../email');
 
 const mockDb = {
-  collection: jest.fn(),
+  collection: vi.fn(),
 };
 const mockCollection = {
-  doc: jest.fn(),
-  where: jest.fn(),
-  orderBy: jest.fn(),
-  get: jest.fn(),
+  doc: vi.fn(),
+  where: vi.fn(),
+  orderBy: vi.fn(),
+  get: vi.fn(),
 };
 const mockDoc = {
-  get: jest.fn(),
-  update: jest.fn(),
+  get: vi.fn(),
+  update: vi.fn(),
 };
 
-(getFirestoreAdmin as jest.Mock).mockReturnValue(mockDb);
-(mockDb.collection as jest.Mock).mockReturnValue(mockCollection);
-(mockCollection.doc as jest.Mock).mockReturnValue(mockDoc);
-(mockCollection.where as jest.Mock).mockReturnThis();
-(mockCollection.orderBy as jest.Mock).mockReturnThis();
+(getFirestoreAdmin as vi.Mock).mockReturnValue(mockDb);
+(mockDb.collection as vi.Mock).mockReturnValue(mockCollection);
+(mockCollection.doc as vi.Mock).mockReturnValue(mockDoc);
+(mockCollection.where as vi.Mock).mockReturnThis();
+(mockCollection.orderBy as vi.Mock).mockReturnThis();
 
 
 describe('Candidate Service', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('calculateAge', () => {
@@ -56,8 +57,8 @@ describe('Candidate Service', () => {
     it('should update status and send rejection email', async () => {
       const candidateData = { email: 'test@example.com', fullName: 'Test User', jobTitleText: 'Developer' };
       mockDoc.get.mockResolvedValue({ exists: true, data: () => candidateData });
-      const sendRejectionEmailSpy = jest.spyOn(emailService, 'sendRejectionEmail');
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const sendRejectionEmailSpy = vi.spyOn(emailService, 'sendRejectionEmail');
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await updateCandidateStatus('1', 'rejected');
 
@@ -69,8 +70,8 @@ describe('Candidate Service', () => {
     it('should update status and send interview email', async () => {
         const candidateData = { email: 'test@example.com', fullName: 'Test User' };
         mockDoc.get.mockResolvedValue({ exists: true, data: () => candidateData });
-        const sendNotificationEmailSpy = jest.spyOn(emailService, 'sendNotificationEmail');
-        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        const sendNotificationEmailSpy = vi.spyOn(emailService, 'sendNotificationEmail');
+        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         const interviewDate = new Date();
     
         await updateCandidateStatus('1', 'interview_scheduled', interviewDate.toISOString());

@@ -1,17 +1,18 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import DashboardHeader from '../DashboardHeader';
 import '@testing-library/jest-dom';
 
-const mockPush = jest.fn();
-jest.mock('next/navigation', () => ({
+const mockPush = vi.fn();
+vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
   }),
 }));
 
-jest.mock('next-themes', () => ({
+vi.mock('next-themes', () => ({
   useTheme: () => ({
     theme: 'light',
   }),

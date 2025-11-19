@@ -1,11 +1,12 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import EditModalHeader from '../EditModalHeader';
 import '@testing-library/jest-dom';
 
 describe('EditModalHeader', () => {
-  const onCloseMock = jest.fn();
+  const onCloseMock = vi.fn();
 
   const defaultProps = {
     onClose: onCloseMock,

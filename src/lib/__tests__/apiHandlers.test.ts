@@ -1,27 +1,28 @@
+import { vi } from 'vitest';
 
 import { createApiHandlers } from '../apiHandlers';
 import { Candidate } from '@/types';
 
-const mockShowToast = jest.fn();
-const mockCloseScoringModal = jest.fn();
-const mockCloseProfileModal = jest.fn();
-const mockSetIsInterviewSchedulingOpen = jest.fn();
-const mockSetConfirmationModal = jest.fn();
-const mockSetStatusUpdateLoading = jest.fn();
-const mockSetIsScoring = jest.fn();
-const mockSetScoringError = jest.fn();
-const mockSetIsScheduling = jest.fn();
+const mockShowToast = vi.fn();
+const mockCloseScoringModal = vi.fn();
+const mockCloseProfileModal = vi.fn();
+const mockSetIsInterviewSchedulingOpen = vi.fn();
+const mockSetConfirmationModal = vi.fn();
+const mockSetStatusUpdateLoading = vi.fn();
+const mockSetIsScoring = vi.fn();
+const mockSetScoringError = vi.fn();
+const mockSetIsScheduling = vi.fn();
 
 const selectedCandidate: Candidate = { id: '1', fullName: 'John Doe', status: 'submitted', score: null, email: 'a@a.com', cvUrl: '' };
 const candidates: Candidate[] = [selectedCandidate];
 
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('API Handlers', () => {
   let handlers: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     handlers = createApiHandlers(
       mockShowToast,
       mockCloseScoringModal,
@@ -39,8 +40,8 @@ describe('API Handlers', () => {
 
   describe('handleScoreSubmit', () => {
     it('should score a candidate successfully', async () => {
-      (fetch as jest.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      (fetch as vi.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       await handlers.handleScoreSubmit('job1', 'Job Title', 'Job Desc');
       expect(mockSetIsScoring).toHaveBeenCalledWith(true);
       expect(fetch).toHaveBeenCalledWith('/api/score-candidate', expect.any(Object));
@@ -51,8 +52,8 @@ describe('API Handlers', () => {
     });
 
     it('should handle scoring failure', async () => {
-        (fetch as jest.Mock).mockResolvedValue({ ok: false, json: () => Promise.resolve({ error: 'Failed' }) });
-        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        (fetch as vi.Mock).mockResolvedValue({ ok: false, json: () => Promise.resolve({ error: 'Failed' }) });
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         await handlers.handleScoreSubmit('job1', 'Job Title', 'Job Desc');
         expect(mockSetScoringError).toHaveBeenCalledWith('Failed');
         expect(mockSetIsScoring).toHaveBeenCalledWith(false);
@@ -62,8 +63,8 @@ describe('API Handlers', () => {
 
   describe('handleStatusChange', () => {
     it('should change status directly for non-rejected status', async () => {
-        (fetch as jest.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
-        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        (fetch as vi.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         await handlers.handleStatusChange('1', 'approved');
         expect(fetch).toHaveBeenCalledWith('/api/update-status', expect.any(Object));
         expect(mockShowToast).toHaveBeenCalledWith('Candidate status updated to approved successfully!', 'success');
@@ -78,7 +79,7 @@ describe('API Handlers', () => {
 
   describe('handleScheduleInterview', () => {
     it('should schedule an interview successfully', async () => {
-      (fetch as jest.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+      (fetch as vi.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
       await handlers.handleScheduleInterview('1', '2025-12-25', '10:00', 30, 'admin@example.com');
       expect(mockSetIsScheduling).toHaveBeenCalledWith(true);
       expect(fetch).toHaveBeenCalledWith('/api/schedule-interview-meet', expect.any(Object));
@@ -97,8 +98,8 @@ describe('API Handlers', () => {
 
   describe('handleEditCandidate', () => {
     it('should edit a candidate successfully', async () => {
-        (fetch as jest.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
-        const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        (fetch as vi.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
+        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
         await handlers.handleEditCandidate('1', { fullName: 'New Name' });
         expect(fetch).toHaveBeenCalledWith('/api/update-candidate', expect.any(Object));
         expect(mockShowToast).toHaveBeenCalledWith('Candidate information updated successfully!', 'success');

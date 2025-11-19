@@ -1,15 +1,16 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import JobManagement from '../JobManagement';
 import { Job } from '@/types';
 
 // Mock the fetch API
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 // Mock console.error
-console.error = jest.fn();
+console.error = vi.fn();
 
 describe('JobManagement', () => {
-  const onClose = jest.fn();
+  const onClose = vi.fn();
 
   const mockJobs: Job[] = [
     { id: '1', title: 'Software Engineer', description: 'Develop amazing things', category: 'IT', specialties: ['Frontend'], isActive: true, createdAt: { toDate: () => new Date() } },
@@ -17,13 +18,13 @@ describe('JobManagement', () => {
   ];
 
   beforeEach(() => {
-    (fetch as jest.Mock).mockClear();
-    (console.error as jest.Mock).mockClear();
-    jest.clearAllMocks();
+    (fetch as vi.Mock).mockClear();
+    (console.error as vi.Mock).mockClear();
+    vi.clearAllMocks();
   });
 
   it('renders the component when open', async () => {
-    (fetch as jest.Mock).mockResolvedValueOnce({
+    (fetch as vi.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ jobs: mockJobs }),
     });
@@ -35,7 +36,7 @@ describe('JobManagement', () => {
   });
 
   it('renders the "Add New Job" button', async () => {
-    (fetch as jest.Mock).mockResolvedValueOnce({
+    (fetch as vi.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ jobs: [] }),
     });
@@ -46,7 +47,7 @@ describe('JobManagement', () => {
   });
 
   it('handles error when fetching jobs', async () => {
-    (fetch as jest.Mock).mockRejectedValueOnce(new Error('Failed to fetch jobs'));
+    (fetch as vi.Mock).mockRejectedValueOnce(new Error('Failed to fetch jobs'));
 
     render(<JobManagement isOpen={true} onClose={onClose} />);
 

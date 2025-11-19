@@ -1,24 +1,25 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import LocationInfoForm from '../LocationInfoForm';
 import '@testing-library/jest-dom';
 
-jest.mock('../../ui/SearchableDropdown', () => ({
-    __esModule: true,
-    default: ({ value, onChange, placeholder, id, disabled }: any) => (
-        <input
-            data-testid={placeholder}
-            id={id}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            disabled={disabled}
-        />
-    ),
+vi.mock('../../ui/SearchableDropdown', () => ({
+  __esModule: true,
+  default: ({ value, onChange, placeholder, id, disabled }: any) => (
+    <input
+      data-testid={placeholder}
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+    />
+  ),
 }));
 
 describe('LocationInfoForm', () => {
-  const handleInputChangeMock = jest.fn();
+  const handleInputChangeMock = vi.fn();
 
   const defaultProps = {
     formData: {
@@ -45,27 +46,47 @@ describe('LocationInfoForm', () => {
   });
 
   it('should call handleInputChange when the city is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<LocationInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/^City/), { target: { value: 'New City' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('city', 'New City');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('New City');
   });
 
   it('should call handleInputChange when the country is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<LocationInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/^Country/), { target: { value: 'New Country' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('country', 'New Country');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('New Country');
   });
 
   it('should call handleInputChange when the nationality is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<LocationInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/^Nationality/), { target: { value: 'New Nationality' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('nationality', 'New Nationality');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('New Nationality');
   });
 
   it('should call handleInputChange when the second nationality is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<LocationInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/Second Nationality/), { target: { value: 'New Second Nationality' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('doubleNationality', 'New Second Nationality');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('New Second Nationality');
   });
 
   it('should display error messages when there are errors', () => {

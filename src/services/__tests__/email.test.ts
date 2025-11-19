@@ -1,31 +1,42 @@
+import { vi } from 'vitest';
 /**
  * @jest-environment node
  */
 
-const mockSendMail = jest.fn().mockResolvedValue({ messageId: 'mock-message-id' });
-const mockVerify = jest.fn((callback) => callback(null, true));
+const { mockSendMail, mockVerify } = vi.hoisted(() => {
+    return {
+        mockSendMail: vi.fn().mockResolvedValue({ messageId: 'mock-message-id' }),
+        mockVerify: vi.fn((callback) => callback(null, true)),
+    };
+});
 
-jest.mock('nodemailer', () => ({
-    createTransport: jest.fn().mockReturnValue({
+vi.mock('nodemailer', () => {
+    const mockCreateTransport = vi.fn().mockReturnValue({
         sendMail: mockSendMail,
         verify: mockVerify,
-    }),
-}));
+    });
+    return {
+        default: {
+            createTransport: mockCreateTransport,
+        },
+        createTransport: mockCreateTransport,
+    };
+});
 
 describe('Email Service', () => {
     let sendNotificationEmail: any, sendRejectionEmail: any, sendCancellationEmail: any;
 
-    beforeEach(() => {
-        jest.clearAllMocks();
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        vi.resetModules();
         // Set up SMTP env vars for tests
         process.env.SMTP_HOST = 'smtp.example.com';
         process.env.SMTP_USER = 'user';
         process.env.SMTP_PASS = 'pass';
         process.env.SMTP_FROM_EMAIL = 'from@example.com';
 
-        // Since the transporter is created at the module level, we need to re-require the module
-        // to get the new mock implementation.
-        const emailService = require('../email');
+        // Re-import the module to get the new mock implementation and env vars
+        const emailService = await import('../email');
         sendNotificationEmail = emailService.sendNotificationEmail;
         sendRejectionEmail = emailService.sendRejectionEmail;
         sendCancellationEmail = emailService.sendCancellationEmail;
@@ -36,7 +47,7 @@ describe('Email Service', () => {
             const to = 'test@example.com';
             const candidateName = 'Test User';
             const interviewDate = new Date();
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
             await sendNotificationEmail(to, 'interview_scheduled', candidateName, interviewDate);
 
             expect(mockSendMail).toHaveBeenCalled();
@@ -50,7 +61,7 @@ describe('Email Service', () => {
         it('should send a rejection email', async () => {
             const to = 'test@example.com';
             const candidateName = 'Test User';
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
             await sendNotificationEmail(to, 'rejected', candidateName);
 
             expect(mockSendMail).toHaveBeenCalled();
@@ -67,7 +78,7 @@ describe('Email Service', () => {
             const to = 'test@example.com';
             const candidateName = 'Test User';
             const jobTitle = 'Developer';
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
             await sendRejectionEmail(to, candidateName, jobTitle);
 
             expect(mockSendMail).toHaveBeenCalled();
@@ -85,7 +96,7 @@ describe('Email Service', () => {
             const candidateName = 'Test User';
             const jobTitle = 'Developer';
             const reason = 'Unforeseen circumstances';
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+            const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
             await sendCancellationEmail({ candidateEmail: to, candidateName, jobTitle, reason });
 
             expect(mockSendMail).toHaveBeenCalled();

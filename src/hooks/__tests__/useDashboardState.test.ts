@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useDashboardState } from '../useDashboardState';
 
@@ -32,7 +33,7 @@ describe('useDashboardState', () => {
   });
 
   it('should show and hide toast', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     const { result } = renderHook(() => useDashboardState());
 
     act(() => {
@@ -44,7 +45,7 @@ describe('useDashboardState', () => {
     expect(result.current.toast.type).toBe('success');
 
     act(() => {
-      jest.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5000);
     });
 
     expect(result.current.toast.isVisible).toBe(false);

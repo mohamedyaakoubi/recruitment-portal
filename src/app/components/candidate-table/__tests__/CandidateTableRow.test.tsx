@@ -1,9 +1,12 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import CandidateTableRow from '../CandidateTableRow';
 import '@testing-library/jest-dom';
 
-jest.mock('../CandidateTableActions', () => () => <td data-testid="actions-mock">Actions</td>);
+vi.mock('../CandidateTableActions', () => ({
+  default: () => <td data-testid="actions-mock">Actions</td>
+}));
 
 describe('CandidateTableRow', () => {
   const candidate = {
@@ -22,9 +25,9 @@ describe('CandidateTableRow', () => {
     candidate,
     splitName: (name: string) => ({ firstName: name.split(' ')[0], lastName: name.split(' ')[1] }),
     calculateAge: () => 33,
-    onViewCandidate: jest.fn(),
-    onScoreCandidate: jest.fn(),
-    onEditCandidate: jest.fn(),
+    onViewCandidate: vi.fn(),
+    onScoreCandidate: vi.fn(),
+    onEditCandidate: vi.fn(),
   };
 
   const renderInTable = (ui: React.ReactElement) => {

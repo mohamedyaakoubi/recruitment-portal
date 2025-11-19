@@ -1,35 +1,21 @@
-jest.mock('react-dom/client');
 
-jest.mock('react-dom');
 
 /**
  * @jest-environment jsdom
  */
 
-import { render, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useCandidateTable } from '../useCandidateTable';
 import { Candidate } from '@/types';
 import React from 'react';
+import { vi } from 'vitest';
 
-const renderHook = (hook: () => any) => {
-  const result = {};
-  const TestComponent = () => {
-    Object.assign(result, hook());
-    return null;
-  };
-  render(<TestComponent />);
-  return { result };
-};
 
-jest.mock('react-dom', () => ({
-  ...jest.requireActual('react-dom'),
-  createPortal: (node: any) => node,
-}));
 
 // Mock browser APIs
-const mockCreateObjectURL = jest.fn();
-const mockRevokeObjectURL = jest.fn();
-const mockAlert = jest.fn();
+const mockCreateObjectURL = vi.fn();
+const mockRevokeObjectURL = vi.fn();
+const mockAlert = vi.fn();
 
 Object.defineProperty(window, 'URL', {
   value: {
@@ -45,175 +31,186 @@ Object.defineProperty(window, 'alert', {
 });
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
-// Mock createElement and appendChild for download functionality
-const mockClick = jest.fn();
-const mockRemove = jest.fn();
-const mockAppendChild = jest.fn();
-const mockRemoveChild = jest.fn();
-
-Object.defineProperty(document, 'createElement', {
-  value: jest.fn(() => ({
-    href: '',
-    download: '',
-    click: mockClick,
-    remove: mockRemove,
-  })),
-});
-
-Object.defineProperty(document.body, 'appendChild', {
-  value: mockAppendChild,
-});
-
-Object.defineProperty(document.body, 'removeChild', {
-  value: mockRemoveChild,
-});
+// Mock DOM methods for download functionality
+const mockClick = vi.fn();
+const mockRemove = vi.fn();
 
 const mockCandidates: Candidate[] = [
-  { 
-    id: '1', 
-    fullName: 'John Doe', 
-    email: 'john@example.com', 
-    dateOfBirth: '1990-01-01', 
-    city: 'New York', 
-    country: 'USA', 
-    submittedAt: { toMillis: () => 1000 }, 
-    status: 'submitted', 
-    score: 85, 
-    scoreAnalysis: '', 
-    interviewDate: undefined, 
-    calendarEventId: '', 
-    meetLink: '', 
-    duration: 0, 
-    phone: '', 
-    availability: [], 
-    linkedin: '', 
-    github: '', 
-    resume: '', 
-    coverLetter: '', 
-    jobTitle: '', 
-    jobCategory: '', 
-    yearsOfExperience: 0, 
-    skills: [], 
-    referral: '', 
-    source: '', 
-    startDate: '', 
-    comments: '', 
-    createdAt: new Date(), 
-    updatedAt: new Date() 
+  {
+    id: '1',
+    fullName: 'John Doe',
+    email: 'john@example.com',
+    dateOfBirth: '1990-01-01',
+    city: 'New York',
+    country: 'USA',
+    submittedAt: { toMillis: () => 1000 },
+    status: 'submitted',
+    score: 85,
+    scoreAnalysis: '',
+    interviewDate: undefined,
+    calendarEventId: '',
+    meetLink: '',
+    duration: 0,
+    phone: '',
+    availability: [],
+    linkedin: '',
+    github: '',
+    resume: '',
+    coverLetter: '',
+    jobTitle: '',
+    jobCategory: '',
+    yearsOfExperience: 0,
+    skills: [],
+    referral: '',
+    source: '',
+    startDate: '',
+    comments: '',
+    createdAt: new Date(),
+    updatedAt: new Date()
   },
-  { 
-    id: '2', 
-    fullName: 'Jane Smith', 
-    email: 'jane@example.com', 
-    dateOfBirth: '1992-05-15', 
-    city: 'London', 
-    country: 'UK', 
-    submittedAt: { toMillis: () => 2000 }, 
-    status: 'interview_scheduled', 
-    score: 90, 
-    scoreAnalysis: '', 
-    interviewDate: undefined, 
-    calendarEventId: '', 
-    meetLink: '', 
-    duration: 0, 
-    phone: '', 
-    availability: [], 
-    linkedin: '', 
-    github: '', 
-    resume: '', 
-    coverLetter: '', 
-    jobTitle: '', 
-    jobCategory: '', 
-    yearsOfExperience: 0, 
-    skills: [], 
-    referral: '', 
-    source: '', 
-    startDate: '', 
-    comments: '', 
-    createdAt: new Date(), 
-    updatedAt: new Date() 
+  {
+    id: '2',
+    fullName: 'Jane Smith',
+    email: 'jane@example.com',
+    dateOfBirth: '1992-05-15',
+    city: 'London',
+    country: 'UK',
+    submittedAt: { toMillis: () => 2000 },
+    status: 'interview_scheduled',
+    score: 90,
+    scoreAnalysis: '',
+    interviewDate: undefined,
+    calendarEventId: '',
+    meetLink: '',
+    duration: 0,
+    phone: '',
+    availability: [],
+    linkedin: '',
+    github: '',
+    resume: '',
+    coverLetter: '',
+    jobTitle: '',
+    jobCategory: '',
+    yearsOfExperience: 0,
+    skills: [],
+    referral: '',
+    source: '',
+    startDate: '',
+    comments: '',
+    createdAt: new Date(),
+    updatedAt: new Date()
   },
-  { 
-    id: '3', 
-    fullName: 'Bob Johnson', 
-    email: 'bob@example.com', 
-    dateOfBirth: '1985-10-10', 
-    city: 'Paris', 
-    country: 'France', 
-    submittedAt: { toMillis: () => 500 }, 
-    status: 'rejected', 
-    score: 70, 
-    scoreAnalysis: '', 
-    interviewDate: undefined, 
-    calendarEventId: '', 
-    meetLink: '', 
-    duration: 0, 
-    phone: '', 
-    availability: [], 
-    linkedin: '', 
-    github: '', 
-    resume: '', 
-    coverLetter: '', 
-    jobTitle: '', 
-    jobCategory: '', 
-    yearsOfExperience: 0, 
-    skills: [], 
-    referral: '', 
-    source: '', 
-    startDate: '', 
-    comments: '', 
-    createdAt: new Date(), 
-    updatedAt: new Date() 
+  {
+    id: '3',
+    fullName: 'Bob Johnson',
+    email: 'bob@example.com',
+    dateOfBirth: '1985-10-10',
+    city: 'Paris',
+    country: 'France',
+    submittedAt: { toMillis: () => 500 },
+    status: 'rejected',
+    score: 70,
+    scoreAnalysis: '',
+    interviewDate: undefined,
+    calendarEventId: '',
+    meetLink: '',
+    duration: 0,
+    phone: '',
+    availability: [],
+    linkedin: '',
+    github: '',
+    resume: '',
+    coverLetter: '',
+    jobTitle: '',
+    jobCategory: '',
+    yearsOfExperience: 0,
+    skills: [],
+    referral: '',
+    source: '',
+    startDate: '',
+    comments: '',
+    createdAt: new Date(),
+    updatedAt: new Date()
   },
 ];
 
 describe('useCandidateTable', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockCreateObjectURL.mockReturnValue('mock-blob-url');
-    (global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as vi.Mock).mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ data: [], filename: 'test.xlsx', count: 0 }),
       blob: () => Promise.resolve(new Blob()),
     });
+
+
+
+    // Fix for spyOn recursion:
+    const originalCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
+      if (tagName === 'a') {
+        return {
+          href: '',
+          download: '',
+          click: mockClick,
+          remove: mockRemove,
+        } as unknown as HTMLAnchorElement;
+      }
+      return originalCreateElement(tagName, options);
+    });
+
+    // Spy on document.body.appendChild
+    vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
+      return node;
+    });
+
+    // Spy on document.body.removeChild
+    vi.spyOn(document.body, 'removeChild').mockImplementation((node) => {
+      return node;
+    });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should initialize with default sort values', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
-    expect(result.sortField).toBe('submittedAt');
-    expect(result.sortDirection).toBe('desc');
-    expect(result.isExporting).toBe(false);
+
+    expect(result.current.sortField).toBe('submittedAt');
+    expect(result.current.sortDirection).toBe('desc');
+    expect(result.current.isExporting).toBe(false);
   });
 
   it('should handle sorting correctly', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
+
     act(() => {
-      result.handleSort('fullName');
+      result.current.handleSort('fullName');
     });
-    
-    expect(result.sortField).toBe('fullName');
-    expect(result.sortDirection).toBe('asc');
-    
+
+    expect(result.current.sortField).toBe('fullName');
+    expect(result.current.sortDirection).toBe('asc');
+
     // Sort same field again to reverse direction
     act(() => {
-      result.handleSort('fullName');
+      result.current.handleSort('fullName');
     });
-    
-    expect(result.sortDirection).toBe('desc');
+
+    expect(result.current.sortDirection).toBe('desc');
   });
 
   it('should sort candidates by fullName', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
+
     act(() => {
-      result.handleSort('fullName');
+      result.current.handleSort('fullName');
     });
-    
-    const sorted = result.sortedCandidates;
+
+    const sorted = result.current.sortedCandidates;
     // With ascending sort, Bob should come first alphabetically
     expect(sorted[0].fullName).toBe('Bob Johnson');
     expect(sorted[1].fullName).toBe('Jane Smith');
@@ -222,9 +219,9 @@ describe('useCandidateTable', () => {
 
   it('should sort candidates by submittedAt', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
+
     // Default sort is by submittedAt desc
-    const sorted = result.sortedCandidates;
+    const sorted = result.current.sortedCandidates;
     expect(sorted[0].id).toBe('2'); // highest timestamp (2000)
     expect(sorted[1].id).toBe('1'); // middle timestamp (1000)
     expect(sorted[2].id).toBe('3'); // lowest timestamp (500)
@@ -232,12 +229,12 @@ describe('useCandidateTable', () => {
 
   it('should sort candidates by status', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
+
     act(() => {
-      result.handleSort('status');
+      result.current.handleSort('status');
     });
-    
-    const sorted = result.sortedCandidates;
+
+    const sorted = result.current.sortedCandidates;
     // Alphabetical order: interview_scheduled, rejected, submitted
     expect(sorted[0].status).toBe('interview_scheduled');
     expect(sorted[1].status).toBe('rejected');
@@ -246,12 +243,12 @@ describe('useCandidateTable', () => {
 
   it('should sort candidates by score', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
+
     act(() => {
-      result.handleSort('score');
+      result.current.handleSort('score');
     });
-    
-    const sorted = result.sortedCandidates;
+
+    const sorted = result.current.sortedCandidates;
     // Ascending order: 70, 85, 90
     expect(sorted[0].score).toBe(70);
     expect(sorted[1].score).toBe(85);
@@ -260,11 +257,11 @@ describe('useCandidateTable', () => {
 
   it('should handle export functionality', async () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, { status: 'all' }));
-    
+
     await act(async () => {
-      await result.handleExport('xlsx');
+      await result.current.handleExport('xlsx');
     });
-    
+
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/export-candidates?format=xlsx&status=all')
     );
@@ -273,11 +270,11 @@ describe('useCandidateTable', () => {
   it('should handle export with filters', async () => {
     const filters = { status: 'submitted', name: 'John' };
     const { result } = renderHook(() => useCandidateTable(mockCandidates, filters));
-    
+
     await act(async () => {
-      await result.handleExport('csv');
+      await result.current.handleExport('csv');
     });
-    
+
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('format=csv&status=submitted&name=John')
     );
@@ -285,18 +282,18 @@ describe('useCandidateTable', () => {
 
   it('should split names correctly', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
-    expect(result.splitName('John Doe')).toEqual({
+
+    expect(result.current.splitName('John Doe')).toEqual({
       firstName: 'John',
       lastName: 'Doe'
     });
-    
-    expect(result.splitName('Mary Jane Smith')).toEqual({
+
+    expect(result.current.splitName('Mary Jane Smith')).toEqual({
       firstName: 'Mary',
       lastName: 'Jane Smith'
     });
-    
-    expect(result.splitName('Madonna')).toEqual({
+
+    expect(result.current.splitName('Madonna')).toEqual({
       firstName: 'Madonna',
       lastName: ''
     });
@@ -304,37 +301,37 @@ describe('useCandidateTable', () => {
 
   it('should calculate age correctly', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
+
     // Test with a fixed date
     const originalDate = Date;
     const mockDate = new Date('2024-01-01');
-    global.Date = jest.fn(() => mockDate) as any;
+    global.Date = vi.fn(() => mockDate) as any;
     global.Date.now = originalDate.now;
     global.Date.UTC = originalDate.UTC;
     global.Date.prototype = originalDate.prototype;
-    
-    expect(result.calculateAge('1990-01-01')).toBe(34);
-    expect(result.calculateAge('2000-06-15')).toBe(23);
-    expect(result.calculateAge('')).toBeNull();
-    expect(result.calculateAge('invalid-date')).toBeNull();
-    
+
+    expect(result.current.calculateAge('1990-01-01')).toBe(34);
+    expect(result.current.calculateAge('2000-06-15')).toBe(23);
+    expect(result.current.calculateAge('')).toBeNull();
+    expect(result.current.calculateAge('invalid-date')).toBeNull();
+
     // Restore Date
     global.Date = originalDate;
   });
 
   it('should handle export errors', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    (global.fetch as vi.Mock).mockResolvedValueOnce({
       ok: false,
       json: () => Promise.resolve({ details: 'Export failed' }),
     });
-    
+
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
+
     await act(async () => {
-      await result.handleExport('xlsx');
+      await result.current.handleExport('xlsx');
     });
-    
-    expect(result.isExporting).toBe(false);
+
+    expect(result.current.isExporting).toBe(false);
     expect(mockAlert).toHaveBeenCalledWith(expect.stringContaining('Export failed'));
   });
 
@@ -343,19 +340,19 @@ describe('useCandidateTable', () => {
     const exportPromise = new Promise(resolve => {
       resolvePromise = resolve;
     });
-    
-    (global.fetch as jest.Mock).mockReturnValueOnce(exportPromise);
-    
+
+    (global.fetch as vi.Mock).mockReturnValueOnce(exportPromise);
+
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
+
     // Start the export but don't await it yet
     act(() => {
-      result.handleExport('xlsx');
+      result.current.handleExport('xlsx');
     });
-    
+
     // Should be exporting now
-    expect(result.isExporting).toBe(true);
-    
+    expect(result.current.isExporting).toBe(true);
+
     // Resolve the fetch
     await act(async () => {
       resolvePromise!({
@@ -365,22 +362,22 @@ describe('useCandidateTable', () => {
       });
       await exportPromise;
     });
-    
+
     // Should not be exporting anymore
-    expect(result.isExporting).toBe(false);
+    expect(result.current.isExporting).toBe(false);
   });
 
   it('should handle createObjectURL errors', async () => {
     mockCreateObjectURL.mockImplementationOnce(() => {
       throw new Error('createObjectURL failed');
     });
-    
+
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
-    
+
     await act(async () => {
-      await result.handleExport('xlsx');
+      await result.current.handleExport('xlsx');
     });
-    
+
     expect(mockAlert).toHaveBeenCalledWith(expect.stringContaining('createObjectURL failed'));
   });
 });

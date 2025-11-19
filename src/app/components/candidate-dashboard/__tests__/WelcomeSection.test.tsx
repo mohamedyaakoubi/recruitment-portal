@@ -1,11 +1,12 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import WelcomeSection from '../WelcomeSection';
 import '@testing-library/jest-dom';
 
 describe('WelcomeSection', () => {
-  const handleNewApplicationMock = jest.fn();
+  const handleNewApplicationMock = vi.fn();
 
   const defaultProps = {
     candidateEmail: 'test@example.com',

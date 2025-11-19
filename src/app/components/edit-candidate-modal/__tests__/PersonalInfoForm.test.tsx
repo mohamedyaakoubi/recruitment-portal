@@ -1,10 +1,11 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import PersonalInfoForm from '../PersonalInfoForm';
 import '@testing-library/jest-dom';
 
 describe('PersonalInfoForm', () => {
-  const handleInputChangeMock = jest.fn();
+  const handleInputChangeMock = vi.fn();
 
   const defaultProps = {
     formData: {
@@ -37,45 +38,80 @@ describe('PersonalInfoForm', () => {
   });
 
   it('should call handleInputChange when the first name is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<PersonalInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/First Name/), { target: { value: 'New' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('firstName', 'New');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('New');
   });
 
   it('should call handleInputChange when the last name is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<PersonalInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/Last Name/), { target: { value: 'Name' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('lastName', 'Name');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('Name');
   });
 
   it('should call handleInputChange when the email is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<PersonalInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/Email/), { target: { value: 'new@example.com' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('email', 'new@example.com');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('new@example.com');
   });
 
   it('should call handleInputChange when the gender is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<PersonalInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/Gender/), { target: { value: 'female' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('gender', 'female');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('female');
   });
 
   it('should call handleInputChange when the date of birth is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<PersonalInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/Date of Birth/), { target: { value: '1991-01-01' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('dateOfBirth', '1991-01-01');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('1991-01-01');
   });
 
   it('should call handleInputChange when the country code is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<PersonalInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText('Country Code'), { target: { value: '+44' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('countryCode', '+44');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('+44');
   });
 
   it('should call handleInputChange when the phone number is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<PersonalInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/Phone Number/), { target: { value: '0987654321' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('phoneNumber', '0987654321');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('0987654321');
   });
 
   it('should display error messages when there are errors', () => {

@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 
 import { renderHook, act } from '@testing-library/react';
 import { useDashboard } from '../useDashboard';
@@ -8,16 +9,16 @@ import { useRouter } from 'next/navigation';
 import { Candidate } from '@/types';
 
 // Mock dependencies
-jest.mock('@/hooks/useAuth');
-jest.mock('@/lib/firebase', () => ({ db: jest.fn() }));
-jest.mock('firebase/firestore');
-jest.mock('next/navigation');
-jest.mock('@/lib/dashboardUtils');
+vi.mock('@/hooks/useAuth');
+vi.mock('@/lib/firebase', () => ({ db: vi.fn() }));
+vi.mock('firebase/firestore');
+vi.mock('next/navigation');
+vi.mock('@/lib/dashboardUtils');
 
-const mockUseAuth = useAuth as jest.Mock;
-const mockUseRouter = useRouter as jest.Mock;
-const mockPush = jest.fn();
-const mockOnSnapshot = onSnapshot as jest.Mock;
+const mockUseAuth = useAuth as vi.Mock;
+const mockUseRouter = useRouter as vi.Mock;
+const mockPush = vi.fn();
+const mockOnSnapshot = onSnapshot as vi.Mock;
 
 const mockCandidates: Candidate[] = [
     { id: '1', fullName: 'John Doe', status: 'submitted', city: 'New York', country: 'USA', nationality: 'American', jobTitleText: 'Frontend Developer', jobCategory: 'Engineering', dateOfBirth: '1990-01-01', specialty: 'React', interviewDate: { toDate: () => new Date('2025-08-01T10:00:00Z') }, duration: 60, email: '', score: 0, scoreAnalysis: '', calendarEventId: '', meetLink: '', phone: '', availability: [], linkedin: '', github: '', resume: '', coverLetter: '', jobTitle: '', yearsOfExperience: 0, skills: [], referral: '', source: '', startDate: '', comments: '', createdAt: new Date(), updatedAt: new Date(), submittedAt: { toMillis: () => 1000 } },
@@ -27,24 +28,24 @@ const mockCandidates: Candidate[] = [
 
 describe('useDashboard', () => {
     beforeEach(() => {
-        mockUseAuth.mockReturnValue({ user: { uid: 'test-user' }, loading: false, signOut: jest.fn() });
+        mockUseAuth.mockReturnValue({ user: { uid: 'test-user' }, loading: false, signOut: vi.fn() });
         mockUseRouter.mockReturnValue({ push: mockPush });
         mockOnSnapshot.mockImplementation((q, callback) => {
             callback({
                 forEach: (cb: (doc: any) => void) => mockCandidates.forEach(c => cb({ id: c.id, data: () => c }))
             });
-            return jest.fn(); // unsubscribe
+            return vi.fn(); // unsubscribe
         });
-        jest.useFakeTimers();
+        vi.useFakeTimers();
     });
 
     afterEach(() => {
-        jest.clearAllMocks();
-        jest.useRealTimers();
+        vi.clearAllMocks();
+        vi.useRealTimers();
     });
 
     it('redirects to login if not authenticated', () => {
-        mockUseAuth.mockReturnValue({ user: null, loading: false, signOut: jest.fn() });
+        mockUseAuth.mockReturnValue({ user: null, loading: false, signOut: vi.fn() });
         renderHook(() => useDashboard());
         expect(mockPush).toHaveBeenCalledWith('/admin-dashboard-secret/login');
     });
@@ -139,7 +140,7 @@ describe('useDashboard', () => {
         expect(result.current.toast.isVisible).toBe(true);
         expect(result.current.toast.message).toBe('Test message');
         act(() => {
-            jest.runAllTimers();
+            vi.runAllTimers();
         });
         expect(result.current.toast.isVisible).toBe(false);
     });

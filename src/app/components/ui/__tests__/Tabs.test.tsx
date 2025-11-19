@@ -1,11 +1,12 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Tabs from '../Tabs';
 import '@testing-library/jest-dom';
 
 describe('Tabs', () => {
-  const onTabChangeMock = jest.fn();
+  const onTabChangeMock = vi.fn();
   const tabs = [
     { label: 'Tab 1', value: 'tab1' },
     { label: 'Tab 2', value: 'tab2' },

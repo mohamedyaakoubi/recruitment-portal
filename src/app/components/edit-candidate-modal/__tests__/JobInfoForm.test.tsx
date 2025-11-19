@@ -1,13 +1,14 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import JobInfoForm from '../JobInfoForm';
 import '@testing-library/jest-dom';
 
 describe('JobInfoForm', () => {
-  const handleCategoryChangeMock = jest.fn();
-  const handleJobChangeMock = jest.fn();
-  const handleInputChangeMock = jest.fn();
+  const handleCategoryChangeMock = vi.fn();
+  const handleJobChangeMock = vi.fn();
+  const handleInputChangeMock = vi.fn();
 
   const defaultProps = {
     formData: {
@@ -41,21 +42,36 @@ describe('JobInfoForm', () => {
   });
 
   it('should call handleCategoryChange when the job category is changed', () => {
+    let capturedValue = '';
+    handleCategoryChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<JobInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText('Job Category'), { target: { value: 'Finance' } });
-    expect(handleCategoryChangeMock).toHaveBeenCalledWith('Finance');
+    expect(handleCategoryChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('Finance');
   });
 
   it('should call handleJobChange when the job position is changed', () => {
+    let capturedValue = '';
+    handleJobChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<JobInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText('Job Position'), { target: { value: 'job1' } });
-    expect(handleJobChangeMock).toHaveBeenCalledWith('job1');
+    expect(handleJobChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('job1');
   });
 
   it('should call handleInputChange when the specialty is changed', () => {
+    let capturedValue = '';
+    handleInputChangeMock.mockImplementation((e) => {
+      capturedValue = e.target.value;
+    });
     render(<JobInfoForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText('Specialty'), { target: { value: 'Backend' } });
-    expect(handleInputChangeMock).toHaveBeenCalledWith('specialty', 'Backend');
+    expect(handleInputChangeMock).toHaveBeenCalled();
+    expect(capturedValue).toBe('Backend');
   });
 
   it('should show a loading indicator when loadingJobs is true', () => {

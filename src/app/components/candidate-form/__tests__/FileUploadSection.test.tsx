@@ -1,9 +1,10 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import FileUploadSection from '../FileUploadSection';
 import '@testing-library/jest-dom';
 
-jest.mock('../../ui/FileInput', () => ({
+vi.mock('../../ui/FileInput', () => ({
     __esModule: true,
     default: ({ label, name, disabled }: any) => (
         <input type="file" data-testid={name} aria-label={label} disabled={disabled} />
@@ -11,7 +12,7 @@ jest.mock('../../ui/FileInput', () => ({
 }));
 
 describe('FileUploadSection', () => {
-  const handleFileChangeMock = jest.fn();
+  const handleFileChangeMock = vi.fn();
 
   const defaultProps = {
     handleFileChange: handleFileChangeMock,

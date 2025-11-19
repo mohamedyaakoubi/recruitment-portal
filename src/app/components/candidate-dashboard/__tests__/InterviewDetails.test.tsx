@@ -1,11 +1,12 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import InterviewDetails from '../InterviewDetails';
 import '@testing-library/jest-dom';
 
 describe('InterviewDetails', () => {
-  const formatDateMock = jest.fn((date) => new Date(date.toDate()).toLocaleDateString());
+  const formatDateMock = vi.fn((date) => new Date(date.toDate()).toLocaleDateString());
 
   const applications = [
     {

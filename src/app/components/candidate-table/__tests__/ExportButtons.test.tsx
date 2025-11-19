@@ -1,10 +1,11 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ExportButtons from '../ExportButtons';
 import '@testing-library/jest-dom';
 
 describe('ExportButtons', () => {
-  const handleExportMock = jest.fn();
+  const handleExportMock = vi.fn();
 
   const defaultProps = {
     isExporting: false,

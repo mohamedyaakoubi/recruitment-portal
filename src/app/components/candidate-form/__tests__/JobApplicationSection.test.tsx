@@ -1,14 +1,15 @@
 
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import JobApplicationSection from '../JobApplicationSection';
 import '@testing-library/jest-dom';
 
 describe('JobApplicationSection', () => {
-  const handleCategorySelectionMock = jest.fn();
-  const handleJobSelectionMock = jest.fn();
-  const setSpecialtyMock = jest.fn();
-  const setSpecialtySearchMock = jest.fn();
+  const handleCategorySelectionMock = vi.fn();
+  const handleJobSelectionMock = vi.fn();
+  const setSpecialtyMock = vi.fn();
+  const setSpecialtySearchMock = vi.fn();
 
   const defaultProps = {
     selectedCategory: 'Development & IT',
