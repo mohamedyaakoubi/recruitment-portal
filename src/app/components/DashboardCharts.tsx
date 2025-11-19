@@ -23,6 +23,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   statusChartData,
   scoreDistributionData
 }) => {
+  console.log('DashboardCharts rendering', { statusChartData, scoreDistributionData });
   const { theme } = useTheme();
   const isDarkMode = theme === 'dark';
 
@@ -46,29 +47,29 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
           <div className="relative">
             <ResponsiveContainer width="100%" height={350}>
               <PieChart>
-                <Pie 
-                  data={statusChartData} 
-                  cx="50%" 
-                  cy="50%" 
-                  labelLine={false} 
-                  outerRadius={120} 
+                <Pie
+                  data={statusChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={120}
                   innerRadius={60}
-                  fill="#8884d8" 
-                  dataKey="value" 
+                  fill="#8884d8"
+                  dataKey="value"
                   label={{ fill: legendColor }}
                 >
                   {statusChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
                   ))}
                 </Pie>
-                <RechartsTooltip 
-                  contentStyle={{ 
-                    backgroundColor: tooltipBackgroundColor, 
-                    border: `1px solid ${tooltipBorderColor}`, 
+                <RechartsTooltip
+                  contentStyle={{
+                    backgroundColor: tooltipBackgroundColor,
+                    border: `1px solid ${tooltipBorderColor}`,
                     borderRadius: '8px',
-                  }} 
+                  }}
                 />
-                <Legend 
+                <Legend
                   wrapperStyle={{ paddingTop: '20px', color: legendColor }}
                   iconType="circle"
                 />
@@ -101,30 +102,30 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={scoreDistributionData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={isDarkMode ? '#374151' : '#f1f5f9'} />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   stroke={tickColor}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
-                <YAxis 
+                <YAxis
                   stroke={tickColor}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                   allowDecimals={false}
                 />
-                <RechartsTooltip 
-                  contentStyle={{ 
-                    backgroundColor: tooltipBackgroundColor, 
-                    border: `1px solid ${tooltipBorderColor}`, 
+                <RechartsTooltip
+                  contentStyle={{
+                    backgroundColor: tooltipBackgroundColor,
+                    border: `1px solid ${tooltipBorderColor}`,
                     borderRadius: '8px',
-                  }} 
+                  }}
                   labelStyle={{ color: legendColor }}
                 />
-                <Bar 
-                  dataKey="count" 
+                <Bar
+                  dataKey="count"
                   fill="#10B981"
                   radius={[4, 4, 0, 0]}
                 />

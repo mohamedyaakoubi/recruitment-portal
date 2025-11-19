@@ -42,9 +42,7 @@ next-env.d.ts
 
 __mocks__/
 # Ignore test files
-__tests__/
-**/*.test.*
-**/*.spec.*
+
 
 # Ignore test snapshots (used with Jest)
 *.snap
