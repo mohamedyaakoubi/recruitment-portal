@@ -1,3 +1,5 @@
+'use client';
+
 // src/app/components/DashboardCharts.tsx
 import React from 'react';
 import { useTheme } from 'next-themes';
