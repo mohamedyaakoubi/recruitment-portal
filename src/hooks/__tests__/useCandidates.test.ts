@@ -1,17 +1,23 @@
 import { vi } from 'vitest';
-
 import { renderHook, act } from '@testing-library/react';
-import { useCandidates } from '../useCandidates';
-import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Candidate } from '@/types';
 
-// Mock Firebase
+// Mock Firebase BEFORE importing anything that uses it
 vi.mock('@/lib/firebase', () => ({
-  db: vi.fn(),
+  db: {},
 }));
-vi.mock('firebase/firestore');
 
-const mockOnSnapshot = onSnapshot as vi.Mock;
+vi.mock('firebase/firestore', () => ({
+  collection: vi.fn(),
+  query: vi.fn(),
+  onSnapshot: vi.fn(),
+}));
+
+// Now import the hook and mocked functions
+import { useCandidates } from '../useCandidates';
+import { onSnapshot, collection } from 'firebase/firestore';
+
+const mockOnSnapshot = onSnapshot as unknown as vi.Mock;
 
 describe('useCandidates', () => {
   it('should not fetch candidates if user is null', () => {
@@ -66,7 +72,7 @@ describe('useCandidates', () => {
       return vi.fn();
     });
 
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
     const { result } = renderHook(() => useCandidates(mockUser));
 
     await act(async () => {

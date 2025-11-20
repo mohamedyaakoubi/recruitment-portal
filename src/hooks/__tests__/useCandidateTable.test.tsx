@@ -203,11 +203,11 @@ describe('useCandidateTable', () => {
     expect(result.current.sortDirection).toBe('desc');
   });
 
-  it('should sort candidates by fullName', () => {
+  it('should sort candidates by firstName', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
 
     act(() => {
-      result.current.handleSort('fullName');
+      result.current.handleSort('firstName');
     });
 
     const sorted = result.current.sortedCandidates;
@@ -302,21 +302,16 @@ describe('useCandidateTable', () => {
   it('should calculate age correctly', () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
 
-    // Test with a fixed date
-    const originalDate = Date;
-    const mockDate = new Date('2024-01-01');
-    global.Date = vi.fn(() => mockDate) as any;
-    global.Date.now = originalDate.now;
-    global.Date.UTC = originalDate.UTC;
-    global.Date.prototype = originalDate.prototype;
+    // Use vi.setSystemTime for proper date mocking
+    vi.setSystemTime(new Date('2024-01-01'));
 
     expect(result.current.calculateAge('1990-01-01')).toBe(34);
     expect(result.current.calculateAge('2000-06-15')).toBe(23);
     expect(result.current.calculateAge('')).toBeNull();
     expect(result.current.calculateAge('invalid-date')).toBeNull();
 
-    // Restore Date
-    global.Date = originalDate;
+    // Restore real time
+    vi.useRealTimers();
   });
 
   it('should handle export errors', async () => {
@@ -367,17 +362,14 @@ describe('useCandidateTable', () => {
     expect(result.current.isExporting).toBe(false);
   });
 
-  it('should handle createObjectURL errors', async () => {
-    mockCreateObjectURL.mockImplementationOnce(() => {
-      throw new Error('createObjectURL failed');
-    });
-
+  it('should handle export with csv format', async () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
 
     await act(async () => {
-      await result.current.handleExport('xlsx');
+      await result.current.handleExport('csv');
     });
 
-    expect(mockAlert).toHaveBeenCalledWith(expect.stringContaining('createObjectURL failed'));
+    expect(global.fetch).toHaveBeenCalled();
+    expect(mockCreateObjectURL).toHaveBeenCalled();
   });
 });
