@@ -1,17 +1,16 @@
 /// <reference types="vitest" />
-
-import type { TestAPI, ExpectStatic, Vi } from 'vitest';
+/// <reference types="vitest/globals" />
 
 declare global {
-    const describe: TestAPI['describe'];
-    const it: TestAPI['it'];
-    const test: TestAPI['test'];
-    const expect: ExpectStatic;
-    const vi: Vi;
-    const beforeEach: TestAPI['beforeEach'];
-    const afterEach: TestAPI['afterEach'];
-    const beforeAll: TestAPI['beforeAll'];
-    const afterAll: TestAPI['afterAll'];
+    const describe: typeof import('vitest')['describe'];
+    const it: typeof import('vitest')['it'];
+    const test: typeof import('vitest')['test'];
+    const expect: typeof import('vitest')['expect'];
+    const vi: typeof import('vitest')['vi'];
+    const beforeEach: typeof import('vitest')['beforeEach'];
+    const afterEach: typeof import('vitest')['afterEach'];
+    const beforeAll: typeof import('vitest')['beforeAll'];
+    const afterAll: typeof import('vitest')['afterAll'];
 }
 
 export { };

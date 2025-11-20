@@ -3,12 +3,14 @@ import { renderHook, act } from '@testing-library/react';
 import { Candidate } from '@/types';
 
 // Mock dependencies BEFORE importing anything that uses them
+const mockOnSnapshot = vi.fn();
+
 vi.mock('@/hooks/useAuth');
 vi.mock('@/lib/firebase', () => ({ db: {} }));
 vi.mock('firebase/firestore', () => ({
     collection: vi.fn(),
     query: vi.fn(),
-    onSnapshot: vi.fn(),
+    onSnapshot: mockOnSnapshot,
 }));
 vi.mock('next/navigation');
 vi.mock('@/lib/dashboardUtils');
@@ -16,18 +18,16 @@ vi.mock('@/lib/dashboardUtils');
 // Now import the hooks and mocked functions
 import { useDashboard } from '../useDashboard';
 import { useAuth } from '@/hooks/useAuth';
-import { onSnapshot } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
-const mockUseAuth = useAuth as unknown as vi.Mock;
-const mockUseRouter = useRouter as unknown as vi.Mock;
+const mockUseAuth = useAuth as unknown as ReturnType<typeof vi.fn>;
+const mockUseRouter = useRouter as unknown as ReturnType<typeof vi.fn>;
 const mockPush = vi.fn();
-const mockOnSnapshot = onSnapshot as unknown as vi.Mock;
 
-const mockCandidates: Candidate[] = [
-    { id: '1', fullName: 'John Doe', status: 'submitted', city: 'New York', country: 'USA', nationality: 'American', jobTitleText: 'Frontend Developer', jobCategory: 'Engineering', dateOfBirth: '1990-01-01', specialty: 'React', interviewDate: { toDate: () => new Date('2025-08-01T10:00:00Z') }, duration: 60, email: '', score: 0, scoreAnalysis: '', calendarEventId: '', meetLink: '', phone: '', availability: [], linkedin: '', github: '', resume: '', coverLetter: '', jobTitle: '', yearsOfExperience: 0, skills: [], referral: '', source: '', startDate: '', comments: '', createdAt: new Date(), updatedAt: new Date(), submittedAt: { toMillis: () => 1000 } },
-    { id: '2', fullName: 'Alice Smith', status: 'approved', city: 'London', country: 'UK', nationality: 'British', jobTitleText: 'Backend Developer', jobCategory: 'Engineering', dateOfBirth: '1995-05-05', specialty: 'Node.js', interviewDate: { toDate: () => new Date('2025-07-20T14:00:00Z') }, duration: 30, email: '', score: 0, scoreAnalysis: '', calendarEventId: '', meetLink: '', phone: '', availability: [], linkedin: '', github: '', resume: '', coverLetter: '', jobTitle: '', yearsOfExperience: 0, skills: [], referral: '', source: '', startDate: '', comments: '', createdAt: new Date(), updatedAt: new Date(), submittedAt: { toMillis: () => 2000 } },
-    { id: '3', fullName: 'Bob Johnson', status: 'rejected', city: 'New York', country: 'USA', nationality: 'American', jobTitleText: 'UI/UX Designer', jobCategory: 'Design', dateOfBirth: '1988-03-15', specialty: 'Figma', interviewDate: null, email: '', score: 0, scoreAnalysis: '', calendarEventId: '', meetLink: '', duration: 0, phone: '', availability: [], linkedin: '', github: '', resume: '', coverLetter: '', jobTitle: '', yearsOfExperience: 0, skills: [], referral: '', source: '', startDate: '', comments: '', createdAt: new Date(), updatedAt: new Date(), submittedAt: { toMillis: () => 500 } },
+const mockCandidates: Partial<Candidate>[] = [
+    { id: '1', fullName: 'John Doe', status: 'submitted', city: 'New York', country: 'USA', nationality: 'American', jobTitleText: 'Frontend Developer', jobCategory: 'Engineering', dateOfBirth: '1990-01-01', specialty: 'React', interviewDate: { toDate: () => new Date('2025-08-01T10:00:00Z') } as any, duration: 60, email: '', score: 0, scoreAnalysis: '', calendarEventId: '', meetLink: '', submittedAt: { toMillis: () => 1000 } as any, websites: [], cvUrl: '', passportUrl: '' },
+    { id: '2', fullName: 'Alice Smith', status: 'approved', city: 'London', country: 'UK', nationality: 'British', jobTitleText: 'Backend Developer', jobCategory: 'Engineering', dateOfBirth: '1995-05-05', specialty: 'Node.js', interviewDate: { toDate: () => new Date('2025-07-20T14:00:00Z') } as any, duration: 30, email: '', score: 0, scoreAnalysis: '', calendarEventId: '', meetLink: '', submittedAt: { toMillis: () => 2000 } as any, websites: [], cvUrl: '', passportUrl: '' },
+    { id: '3', fullName: 'Bob Johnson', status: 'rejected', city: 'New York', country: 'USA', nationality: 'American', jobTitleText: 'UI/UX Designer', jobCategory: 'Design', dateOfBirth: '1988-03-15', specialty: 'Figma', interviewDate: null, email: '', score: 0, scoreAnalysis: '', calendarEventId: '', meetLink: '', duration: 0, submittedAt: { toMillis: () => 500 } as any, websites: [], cvUrl: '', passportUrl: '' },
 ];
 
 describe('useDashboard', () => {

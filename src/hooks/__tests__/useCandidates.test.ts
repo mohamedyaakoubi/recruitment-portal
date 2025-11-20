@@ -3,39 +3,40 @@ import { renderHook, act } from '@testing-library/react';
 import { Candidate } from '@/types';
 
 // Mock Firebase BEFORE importing anything that uses it
+const mockCollection = vi.fn();
+const mockQuery = vi.fn();
+const mockOnSnapshot = vi.fn();
+
 vi.mock('@/lib/firebase', () => ({
   db: {},
 }));
 
 vi.mock('firebase/firestore', () => ({
-  collection: vi.fn(),
-  query: vi.fn(),
-  onSnapshot: vi.fn(),
+  collection: mockCollection,
+  query: mockQuery,
+  onSnapshot: mockOnSnapshot,
 }));
 
-// Now import the hook and mocked functions
+// Now import the hook
 import { useCandidates } from '../useCandidates';
-import { onSnapshot, collection } from 'firebase/firestore';
-
-const mockOnSnapshot = onSnapshot as unknown as vi.Mock;
 
 describe('useCandidates', () => {
   it('should not fetch candidates if user is null', () => {
     const { result } = renderHook(() => useCandidates(null));
     expect(result.current.candidates).toEqual([]);
     expect(result.current.loadingCandidates).toBe(false);
-    expect(collection).not.toHaveBeenCalled();
+    expect(mockCollection).not.toHaveBeenCalled();
   });
 
   it('should fetch and set candidates if user is provided', async () => {
     const mockUser = { uid: 'test-user' };
     const mockCandidates: Partial<Candidate>[] = [
-      { id: '1', submittedAt: { toMillis: () => 2000 } },
-      { id: '2', submittedAt: { toMillis: () => 1000 } },
+      { id: '1', submittedAt: { toMillis: () => 2000 } as any },
+      { id: '2', submittedAt: { toMillis: () => 1000 } as any },
     ];
 
     let onSnapshotCallback: (snapshot: any) => void;
-    mockOnSnapshot.mockImplementation((q, callback) => {
+    mockOnSnapshot.mockImplementation((q: any, callback: (snapshot: any) => void) => {
       onSnapshotCallback = callback;
       return vi.fn(); // Unsubscribe function
     });
@@ -67,7 +68,7 @@ describe('useCandidates', () => {
     const errorMessage = 'Failed to fetch';
 
     let onErrorCallback: (error: Error) => void;
-    mockOnSnapshot.mockImplementation((q, successCb, errorCb) => {
+    mockOnSnapshot.mockImplementation((q: any, successCb: (snapshot: any) => void, errorCb: (error: Error) => void) => {
       onErrorCallback = errorCb;
       return vi.fn();
     });

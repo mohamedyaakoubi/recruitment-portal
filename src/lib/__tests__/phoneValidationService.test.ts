@@ -62,7 +62,7 @@ describe('phoneValidationService', () => {
         });
 
         it('should validate phone via Abstract API', async () => {
-            (global.fetch as vi.Mock).mockResolvedValueOnce({
+            (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
                 ok: true,
                 text: async () => JSON.stringify({
                     valid: true,

@@ -5,9 +5,9 @@ import CandidateFilters from '../CandidateFilters';
 import { Candidate } from '@/types';
 
 // Mock candidates data for testing
-const mockCandidates: Candidate[] = [
-  { id: '1', name: 'Alice Smith', city: 'New York', country: 'USA', nationality: 'American', jobTitleText: 'Software Engineer', jobCategory: 'IT', specialty: 'Frontend', age: 28, status: 'submitted' },
-  { id: '2', name: 'Bob Johnson', city: 'London', country: 'UK', nationality: 'British', jobTitleText: 'Data Scientist', jobCategory: 'Data', specialty: 'Machine Learning', age: 35, status: 'interview_scheduled' },
+const mockCandidates: Partial<Candidate>[] = [
+  { id: '1', fullName: 'Alice Smith', city: 'New York', country: 'USA', nationality: 'American', jobTitleText: 'Software Engineer', jobCategory: 'IT', specialty: 'Frontend', age: 28, status: 'submitted', email: '', websites: [], cvUrl: '', passportUrl: '', submittedAt: { toMillis: () => 1000 } as any },
+  { id: '2', fullName: 'Bob Johnson', city: 'London', country: 'UK', nationality: 'British', jobTitleText: 'Data Scientist', jobCategory: 'Data', specialty: 'Machine Learning', age: 35, status: 'interview_scheduled', email: '', websites: [], cvUrl: '', passportUrl: '', submittedAt: { toMillis: () => 2000 } as any },
 ];
 
 describe('CandidateFilters', () => {

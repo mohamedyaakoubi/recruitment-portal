@@ -59,7 +59,7 @@ describe('googleOAuth', () => {
         it('should store tokens in Firestore', async () => {
             const mockSet = vi.fn().mockResolvedValue(undefined);
             const mockDoc = vi.fn().mockReturnValue({ set: mockSet });
-            (getFirestoreAdmin as unknown as vi.Mock).mockReturnValue({ doc: mockDoc });
+            (getFirestoreAdmin as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ doc: mockDoc });
 
             const tokens = { access_token: 'test-token' };
             await storeTokens(tokens);
@@ -73,7 +73,7 @@ describe('googleOAuth', () => {
         it('should return null when no tokens are stored', async () => {
             const mockGet = vi.fn().mockResolvedValue({ exists: false });
             const mockDoc = vi.fn().mockReturnValue({ get: mockGet });
-            (getFirestoreAdmin as unknown as vi.Mock).mockReturnValue({ doc: mockDoc });
+            (getFirestoreAdmin as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ doc: mockDoc });
 
             const client = await getAuthenticatedClient();
             expect(client).toBeNull();
