@@ -1,9 +1,10 @@
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import admin from 'firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Query, DocumentData } from 'firebase-admin/firestore';
 import { sendNotificationEmail, sendRejectionEmail } from './email';
 import { format } from 'date-fns';
 import logger from '@/lib/logger';
+import { Candidate } from '@/types';
 
 // 🔥 NEW: Helper function to calculate age
 export const calculateAge = (dateOfBirth: string): number | null => {
@@ -147,7 +148,7 @@ export const exportCandidates = async (
     filterAgeMax: string = ''
 ) => {
     const db = getFirestoreAdmin();
-    let query: any = db.collection("candidates");
+    let query: Query<DocumentData> = db.collection("candidates");
 
     if (filterStatus !== 'all') {
       query = query.where('status', '==', filterStatus);
@@ -155,7 +156,7 @@ export const exportCandidates = async (
 
     const snapshot = await query.orderBy('submittedAt', 'desc').get();
     
-    let candidates = snapshot.docs.map((doc: any) => {
+    let candidates = snapshot.docs.map((doc) => {
       const data = doc.data();
       const age = calculateAge(data.dateOfBirth);
       
@@ -199,7 +200,7 @@ export const exportCandidates = async (
 
     // Apply all filters...
     if (filterName) {
-      candidates = candidates.filter((candidate: any) => 
+      candidates = candidates.filter((candidate) => 
         candidate.fullName.toLowerCase().includes(filterName.toLowerCase()) ||
         candidate.firstName.toLowerCase().includes(filterName.toLowerCase()) ||
         candidate.lastName.toLowerCase().includes(filterName.toLowerCase())
@@ -207,46 +208,46 @@ export const exportCandidates = async (
     }
 
     if (filterNationality) {
-      candidates = candidates.filter((candidate: any) => 
+      candidates = candidates.filter((candidate) => 
         candidate.nationality.toLowerCase().includes(filterNationality.toLowerCase()) ||
         candidate.doubleNationality.toLowerCase().includes(filterNationality.toLowerCase())
       );
     }
 
     if (filterCity) {
-      candidates = candidates.filter((candidate: any) => 
+      candidates = candidates.filter((candidate) => 
         candidate.city.toLowerCase().includes(filterCity.toLowerCase())
       );
     }
 
     if (filterCountry) {
-      candidates = candidates.filter((candidate: any) => 
+      candidates = candidates.filter((candidate) => 
         candidate.country.toLowerCase().includes(filterCountry.toLowerCase())
       );
     }
 
     if (filterJobTitle) {
-      candidates = candidates.filter((candidate: any) => 
+      candidates = candidates.filter((candidate) => 
         candidate.jobTitleText.toLowerCase().includes(filterJobTitle.toLowerCase()) ||
         candidate.jobTitle.toLowerCase().includes(filterJobTitle.toLowerCase())
       );
     }
 
     if (filterCategory) {
-      candidates = candidates.filter((candidate: any) => 
+      candidates = candidates.filter((candidate) => 
         candidate.jobCategory.toLowerCase().includes(filterCategory.toLowerCase())
       );
     }
 
     if (filterSpecialty) {
-      candidates = candidates.filter((candidate: any) => 
+      candidates = candidates.filter((candidate) => 
         candidate.specialty.toLowerCase().includes(filterSpecialty.toLowerCase())
       );
     }
 
     // Age filtering
     if (filterAgeMin || filterAgeMax) {
-      candidates = candidates.filter((candidate: any) => {
+      candidates = candidates.filter((candidate) => {
         const candidateAge = candidate.age;
         if (!candidateAge && candidateAge !== 0) return false;
         

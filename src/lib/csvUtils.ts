@@ -1,7 +1,8 @@
 import { format } from 'date-fns';
+import { Candidate } from '@/types';
 
 // 🔥 UPDATED: Generate CSV with complete candidate information
-export function generateCSV(candidates: any[]): string {
+export function generateCSV(candidates: Candidate[]): string {
   if (candidates.length === 0) {
     return 'No candidates found';
   }

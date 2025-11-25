@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
         throw new Error('No API key configured');
       }
     } catch (error) {
-      logger.warn('Abstract API failed, using regex result', error, { phone: fullPhone });
+      logger.warn('Abstract API failed, using regex result', { phone: fullPhone, error });
       
       return NextResponse.json({
         ...regexResult,

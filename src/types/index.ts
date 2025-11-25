@@ -56,8 +56,8 @@ export interface Job {
   category: JobCategory;
   specialties: string[]; // ✅ Add specialties array
   isActive: boolean;
-  createdAt?: any;
-  updatedAt?: any;
+  createdAt?: Timestamp | Date | string;
+  updatedAt?: Timestamp | Date | string;
 }
 
 export interface ScoringModalProps {
@@ -265,8 +265,8 @@ export interface JobApplicationSectionProps {
   handleCategorySelection: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   jobTitle: string;
   handleJobSelection: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  filteredJobs: any[];
-  selectedJob: any;
+  filteredJobs: Job[];
+  selectedJob: Job | null;
   specialty: string;
   setSpecialty: (specialty: string) => void;
   specialtySearch: string;

@@ -6,6 +6,22 @@ import { GoogleAIFileManager } from "@google/generative-ai/server";
 import logger from "@/lib/logger";
 import { Candidate } from '@/types';
 
+// Gemini API type definitions
+interface GeminiFileData {
+    mimeType: string;
+    fileUri: string;
+}
+
+interface GeminiPart {
+    text?: string;
+    fileData?: GeminiFileData;
+}
+
+interface GeminiFile {
+    uri: string;
+    mimeType: string;
+}
+
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
@@ -115,7 +131,7 @@ function getMimeTypeFromUrl(url: string): string {
 }
 
 // Enhanced document content extraction with actual file upload
-async function extractDocumentContent(fileUrl: string): Promise<{ content: string; geminiFile?: any }> {
+async function extractDocumentContent(fileUrl: string): Promise<{ content: string; geminiFile?: GeminiFile }> {
     try {
         logger.info("Processing document", { fileUrl });
 
@@ -128,7 +144,7 @@ async function extractDocumentContent(fileUrl: string): Promise<{ content: strin
         if (geminiFile) {
             return {
                 content: `📄 Document uploaded to Gemini for analysis: ${fileUrl}`,
-                geminiFile: geminiFile
+                geminiFile: geminiFile as GeminiFile
             };
         } else {
             // Fallback: provide file information for context
@@ -178,7 +194,7 @@ async function getGemini25ScoringAnalysis(
 
         // Collect all files and content for analysis
         const additionalContent: string[] = [];
-        const geminiFiles: any[] = [];
+        const geminiFiles: GeminiFile[] = [];
 
         // Add CV file if successfully uploaded
         if (cvFile) {
@@ -275,7 +291,7 @@ Please provide a thorough assessment based on ALL available information includin
         });
 
         // 🔥 FIXED: Create content parts using the correct API structure
-        const parts: any[] = [];
+        const parts: GeminiPart[] = [];
 
         // Add uploaded files first using the correct format
         geminiFiles.forEach(file => {

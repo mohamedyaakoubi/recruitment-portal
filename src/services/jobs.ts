@@ -63,7 +63,7 @@ export const updateJob = async (jobId: string, jobData: Partial<Job>): Promise<v
     throw new Error('Invalid category');
   }
 
-  const updateData: any = {
+  const updateData: Partial<Job> & { updatedAt: admin.firestore.Timestamp } = {
     ...jobData,
     updatedAt: admin.firestore.Timestamp.now()
   };
