@@ -3,12 +3,13 @@ import admin from 'firebase-admin';
 import { DocumentData } from "firebase-admin/firestore";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
+import logger from "@/lib/logger";
 import { Candidate } from '@/types';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
-  console.warn("GEMINI_API_KEY environment variable not set. AI scoring will be disabled.");
+    logger.warn("GEMINI_API_KEY environment variable not set. AI scoring will be disabled.");
 }
 
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
@@ -40,47 +41,47 @@ interface GeminiScoringResponse {
 // 🔥 FIXED: Function to upload file to Gemini using the correct GoogleAIFileManager
 async function uploadFileToGemini(fileUrl: string, mimeType: string) {
     if (!fileManager) {
-        console.error("File Manager not initialized");
+        logger.error("File Manager not initialized");
         return null;
     }
 
     try {
-        console.log(`📤 Uploading file to Gemini: ${fileUrl}`);
-        
+        logger.info("Uploading file to Gemini", { fileUrl });
+
         // Fetch the file from the URL
         const response = await fetch(fileUrl);
         if (!response.ok) {
             throw new Error(`Failed to fetch file: ${response.statusText}`);
         }
-        
+
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        
+
         // 🔥 FIXED: Use the GoogleAIFileManager for file uploads
         const uploadResult = await fileManager.uploadFile(buffer, {
             mimeType: mimeType,
             displayName: `candidate-cv-${Date.now()}`
         });
-        
-        console.log(`✅ File uploaded successfully: ${uploadResult.file.uri}`);
-        
+
+        logger.info("File uploaded successfully", { uri: uploadResult.file.uri });
+
         // Wait for file to be processed if needed
         let file = uploadResult.file;
         while (file.state === 'PROCESSING') {
-            console.log("⏳ File processing...");
+            logger.info("File processing...");
             await new Promise(resolve => setTimeout(resolve, 2000));
             file = await fileManager.getFile(file.name);
         }
-        
+
         if (file.state === 'FAILED') {
             throw new Error('File processing failed');
         }
-        
-        console.log(`🎉 File ready for analysis: ${file.uri}`);
+
+        logger.info("File ready for analysis", { uri: file.uri });
         return file;
-        
+
     } catch (error) {
-        console.error("❌ Error uploading file to Gemini:", error);
+        logger.error("Error uploading file to Gemini", error);
         return null;
     }
 }
@@ -89,7 +90,7 @@ async function uploadFileToGemini(fileUrl: string, mimeType: string) {
 function getMimeTypeFromUrl(url: string): string {
     const urlWithoutQuery = url.split('?')[0];
     const extension = urlWithoutQuery.toLowerCase().split('.').pop();
-    
+
     switch (extension) {
         case 'pdf':
             return 'application/pdf';
@@ -116,14 +117,14 @@ function getMimeTypeFromUrl(url: string): string {
 // Enhanced document content extraction with actual file upload
 async function extractDocumentContent(fileUrl: string): Promise<{ content: string; geminiFile?: any }> {
     try {
-        console.log(`📄 Processing document: ${fileUrl}`);
-        
+        logger.info("Processing document", { fileUrl });
+
         const mimeType = getMimeTypeFromUrl(fileUrl);
-        console.log(`📋 Detected MIME type: ${mimeType}`);
-        
+        logger.info("Detected MIME type", { mimeType });
+
         // Upload file to Gemini for direct analysis
         const geminiFile = await uploadFileToGemini(fileUrl, mimeType);
-        
+
         if (geminiFile) {
             return {
                 content: `📄 Document uploaded to Gemini for analysis: ${fileUrl}`,
@@ -136,7 +137,7 @@ async function extractDocumentContent(fileUrl: string): Promise<{ content: strin
             };
         }
     } catch (error) {
-        console.error("Error processing document:", error);
+        logger.error("Error processing document", error);
         return {
             content: `📄 Document processing failed: ${fileUrl}`
         };
@@ -147,42 +148,42 @@ async function extractDocumentContent(fileUrl: string): Promise<{ content: strin
 async function analyzeWebsiteContent(url: string): Promise<string> {
     try {
         const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
-        console.log(`🔗 Analyzing website: ${cleanUrl}`);
-        
+        logger.info("Analyzing website", { url: cleanUrl });
+
         // Return instruction for comprehensive analysis
         return `🌐 Please analyze this website: ${cleanUrl} - Extract relevant professional information, portfolio details, work experience, skills, and any other information that would help evaluate this candidate's suitability for the position.`;
     } catch (error) {
-        console.error("Error preparing website analysis:", error);
+        logger.error("Error preparing website analysis", error);
         return `🔗 Website provided: ${url} (analysis preparation failed)`;
     }
 }
 
 // 🔥 FIXED: Enhanced scoring analysis using the correct API structure
 async function getGemini25ScoringAnalysis(
-    jobTitle: string, 
-    jobDescription: string, 
+    jobTitle: string,
+    jobDescription: string,
     candidateData: CandidateDataForScoring
 ): Promise<GeminiScoringResponse | null> {
     if (!genAI) {
-        console.error("Gemini API not initialized. Skipping scoring.");
+        logger.error("Gemini API not initialized. Skipping scoring.");
         return null;
     }
 
     try {
-        console.log(`🤖 Initializing Gemini 2.5 Pro for candidate: ${candidateData.fullName}`);
+        logger.info("Initializing Gemini 2.5 Pro for candidate", { name: candidateData.fullName });
 
         // Process CV file first
         const cvMimeType = getMimeTypeFromUrl(candidateData.cvUrl);
         const cvFile = await uploadFileToGemini(candidateData.cvUrl, cvMimeType);
-        
+
         // Collect all files and content for analysis
         const additionalContent: string[] = [];
         const geminiFiles: any[] = [];
-        
+
         // Add CV file if successfully uploaded
         if (cvFile) {
             geminiFiles.push(cvFile);
-            console.log(`📎 CV file added for analysis: ${cvFile.uri}`);
+            logger.info("CV file added for analysis", { uri: cvFile.uri });
         }
 
         // Process websites
@@ -268,12 +269,14 @@ Provide your response in the following JSON format:
 Please provide a thorough assessment based on ALL available information including uploaded documents.
         `;
 
-        console.log(`🔍 Sending comprehensive analysis request to Gemini 2.5 Pro...`);
-        console.log(`📊 Analysis includes: ${geminiFiles.length} uploaded files, ${additionalContent.length} additional info items`);
+        logger.info("Sending comprehensive analysis request to Gemini 2.5 Pro", {
+            uploadedFiles: geminiFiles.length,
+            additionalInfoItems: additionalContent.length
+        });
 
         // 🔥 FIXED: Create content parts using the correct API structure
         const parts: any[] = [];
-        
+
         // Add uploaded files first using the correct format
         geminiFiles.forEach(file => {
             parts.push({
@@ -283,7 +286,7 @@ Please provide a thorough assessment based on ALL available information includin
                 }
             });
         });
-        
+
         // Add the prompt text
         parts.push({
             text: prompt
@@ -310,16 +313,16 @@ Please provide a thorough assessment based on ALL available information includin
         if (!responseText) {
             throw new Error("No response text received from Gemini API");
         }
-        
-        console.log("🤖 Gemini 2.5 Pro Pro Raw Response:", responseText.substring(0, 200) + "...");
+
+        logger.debug("Gemini 2.5 Pro Raw Response", { preview: responseText.substring(0, 200) });
 
         // 🔥 FIXED: Cleanup using the correct FileManager API
         for (const file of geminiFiles) {
             try {
                 await fileManager!.deleteFile(file.name);
-                console.log(`🗑️ Cleaned up file: ${file.name}`);
+                logger.info("Cleaned up file", { fileName: file.name });
             } catch (cleanupError) {
-                console.warn(`⚠️ Failed to cleanup file ${file.name}:`, cleanupError);
+                logger.warn("Failed to cleanup file", { fileName: file.name, error: cleanupError });
             }
         }
 
@@ -327,14 +330,14 @@ Please provide a thorough assessment based on ALL available information includin
             // Clean and parse JSON response
             let cleanedText = responseText.trim();
             cleanedText = cleanedText.replace(/```json\n?|```/g, "");
-            
+
             const jsonStart = cleanedText.indexOf('{');
             const jsonEnd = cleanedText.lastIndexOf('}');
-            
+
             if (jsonStart === -1 || jsonEnd === -1) {
                 throw new Error("No valid JSON object found in response");
             }
-            
+
             cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
             const parsedResponse: GeminiScoringResponse = JSON.parse(cleanedText);
 
@@ -348,22 +351,24 @@ Please provide a thorough assessment based on ALL available information includin
                 Array.isArray(parsedResponse.areasForImprovement) &&
                 ['highly_recommended', 'recommended', 'conditional', 'not_recommended'].includes(parsedResponse.recommendation)
             ) {
-                console.log(`✅ Gemini 2.5 Pro Analysis Complete - Score: ${parsedResponse.score}, Recommendation: ${parsedResponse.recommendation}`);
+                logger.info("Gemini 2.5 Pro Analysis Complete", {
+                    score: parsedResponse.score,
+                    recommendation: parsedResponse.recommendation
+                });
                 return parsedResponse;
             } else {
-                console.error("❌ Parsed response doesn't match expected format:", parsedResponse);
+                logger.error("Parsed response doesn't match expected format", { parsedResponse });
                 return null;
             }
         } catch (parseError) {
-            console.error("❌ JSON parsing failed:", parseError);
-            console.log("Raw response text:", responseText);
-            
+            logger.error("JSON parsing failed", { error: parseError, responsePreview: responseText.substring(0, 500) });
+
             // Fallback scoring
             const scoreMatch = responseText.match(/['"]*score['"]*\s*:\s*(\d+)/i);
             if (scoreMatch && scoreMatch[1]) {
                 const score = parseInt(scoreMatch[1], 10);
                 if (!isNaN(score) && score >= 0 && score <= 100) {
-                    console.warn("⚠️ Using fallback scoring due to JSON parse error");
+                    logger.warn("Using fallback scoring due to JSON parse error");
                     return {
                         score,
                         analysis: "Analysis completed with comprehensive file and content review, but detailed response parsing failed. The score reflects thorough evaluation of all available information including uploaded documents.",
@@ -377,22 +382,22 @@ Please provide a thorough assessment based on ALL available information includin
         }
 
     } catch (error) {
-        console.error("❌ Error calling Gemini 2.5 Pro API:", error);
+        logger.error("Error calling Gemini 2.5 Pro API", error);
         return null;
     }
 }
 
 export const scoreCandidate = async (
-    candidateId: string, 
-    jobId: string, 
-    jobTitle: string, 
+    candidateId: string,
+    jobId: string,
+    jobTitle: string,
     jobDescription: string
 ): Promise<GeminiScoringResponse> => {
     if (!GEMINI_API_KEY || !genAI) {
         throw new Error('AI Scoring is not configured on the server.');
     }
 
-    console.log(`🎯 Starting comprehensive Gemini 2.5 Pro scoring for candidate: ${candidateId}`);
+    logger.info("Starting comprehensive Gemini 2.5 Pro scoring for candidate", { candidateId });
 
     const db = getFirestoreAdmin();
     const candidateRef = db.collection("candidates").doc(candidateId);
@@ -403,7 +408,7 @@ export const scoreCandidate = async (
     }
 
     const candidateDocData = candidateSnap.data() as DocumentData;
-    
+
     const candidateDataForScoring: CandidateDataForScoring = {
         fullName: candidateDocData.fullName || '',
         cvUrl: candidateDocData.cvUrl || '',
@@ -415,7 +420,7 @@ export const scoreCandidate = async (
         additionalInfo: candidateDocData.additionalInfo || []
     };
 
-    console.log(`📊 Candidate data prepared for comprehensive analysis:`, {
+    logger.info("Candidate data prepared for comprehensive analysis", {
         name: candidateDataForScoring.fullName,
         hasCV: !!candidateDataForScoring.cvUrl,
         websiteCount: candidateDataForScoring.websites?.length || 0,
@@ -443,6 +448,6 @@ export const scoreCandidate = async (
 
     await candidateRef.update(updateData);
 
-    console.log(`✅ Candidate ${candidateId} scored successfully with comprehensive Gemini 2.5 Pro analysis`);
+    logger.info("Candidate scored successfully with comprehensive Gemini 2.5 Pro analysis", { candidateId });
     return scoringResult;
 };

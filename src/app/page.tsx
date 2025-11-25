@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from 'react';
 import Image from 'next/image';
@@ -106,7 +106,7 @@ export default function LandingPage() {
           <div className="bg-[#003A70] text-white text-xs py-1.5">
               <div className="max-w-screen-xl mx-auto px-4 sm:px-6 flex justify-center md:justify-between items-center">
                   <div className="flex items-center">
-                      <span className="text-yellow-400 mr-2 text-base">⚠️</span>
+                      <span className="text-yellow-400 mr-2 text-base">!</span>
                       <span>Découvrez les dernières opportunités!</span>
                   </div>
                   <div className="hidden md:flex items-center space-x-6">
@@ -262,9 +262,9 @@ export default function LandingPage() {
                   <div>
                       <h3 className="text-sm font-semibold tracking-wider uppercase text-slate-200">Contact</h3>
                       <div className="mt-4 space-y-3 text-sm text-slate-300">
-                          <p className="flex items-center"><span className="mr-2 opacity-80">📧</span> wassim@internationalskills.fi</p>
-                          <p className="flex items-center"><span className="mr-2 opacity-80">📞</span> +358 452644966</p>
-                          <p className="flex items-center"><span className="mr-2 opacity-80">📞</span> +216 29 581 180</p>
+                          <p className="flex items-center"><span className="mr-2 opacity-80"></span> wassim@internationalskills.fi</p>
+                          <p className="flex items-center"><span className="mr-2 opacity-80"></span> +358 452644966</p>
+                          <p className="flex items-center"><span className="mr-2 opacity-80"></span> +216 29 581 180</p>
                       </div>
                   </div>
 
