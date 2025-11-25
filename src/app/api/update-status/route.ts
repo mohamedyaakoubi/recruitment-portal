@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateCandidateStatus } from '@/services/candidate';
+import logger from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
     try {
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
-        console.error("Error in /api/update-status:", error);
+        logger.error('Error in /api/update-status', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ 
             error: 'Failed to update candidate status', 

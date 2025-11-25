@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { collection, query, onSnapshot, QueryDocumentSnapshot, DocumentData } from "firebase/firestore";
 import { db } from '@/lib/firebase';
 import { Candidate } from '@/types';
+import logger from '@/lib/logger';
 
 export const useCandidates = (user: any) => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -31,7 +32,7 @@ export const useCandidates = (user: any) => {
         setCandidates(candidatesData);
         setLoadingCandidates(false);
       }, (error) => {
-        console.error("Error fetching candidates: ", error);
+        logger.error('Error fetching candidates', error);
         setLoadingCandidates(false);
       });
       return () => unsubscribe();

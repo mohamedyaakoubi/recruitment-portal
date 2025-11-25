@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scoreCandidate } from '@/services/scoring';
+import logger from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🎯 Starting Gemini 2.5 Pro scoring request...');
+    logger.info('Starting Gemini 2.5 Pro scoring request');
     
     const { candidateId, jobId, jobTitle, jobDescription } = await request.json();
 
@@ -13,13 +14,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log(`📊 Scoring candidate ${candidateId} for position: ${jobTitle}`);
+    logger.info('Scoring candidate', { candidateId, jobTitle });
 
     const scoringResult = await scoreCandidate(candidateId, jobId, jobTitle, jobDescription);
 
-    console.log(`✅ Scoring completed with score: ${scoringResult.score}`);
+    logger.info('Scoring completed', { candidateId, score: scoringResult.score });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
         success: true, 
         score: scoringResult.score, 
         analysis: scoringResult.analysis,
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("❌ Error in Gemini 2.5 Pro scoring:", error);
+    logger.error('Error in Gemini 2.5 Pro scoring', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
     if (errorMessage.includes("AI Scoring is not configured")) {

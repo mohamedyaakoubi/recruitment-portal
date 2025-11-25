@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import type { Candidate, SortDirection, SortField } from '@/types';
+import logger from '@/lib/logger';
 
 export const useCandidateTable = (candidates: Candidate[], filters: any) => {
     const [sortField, setSortField] = useState<SortField>('submittedAt');
@@ -73,7 +74,7 @@ export const useCandidateTable = (candidates: Candidate[], filters: any) => {
                 window.URL.revokeObjectURL(url);
             }
         } catch (error) {
-            console.error('Export failed:', error);
+            logger.error('Export failed', error, { format, filters });
             alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setIsExporting(false);

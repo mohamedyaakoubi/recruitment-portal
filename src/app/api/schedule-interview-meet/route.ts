@@ -1,6 +1,7 @@
 // src/app/api/schedule-interview-meet/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { scheduleInterview } from '@/services/interview';
+import logger from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error scheduling interview:', error);
+    logger.error('Error scheduling interview', error);
     return NextResponse.json(
       { 
         error: 'Failed to schedule interview', 

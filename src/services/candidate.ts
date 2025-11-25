@@ -3,6 +3,7 @@ import admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { sendNotificationEmail, sendRejectionEmail } from './email';
 import { format } from 'date-fns';
+import logger from '@/lib/logger';
 
 // 🔥 NEW: Helper function to calculate age
 export const calculateAge = (dateOfBirth: string): number | null => {
@@ -82,7 +83,7 @@ export const updateCandidateStatus = async (
             if (duration) updateData.duration = duration;
             
         } catch (dateError) {
-            console.error("Invalid interview date format received:", interviewTimestampISO, dateError);
+            logger.error('Invalid interview date format received', dateError, { interviewTimestampISO });
             throw new Error('Invalid interview date format provided. Please use ISO format.');
         }
     } else {
@@ -103,27 +104,27 @@ export const updateCandidateStatus = async (
     if (candidateData.email) {
         try {
             if (newStatus === 'rejected') {
-                console.log(`📧 Sending rejection email to ${candidateData.email}...`);
+                logger.info('Sending rejection email', { email: candidateData.email });
                 await sendRejectionEmail(
                     candidateData.email, 
                     candidateData.fullName || 'Candidate', 
                     candidateData.jobTitleText || ''
                 );
-                console.log(`✅ Rejection email sent successfully to ${candidateData.email}`);
+                logger.info('Rejection email sent successfully', { email: candidateData.email });
                 emailSent = true;
             } else if (newStatus === 'interview_scheduled' && interviewDate) {
-                console.log(`📧 Sending interview notification to ${candidateData.email}...`);
+                logger.info('Sending interview notification', { email: candidateData.email });
                 await sendNotificationEmail(
                     candidateData.email, 
                     newStatus, 
                     candidateData.fullName || 'Candidate', 
                     interviewDate
                 );
-                console.log(`✅ Interview notification sent successfully to ${candidateData.email}`);
+                logger.info('Interview notification sent successfully', { email: candidateData.email });
                 emailSent = true;
             }
         } catch (emailError) {
-            console.error(`❌ Failed to send email to ${candidateData.email}:`, emailError);
+            logger.error('Failed to send email', emailError, { email: candidateData.email });
             // Don't throw error - status update was successful, just email failed
             emailSent = false;
         }

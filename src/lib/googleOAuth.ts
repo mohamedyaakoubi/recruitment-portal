@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import { getFirestoreAdmin } from './firebase-admin';
+import logger from '@/lib/logger';
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -42,7 +43,7 @@ export async function storeTokens(tokens: any) {
     const db = getFirestoreAdmin();
     const tokenRef = db.doc(TOKEN_DB_PATH);
     await tokenRef.set(tokens);
-    console.log('Google Auth tokens stored successfully in Firestore.');
+    logger.info('Google Auth tokens stored successfully in Firestore');
 }
 
 /**
@@ -54,7 +55,7 @@ async function getStoredTokens() {
     const tokenDoc = await tokenRef.get();
 
     if (!tokenDoc.exists) {
-        console.warn('Google Auth tokens not found in Firestore.');
+        logger.warn('Google Auth tokens not found in Firestore');
         return null;
     }
     return tokenDoc.data();
@@ -75,7 +76,7 @@ export async function getAuthenticatedClient() {
 
     // Set up a listener for token refresh events
     oauth2Client.on('tokens', (newTokens) => {
-        console.log('Google Auth tokens were refreshed.');
+        logger.info('Google Auth tokens were refreshed');
         // Update the stored tokens with the new ones (including a new access_token)
         const updatedTokens = { ...tokens, ...newTokens };
         storeTokens(updatedTokens);

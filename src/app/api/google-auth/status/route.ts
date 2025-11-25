@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/googleOAuth';
 import { google } from 'googleapis';
+import logger from '@/lib/logger';
 
 export async function GET() {
     try {
@@ -23,7 +24,7 @@ export async function GET() {
         return NextResponse.json({ isConnected: true, email: email });
 
     } catch (error) {
-        console.error('Error checking Google auth status:', error);
+        logger.error('Error checking Google auth status', error);
         // This can happen if tokens are invalid/revoked. Treat as not connected.
         return NextResponse.json({ isConnected: false, email: null });
     }

@@ -1,6 +1,7 @@
 // src/lib/firebase-admin.ts
 import admin from 'firebase-admin';
 import { getApps } from 'firebase-admin/app';
+import logger from '@/lib/logger';
 
 // Function to initialize Firebase Admin SDK lazily
 const initializeFirebaseAdmin = () => {
@@ -19,9 +20,9 @@ const initializeFirebaseAdmin = () => {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
-      console.log("Firebase Admin SDK initialized successfully.");
+      logger.info("Firebase Admin SDK initialized successfully");
     } catch (error) {
-      console.error('Firebase Admin SDK initialization error:', error);
+      logger.error('Firebase Admin SDK initialization error', error);
       // Throw the error to prevent API routes from proceeding without proper admin access
       throw new Error("Failed to initialize Firebase Admin SDK."); 
     }

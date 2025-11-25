@@ -6,6 +6,7 @@ import {
   checkRateLimit,
   updateRateLimit,
 } from '@/lib/phoneValidationService';
+import logger from '@/lib/logger';
 
 // 🔥 MAIN API HANDLER
 export async function POST(request: NextRequest) {
@@ -26,27 +27,27 @@ export async function POST(request: NextRequest) {
     const cleanPhone = phoneNumber.replace(/\D/g, '');
     const fullPhone = `${countryCode}${cleanPhone}`;
 
-    console.log(`📞 [PRODUCTION] Starting validation for: ${fullPhone}`);
+    logger.info('Starting phone validation', { phone: fullPhone });
 
     // 🔥 STEP 1: Basic format validation
-    console.log('📞 [STEP 1] Basic format validation...');
+    logger.debug('Phone validation step 1: Basic format');
     const basicResult = basicPhoneValidation(fullPhone);
     
     if (!basicResult.isValid) {
-      console.log('❌ [STEP 1] Basic validation failed');
+      logger.debug('Basic validation failed', { phone: fullPhone });
       return NextResponse.json({
         ...basicResult,
         message: 'Phone number format is invalid. Please check your input.'
       });
     }
-    console.log('✅ [STEP 1] Basic validation passed');
+    logger.debug('Basic validation passed', { phone: fullPhone });
 
     // 🔥 STEP 2: Regex pattern validation
-    console.log('📞 [STEP 2] Regex pattern validation...');
+    logger.debug('Phone validation step 2: Regex pattern');
     const regexResult = validatePhoneWithRegex(fullPhone);
     
     if (!regexResult.isValid) {
-      console.log('❌ [STEP 2] Regex validation failed');
+      logger.debug('Regex validation failed', { phone: fullPhone, country: regexResult.country?.name });
       updateRateLimit(clientIP.split(',')[0], fullPhone, false);
       return NextResponse.json({
         ...regexResult,
@@ -54,14 +55,14 @@ export async function POST(request: NextRequest) {
         suggestion: 'Please verify your phone number format and country code.'
       });
     }
-    console.log('✅ [STEP 2] Regex validation passed');
+    logger.debug('Regex validation passed', { phone: fullPhone });
 
     // 🔥 STEP 3: Abstract API validation
-    console.log('📞 [STEP 3] Checking API rate limits...');
+    logger.debug('Phone validation step 3: Checking API rate limits');
     const rateLimit = checkRateLimit(clientIP.split(',')[0], fullPhone);
     
     if (!rateLimit.allowed) {
-      console.log(`🚫 [STEP 3] ${rateLimit.reason}`);
+      logger.debug('Rate limit reached', { reason: rateLimit.reason, phone: fullPhone });
       
       if (rateLimit.isFailedNumber) {
         return NextResponse.json({
@@ -81,11 +82,11 @@ export async function POST(request: NextRequest) {
     // Try Abstract API
     try {
       if (process.env.ABSTRACT_PHONE_API_KEY) {
-        console.log('📞 [STEP 3] Calling Abstract API...');
+        logger.debug('Calling Abstract API for phone validation', { phone: fullPhone });
         const apiResult = await validatePhoneWithAbstractAPI(fullPhone);
         updateRateLimit(clientIP.split(',')[0], fullPhone, true);
         
-        console.log(`✅ [STEP 3] API validation completed: ${apiResult.isValid ? 'VALID' : 'INVALID'}`);
+        logger.info('API validation completed', { phone: fullPhone, isValid: apiResult.isValid });
         
         if (!apiResult.isValid) {
           updateRateLimit(clientIP.split(',')[0], fullPhone, false);
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
         throw new Error('No API key configured');
       }
     } catch (error) {
-      console.warn('📞 [STEP 3] Abstract API failed, using regex result:', error);
+      logger.warn('Abstract API failed, using regex result', error, { phone: fullPhone });
       
       return NextResponse.json({
         ...regexResult,
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Phone validation error:', error);
+    logger.error('Phone validation error', error);
     
     try {
       const { countryCode, phoneNumber } = await request.json();

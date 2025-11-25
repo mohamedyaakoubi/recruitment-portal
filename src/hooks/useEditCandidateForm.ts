@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Candidate, Job } from '@/types';
+import logger from '@/lib/logger';
 
 export const useEditCandidateForm = (
     candidate: Candidate | null,
@@ -50,7 +51,7 @@ export const useEditCandidateForm = (
                 setJobs(data.jobs || []);
                 setJobCategories(data.categories || []);
             } else {
-                console.error('Failed to fetch jobs:', data.error);
+                logger.error('Failed to fetch jobs', new Error(data.error), { response: data });
             }
         } catch (error) {
             console.error('Error fetching jobs:', error);
@@ -203,7 +204,7 @@ export const useEditCandidateForm = (
             await onSave(candidate.id, updatedData);
             onClose();
         } catch (error) {
-            console.error('Failed to update candidate:', error);
+            logger.error('Failed to update candidate', error, { candidateId: candidate?.id });
         }
     };
 

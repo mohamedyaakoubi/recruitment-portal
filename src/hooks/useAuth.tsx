@@ -10,6 +10,7 @@ import {
   User
 } from "firebase/auth";
 import { AuthContextType } from '@/types';
+import logger from '@/lib/logger';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signInWithEmailAndPassword(auth, email, password);
       // Redirect is handled by the component using the hook based on user state
     } catch (err) {
-      console.error("Firebase Sign In Error:", err);
+      logger.error('Firebase Sign In Error', err, { email });
       // Type assertion for error object
       if (err instanceof Error) {
         setError(err.message || "Failed to sign in");
@@ -55,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       // Redirect is handled where signOut is called, e.g., in the dashboard component
     } catch (err) {
-      console.error("Firebase Sign Out Error:", err);
+      logger.error('Firebase Sign Out Error', err);
       // Type assertion for error object
       if (err instanceof Error) {
         setError(err.message || "Failed to sign out");

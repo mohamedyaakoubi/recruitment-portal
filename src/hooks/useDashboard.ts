@@ -8,6 +8,7 @@ import { collection, query, onSnapshot, QueryDocumentSnapshot, DocumentData } fr
 import type { Candidate, InterviewEvent } from '@/types';
 import { isBefore } from 'date-fns';
 import { calculateStats } from '@/lib/dashboardUtils';
+import logger from '@/lib/logger';
 
 export const useDashboard = () => {
     const { user, loading: authLoading, signOut } = useAuth();
@@ -92,7 +93,7 @@ export const useDashboard = () => {
                 setCandidates(candidatesData);
                 setLoadingCandidates(false);
             }, (error) => {
-                console.error("Error fetching candidates: ", error);
+                logger.error('Error fetching candidates', error);
                 setLoadingCandidates(false);
             });
             return () => unsubscribe();

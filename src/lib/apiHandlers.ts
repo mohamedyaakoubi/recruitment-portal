@@ -1,4 +1,5 @@
 import type { Candidate } from '@/types';
+import logger from '@/lib/logger';
 
 export const createApiHandlers = (
     showToast: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void,
@@ -32,11 +33,11 @@ export const createApiHandlers = (
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to score candidate');
             }
-            console.log('Scoring successful:', result);
+            logger.info('Scoring successful', { candidateId: selectedCandidate.id, score: result.score });
             showToast('Candidate scored successfully!', 'success');
             closeScoringModal();
         } catch (error) {
-            console.error('Scoring failed:', error);
+            logger.error('Scoring failed', error, { candidateId: selectedCandidate?.id });
             setScoringError(error instanceof Error ? error.message : 'An unknown error occurred');
         } finally {
             setIsScoring(false);
@@ -55,7 +56,7 @@ export const createApiHandlers = (
             if (!response.ok) {
                 throw new Error(result.error || 'Failed to update status');
             }
-            console.log('Status update successful:', result);
+            logger.info('Status update successful', { candidateId, newStatus, emailSent: result.emailSent });
 
             if (newStatus === 'rejected') {
                 if (result.emailSent) {
@@ -71,7 +72,7 @@ export const createApiHandlers = (
                 closeProfileModal();
             }
         } catch (error) {
-            console.error('Status update failed:', error);
+            logger.error('Status update failed', error, { candidateId, newStatus });
             const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
             showToast(`Failed to update status: ${errorMessage}`, 'error');
         } finally {
@@ -137,7 +138,7 @@ export const createApiHandlers = (
             setIsInterviewSchedulingOpen(false);
 
         } catch (error) {
-            console.error('Failed to schedule interview:', error);
+            logger.error('Failed to schedule interview', error, { candidateId: candidate.id });
             showToast(`Failed to schedule interview: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
         } finally {
             setIsScheduling(false);
@@ -172,7 +173,7 @@ export const createApiHandlers = (
                     showToast('Interview cancelled successfully and candidate has been notified.', 'success');
                     closeProfileModal();
                 } catch (error) {
-                    console.error('Cancel interview failed:', error);
+                    logger.error('Cancel interview failed', error, { candidateId });
                     showToast(`Failed to cancel interview: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
                 } finally {
                     setStatusUpdateLoading((prev: any) => ({ ...prev, [candidateId]: false }));
@@ -195,11 +196,11 @@ export const createApiHandlers = (
                 throw new Error(result.error || 'Failed to update candidate');
             }
 
-            console.log('✅ Candidate updated successfully:', result);
+            logger.info('Candidate updated successfully', { candidateId });
             showToast('Candidate information updated successfully!', 'success');
 
         } catch (error) {
-            console.error('❌ Failed to update candidate:', error);
+            logger.error('Failed to update candidate', error, { candidateId });
             const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
             showToast(`Failed to update candidate: ${errorMessage}`, 'error');
             throw error;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import admin from 'firebase-admin';
 import { calculateAge } from '@/lib/dateUtils';
+import logger from '@/lib/logger';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -21,7 +22,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    console.log(`🔄 Updating candidate ${candidateId} with data:`, updatedData);
+    logger.info('Updating candidate', { candidateId, fields: Object.keys(updatedData) });
 
     const db = getFirestoreAdmin();
     const candidateRef = db.collection('candidates').doc(candidateId);
@@ -52,7 +53,7 @@ export async function PUT(request: NextRequest) {
     // Update the candidate
     await candidateRef.update(updatePayload);
 
-    console.log(`✅ Successfully updated candidate ${candidateId}`);
+    logger.info('Successfully updated candidate', { candidateId });
 
     return NextResponse.json({
       success: true,
@@ -62,7 +63,7 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Update candidate error:', error);
+    logger.error('Update candidate error', error);
     return NextResponse.json(
       { 
         error: 'Failed to update candidate',

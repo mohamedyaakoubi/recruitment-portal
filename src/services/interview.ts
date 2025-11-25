@@ -4,13 +4,14 @@ import { db } from '@/lib/firebase';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import { getAuthenticatedClient } from '@/lib/googleOAuth'; // 👈 CHANGE
 import { sendCancellationEmail } from './email';
+import logger from '@/lib/logger';
 
 const generateMeetLink = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyz';
-  const part1 = Array.from({length: 3}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  const part2 = Array.from({length: 4}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  const part3 = Array.from({length: 3}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  
+  const part1 = Array.from({ length: 3 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const part2 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const part3 = Array.from({ length: 3 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+
   return `https://meet.google.com/${part1}-${part2}-${part3}`;
 };
 
@@ -66,13 +67,13 @@ export const scheduleInterview = async (
         timeZone: 'Europe/Helsinki'
       },
       attendees: [
-        { 
-          email: candidateEmail, 
+        {
+          email: candidateEmail,
           displayName: candidateName,
           responseStatus: 'needsAction'
         },
-        { 
-          email: adminEmail || 'wassim@internationalskills.fi', 
+        {
+          email: adminEmail || 'wassim@internationalskills.fi',
           displayName: 'International Skills Hiring',
           responseStatus: 'accepted'
         }
@@ -101,7 +102,7 @@ export const scheduleInterview = async (
 
     let response;
     if (existingEventId) {
-      console.log(`Updating existing Google Calendar event: ${existingEventId}`);
+      logger.info('Updating existing Google Calendar event', { eventId: existingEventId });
       response = await calendar.events.update({
         calendarId: 'primary',
         eventId: existingEventId,
@@ -110,7 +111,7 @@ export const scheduleInterview = async (
         requestBody: eventDetails,
       });
     } else {
-      console.log('Inserting new Google Calendar event.');
+      logger.info('Inserting new Google Calendar event');
       response = await calendar.events.insert({
         calendarId: 'primary',
         conferenceDataVersion: 1,
@@ -121,18 +122,18 @@ export const scheduleInterview = async (
 
     if (response.data) {
       calendarEventId = response.data.id || '';
-      meetLink = response.data.conferenceData?.entryPoints?.[0]?.uri || 
-                 response.data.hangoutLink || 
-                 generateMeetLink();
+      meetLink = response.data.conferenceData?.entryPoints?.[0]?.uri ||
+        response.data.hangoutLink ||
+        generateMeetLink();
     }
 
   } catch (googleError) {
-    console.error('Google Calendar API error:', googleError);
+    logger.error('Google Calendar API error', googleError);
     // Fallback to manual link generation if API fails but we don't want to block the whole process
     meetLink = generateMeetLink();
     // Re-throw if it's an auth error
     if (googleError instanceof Error && googleError.message.includes('not connected')) {
-        throw googleError;
+      throw googleError;
     }
   }
 
@@ -140,9 +141,9 @@ export const scheduleInterview = async (
     const updateResponse = await fetch(`${origin}/api/update-status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        candidateId, 
-        newStatus: 'interview_scheduled', 
+      body: JSON.stringify({
+        candidateId,
+        newStatus: 'interview_scheduled',
         interviewTimestampISO: interviewDateTime.toISOString(),
         meetLink: meetLink, // 👈 ADD THIS
         calendarEventId: calendarEventId, // 👈 ADD THIS
@@ -152,11 +153,11 @@ export const scheduleInterview = async (
 
     if (!updateResponse.ok) {
       const errorData = await updateResponse.json();
-      console.error('Failed to update candidate status:', errorData);
+      logger.error('Failed to update candidate status', null, errorData);
       throw new Error(errorData.error || 'Failed to update status');
     }
   } catch (updateError) {
-    console.error('Database update error:', updateError);
+    logger.error('Database update error', updateError);
   }
 
   return {
@@ -180,34 +181,34 @@ export const cancelInterview = async (candidateId: string, reason: string) => {
   const db = getFirestoreAdmin(); // 👈 CHANGE: Get Admin DB instance
   const candidateRef = db.collection('candidates').doc(candidateId); // 👈 CHANGE: Use Admin SDK syntax
   const candidateDoc = await candidateRef.get(); // 👈 CHANGE: Use Admin SDK syntax
-  
+
   if (!candidateDoc.exists) {
     throw new Error('Candidate not found');
   }
 
   const candidateData = candidateDoc.data();
   if (!candidateData) {
-      throw new Error('Candidate data not found');
+    throw new Error('Candidate data not found');
   }
-  
+
   if (candidateData.calendarEventId) {
     try {
       const auth = await getAuthenticatedClient();
       if (auth) {
         const calendar = google.calendar({ version: 'v3', auth });
-        
+
         await calendar.events.delete({
           calendarId: 'primary',
           eventId: candidateData.calendarEventId,
           sendUpdates: 'all'
         });
-        
-        console.log('Google Calendar event deleted successfully:', candidateData.calendarEventId);
+
+        logger.info('Google Calendar event deleted successfully', { eventId: candidateData.calendarEventId });
       } else {
-        console.warn('Could not delete Google Calendar event: User is not authenticated.');
+        logger.warn('Could not delete Google Calendar event: User is not authenticated');
       }
     } catch (googleError) {
-      console.error('Failed to delete Google Calendar event:', googleError);
+      logger.error('Failed to delete Google Calendar event', googleError);
     }
   }
 
@@ -228,7 +229,7 @@ export const cancelInterview = async (candidateId: string, reason: string) => {
         reason
       });
     } catch (emailError) {
-      console.error('Failed to send cancellation email:', emailError);
+      logger.error('Failed to send cancellation email', emailError);
     }
   }
 };

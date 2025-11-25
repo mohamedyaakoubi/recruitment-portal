@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendApplicationConfirmationEmail } from '@/services/email';
+import logger from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
     try {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
-        console.error('❌ Error in send-confirmation-email API:', error);
+        logger.error('Error in send-confirmation-email API', error);
         
         return NextResponse.json(
             { 

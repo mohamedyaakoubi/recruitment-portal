@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from './components/ui/ThemeSwitcher';
 import { useTheme } from 'next-themes';
 import { useEffect } from 'react';
+import logger from '@/lib/logger';
 
 // Helper component for social media icons in the footer
 const SocialIcon = ({ href, children }: { href: string, children: React.ReactNode }) => (
@@ -48,7 +49,7 @@ export default function LandingPage() {
       const normalizedEmail = email.toLowerCase().trim();
 
       // 🔥 STEP 1: Check database first (FREE - no API cost)
-      console.log('Step 1: Checking database for existing candidate...');
+      logger.info('Checking database for existing candidate', { email: normalizedEmail });
       const checkResponse = await fetch('/api/check-candidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -63,13 +64,13 @@ export default function LandingPage() {
 
       // If candidate exists in database, skip email verification
       if (checkResult.exists && checkResult.count > 0) {
-        console.log('✅ Existing candidate found in database - redirecting to choices');
+        logger.info('Existing candidate found, redirecting to choices', { email: normalizedEmail });
         router.push(`/candidate-choices?email=${encodeURIComponent(normalizedEmail)}`);
         return;
       }
 
       // 🔥 STEP 2: Only verify email if candidate doesn't exist (COSTS MONEY)
-      console.log('Step 2: New email - verifying with external API...');
+      logger.info('New email, verifying with external API', { email: normalizedEmail });
       const verifyResponse = await fetch('/api/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,11 +89,11 @@ export default function LandingPage() {
       }
 
       // 🔥 STEP 3: Email is valid and new - redirect to form
-      console.log('✅ Email verified - redirecting to application form');
+      logger.info('Email verified, redirecting to application form', { email: normalizedEmail });
       router.push(`/candidate-form?email=${encodeURIComponent(normalizedEmail)}`);
 
     } catch (err) {
-      console.error('Email submission error:', err);
+      logger.error('Email submission error', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);

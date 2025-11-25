@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Candidate } from '@/types';
+import logger from '@/lib/logger';
 
 export const useProfileModal = (
     candidate: Candidate | null,
@@ -18,7 +19,7 @@ export const useProfileModal = (
             await onEditCandidate(candidateId, updatedData);
             setIsEditModalOpen(false);
         } catch (error) {
-            console.error('Failed to update candidate:', error);
+            logger.error('Failed to update candidate', error, { candidateId });
         } finally {
             setIsUpdating(false);
         }

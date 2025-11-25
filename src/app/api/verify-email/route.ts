@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyEmail } from '@/services/emailVerification';
+import logger from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(verificationResult);
 
   } catch (error) {
-    console.error('Email verification error:', error);
+    logger.error('Email verification error', error);
     return NextResponse.json(
       { error: 'Internal server error during email verification' },
       { status: 500 }

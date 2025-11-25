@@ -1,3 +1,5 @@
+import logger from '@/lib/logger';
+
 interface EmailVerificationResponse {
   isValid: boolean;
   deliverable?: boolean;
@@ -35,7 +37,7 @@ async function verifyEmailWithAbstractAPI(email: string): Promise<EmailVerificat
       role_account: data.is_role_email?.value || false,
     };
   } catch (error) {
-    console.error('Abstract API verification failed:', error);
+    logger.error('Abstract API verification failed', error);
     throw error;
   }
 }
@@ -70,7 +72,7 @@ async function verifyEmailWithHunter(email: string): Promise<EmailVerificationRe
       role_account: data.data.role,
     };
   } catch (error) {
-    console.error('Hunter verification failed:', error);
+    logger.error('Hunter verification failed', error);
     throw error;
   }
 }
@@ -119,13 +121,13 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationRespo
         }
         // If no API keys are configured, use basic validation
         else {
-            console.warn('No email verification API configured. Using basic validation only.');
+            logger.warn('No email verification API configured. Using basic validation only');
             verificationResult = {
                 isValid: true, // Allow through for basic validation
             };
         }
     } catch (error) {
-        console.error('Email verification service failed:', error);
+        logger.error('Email verification service failed', error);
         
         // In production, you might want to be more restrictive
         // For now, we'll allow the email through if the service fails

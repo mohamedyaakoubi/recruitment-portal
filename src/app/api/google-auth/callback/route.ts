@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOAuth2Client, storeTokens } from '@/lib/googleOAuth';
+import logger from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
     const url = new URL(request.url);
@@ -7,7 +8,7 @@ export async function GET(request: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || '/';
 
     if (!code) {
-        console.error('Google auth callback error: No code received.');
+        logger.error('Google auth callback error: No code received');
         return NextResponse.redirect(`${appUrl}?error=google_auth_failed`);
     }
 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${appUrl}/admin-dashboard-secret?success=google_auth_complete`);
 
     } catch (error) {
-        console.error('Error exchanging code for tokens:', error);
+        logger.error('Error exchanging code for tokens', error);
         return NextResponse.redirect(`${appUrl}?error=google_token_exchange_failed`);
     }
 }

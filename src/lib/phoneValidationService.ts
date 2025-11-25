@@ -1,4 +1,5 @@
 import { phonePatterns, getCountryName } from './phoneValidationData';
+import logger from '@/lib/logger';
 
 interface PhoneValidationResponse {
   isValid: boolean;
@@ -119,7 +120,7 @@ export async function validatePhoneWithAbstractAPI(fullPhone: string): Promise<P
     const phoneForAPI = fullPhone.startsWith('+') ? fullPhone.substring(1) : fullPhone;
     const url = `https://phonevalidation.abstractapi.com/v1/?api_key=${apiKey}&phone=${encodeURIComponent(phoneForAPI)}`;
     
-    console.log(`📞 [PRODUCTION] Validating phone via Abstract API: ${phoneForAPI}`);
+    logger.info('Validating phone via Abstract API', { phone: phoneForAPI });
     
     const responseText = await httpGetAsync(url);
     const data = JSON.parse(responseText);
@@ -143,7 +144,7 @@ export async function validatePhoneWithAbstractAPI(fullPhone: string): Promise<P
       validationLevel: 'high'
     };
   } catch (error) {
-    console.error('Abstract Phone API validation failed:', error);
+    logger.error('Abstract Phone API validation failed', error, { phone: fullPhone });
     throw error;
   }
 }
@@ -221,7 +222,7 @@ setInterval(() => {
   for (const [key, data] of validationAttempts.entries()) {
     if (data.lastAttempt < oneDayAgo) {
       validationAttempts.delete(key);
-      console.log(`🧹 Cleaned up old rate limit data for: ${key}`);
+      logger.debug('Cleaned up old rate limit data', { key });
     }
   }
 }, 60 * 60 * 1000); // Clean every hour

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from '@/lib/firebase';
+import logger from '@/lib/logger';
 
 export const useCandidateForm = () => {
   const router = useRouter();
@@ -53,7 +54,7 @@ export const useCandidateForm = () => {
   const validatePhoneNumber = async (countryCode: string, phoneNumber: string): Promise<boolean> => {
     // 🔥 CRITICAL: Skip validation entirely for existing candidates
     if (isExistingCandidate) {
-      console.log('📞 Skipping phone validation for existing candidate');
+      logger.debug('Skipping phone validation for existing candidate');
       setPhoneValidation({
         isValid: true, // Assume valid since it was previously accepted
         isValidating: false,
@@ -109,16 +110,17 @@ export const useCandidateForm = () => {
 
       // Log validation details for debugging
       if (result.isValid && result.country) {
-        console.log(`📞 Phone validated for ${result.country.name} (${result.type || 'unknown type'})`);
-        if (result.carrier) {
-          console.log(`📞 Carrier: ${result.carrier}`);
-        }
+        logger.info('Phone validated successfully', { 
+          country: result.country.name, 
+          type: result.type || 'unknown',
+          carrier: result.carrier 
+        });
       }
 
       return result.isValid;
 
     } catch (error) {
-      console.error('❌ Phone validation error:', error);
+      logger.error('Phone validation error', error, { countryCode, phoneNumber });
       
       // Fallback validation - just check basic format
       const basicValidation = /^\d{6,15}$/.test(phoneNumber.replace(/\D/g, ''));
@@ -138,7 +140,11 @@ export const useCandidateForm = () => {
 
   // 🔥 FIXED: Single useEffect with proper debouncing
   useEffect(() => {
-    console.log(`📞 Phone validation useEffect triggered: phone="${phoneNumber}", country="${countryCode}", existing=${isExistingCandidate}`);
+    logger.debug('Phone validation useEffect triggered', { 
+      phone: phoneNumber, 
+      country: countryCode, 
+      existing: isExistingCandidate 
+    });
     
     // Skip validation entirely for existing candidates
     if (isExistingCandidate) {
@@ -171,15 +177,15 @@ export const useCandidateForm = () => {
 
     // Only validate for new candidates with valid input
     if (phoneNumber.trim() && countryCode && phoneNumber.trim().length >= 6) {
-      console.log(`📞 Setting up debounced validation for: ${countryCode}${phoneNumber}`);
+      logger.debug('Setting up debounced validation', { fullPhone: `${countryCode}${phoneNumber}` });
       
       const timeoutId = setTimeout(() => {
-        console.log(`📞 Executing debounced validation for: ${countryCode}${phoneNumber}`);
+        logger.debug('Executing debounced validation', { fullPhone: `${countryCode}${phoneNumber}` });
         validatePhoneNumber(countryCode, phoneNumber);
       }, 2000); // 🔥 INCREASED: 2 seconds debounce to prevent excessive calls
 
       return () => {
-        console.log(`📞 Clearing timeout for: ${countryCode}${phoneNumber}`);
+        logger.debug('Clearing validation timeout', { fullPhone: `${countryCode}${phoneNumber}` });
         clearTimeout(timeoutId);
       };
     }
@@ -194,7 +200,11 @@ export const useCandidateForm = () => {
     applicationId: string;
   }) => {
     try {
-      console.log('📧 Attempting to send confirmation email...', candidateData);
+      logger.info('Attempting to send confirmation email', { 
+        email: candidateData.email, 
+        name: candidateData.fullName,
+        applicationId: candidateData.applicationId 
+      });
       
       const response = await fetch('/api/send-confirmation-email', {
         method: 'POST',
@@ -214,13 +224,13 @@ export const useCandidateForm = () => {
       const result = await response.json();
       
       if (!result.success) {
-        console.error('❌ Failed to send confirmation email:', result.error);
+        logger.error('Failed to send confirmation email', new Error(result.error), { email: candidateData.email });
         // Don't throw error - we don't want to fail the entire submission if email fails
       } else {
-        console.log('✅ Confirmation email sent successfully');
+        logger.info('Confirmation email sent successfully', { email: candidateData.email });
       }
     } catch (error) {
-      console.error('❌ Error sending confirmation email:', error);
+      logger.error('Error sending confirmation email', error, { email: candidateData.email });
       // Don't throw error - we don't want to fail the entire submission if email fails
     }
   };
@@ -289,7 +299,7 @@ export const useCandidateForm = () => {
         }
       }
     } catch (error) {
-      console.error('Error loading existing candidate data:', error);
+      logger.error('Error loading existing candidate data', error, { email });
     }
   };
 
@@ -344,7 +354,7 @@ export const useCandidateForm = () => {
           setJobs(data.jobs || []);
         }
       } catch (error) {
-        console.error('Error loading jobs:', error);
+        logger.error('Error loading jobs', error);
       }
     };
     loadJobs();
@@ -442,7 +452,7 @@ useEffect(() => {
       return { isDuplicate: false, message: '' };
       
     } catch (error) {
-      console.error('Error checking duplicate applications:', error);
+      logger.error('Error checking duplicate applications', error, { email: candidateEmail });
       return { isDuplicate: false, message: '' };
     }
   };
@@ -540,7 +550,7 @@ useEffect(() => {
 
   // Phone validation only for new candidates
   if (!isExistingCandidate) {
-    console.log('📞 Starting phone validation before submission for new candidate...');
+    logger.debug('Starting phone validation before submission for new candidate');
     const isPhoneValid = await validatePhoneNumber(countryCode, phoneNumber);
     
     if (!isPhoneValid) {
@@ -548,7 +558,7 @@ useEffect(() => {
       return;
     }
   } else {
-    console.log('📞 Skipping phone validation for existing candidate');
+    logger.debug('Skipping phone validation for existing candidate');
   }
 
   // Enhanced validation with specific missing field messages
@@ -571,7 +581,7 @@ useEffect(() => {
   if (!passportFile) missingFields.push('Passport/ID');
 
   // Debug log
-  console.log('🔍 Form validation debug:', {
+  logger.debug('Form validation debug', {
     firstName,
     lastName,
     firstNameValid: !firstNameError,
@@ -692,7 +702,7 @@ useEffect(() => {
 
     // Send confirmation email after successful submission
     if (docRef && docRef.id) {
-      console.log('✅ Application saved successfully, sending confirmation email...');
+      logger.info('Application saved successfully, sending confirmation email', { applicationId: docRef.id });
       
       await sendConfirmationEmail({
         email: normalizedEmail,
@@ -712,7 +722,7 @@ useEffect(() => {
     }, 3000);
 
   } catch (err) {
-    console.error('❌ Submission error:', err);
+    logger.error('Submission error', err);
     setError(err instanceof Error ? `Submission failed: ${err.message}` : 'An unknown error occurred');
   } finally {
     setIsLoading(false);
