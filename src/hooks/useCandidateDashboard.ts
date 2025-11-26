@@ -51,11 +51,16 @@ export const useCandidateDashboard = () => {
     router.push(`/candidate-form?email=${encodeURIComponent(candidateEmail)}`);
   };
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: { toDate?: () => Date } | Date | string | null | undefined) => {
     if (!timestamp) return 'N/A';
 
     let date: Date;
-    if (timestamp && typeof timestamp.toDate === 'function') {
+    if (
+      timestamp &&
+      typeof timestamp === 'object' &&
+      'toDate' in timestamp &&
+      typeof timestamp.toDate === 'function'
+    ) {
       date = timestamp.toDate();
     } else if (timestamp instanceof Date) {
       date = timestamp;

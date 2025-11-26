@@ -454,7 +454,9 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                 <div className="flex space-x-2">
                   <select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
+                    onChange={(e) =>
+                      setSortBy(e.target.value as 'createdAt' | 'updatedAt' | 'title')
+                    }
                     className={`${inputFieldStyles} flex-1`}
                   >
                     <option value="createdAt">Date Created</option>

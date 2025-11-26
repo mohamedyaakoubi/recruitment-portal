@@ -78,7 +78,8 @@ export const useEditCandidateForm = (
     } else {
       setAvailableSpecialties([]);
     }
-  }, [selectedJob]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedJob]); // formData.specialty is managed separately
 
   useEffect(() => {
     if (candidate) {

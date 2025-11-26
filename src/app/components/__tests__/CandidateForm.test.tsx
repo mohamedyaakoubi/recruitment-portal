@@ -15,7 +15,8 @@ vi.mock('../DebugInfo', () => ({ default: () => <div>DebugInfo</div> }));
 
 // Mock next/image
 vi.mock('next/image', () => ({
-  default: ({ alt }: any) => <img alt={alt} />,
+  // eslint-disable-next-line @next/next/no-img-element
+  default: ({ alt }: { alt: string }) => <img alt={alt} />,
 }));
 
 // Mock next-themes

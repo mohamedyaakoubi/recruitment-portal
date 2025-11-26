@@ -6,7 +6,7 @@ interface CandidateData {
   id: string;
   submittedAt: string | null;
   interviewDate: string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export async function POST(request: NextRequest) {

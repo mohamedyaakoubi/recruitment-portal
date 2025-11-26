@@ -28,7 +28,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Prepare update data with timestamp
-    const updatePayload: any = {
+    const updatePayload: Record<string, unknown> = {
       ...updatedData,
       lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
     };

@@ -5,7 +5,7 @@ import ApplicationCard from './ApplicationCard';
 
 interface ApplicationStatusProps {
   applications: Candidate[];
-  formatDate: (timestamp: any) => string;
+  formatDate: (timestamp: { toDate?: () => Date } | Date | string | null | undefined) => string;
 }
 
 const ApplicationStatus: React.FC<ApplicationStatusProps> = ({ applications, formatDate }) => (

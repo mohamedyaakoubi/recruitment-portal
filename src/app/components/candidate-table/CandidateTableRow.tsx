@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { FiExternalLink } from 'react-icons/fi'; // 👈 ADD THIS IMPORT
 import type { Candidate } from '@/types';
 import StatusBadge from '../ui/StatusBadge';
@@ -35,10 +36,12 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
         <div className="flex items-center">
           <div className="h-10 w-10 flex-shrink-0">
             {candidate.photoUrl ? (
-              <img
+              <Image
                 className="h-10 w-10 rounded-full object-cover"
                 src={candidate.photoUrl}
                 alt=""
+                width={40}
+                height={40}
               />
             ) : (
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">

@@ -4,10 +4,11 @@ import React from 'react';
 import { FiMapPin } from 'react-icons/fi';
 import SearchableDropdown from '../ui/SearchableDropdown';
 import { countries } from '@/lib/formData';
+import { Candidate } from '@/types';
 
 interface LocationInfoFormProps {
-  formData: any;
-  errors: any;
+  formData: Partial<Candidate>;
+  errors: Record<string, string>;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   isLoading: boolean;
 }

@@ -2,11 +2,12 @@
 
 import React from 'react';
 import { FiBriefcase } from 'react-icons/fi';
+import { Candidate } from '@/types';
 
 interface JobInfoFormProps {
-  formData: any;
+  formData: Partial<Candidate>;
   jobCategories: string[];
-  filteredJobs: any[];
+  filteredJobs: { id: string; title: string; category: string; specialty?: string }[];
   availableSpecialties: string[];
   handleCategoryChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   handleJobChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;

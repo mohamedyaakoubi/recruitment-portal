@@ -39,7 +39,12 @@ export function generateAuthUrl() {
 /**
  * Stores the provided tokens securely in Firestore.
  */
-export async function storeTokens(tokens: any) {
+export async function storeTokens(tokens: {
+  access_token: string;
+  refresh_token?: string;
+  expiry_date?: number;
+  [key: string]: unknown;
+}) {
   const db = getFirestoreAdmin();
   const tokenRef = db.doc(TOKEN_DB_PATH);
   await tokenRef.set(tokens);

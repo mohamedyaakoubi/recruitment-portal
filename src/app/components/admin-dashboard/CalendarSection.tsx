@@ -19,7 +19,7 @@ interface CalendarSectionProps {
   filteredInterviewEvents: InterviewEvent[];
   calendarFilter: 'all' | 'upcoming' | 'completed';
   setCalendarFilter: (filter: 'all' | 'upcoming' | 'completed') => void;
-  openProfileModal: (candidate: any) => void;
+  openProfileModal: (candidate: Candidate) => void;
 }
 
 const eventStyleGetter = (event: InterviewEvent) => {

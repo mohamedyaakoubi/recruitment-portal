@@ -3,10 +3,11 @@
 import React from 'react';
 import { FiUser } from 'react-icons/fi';
 import { countryCodes } from '@/lib/formData';
+import { Candidate } from '@/types';
 
 interface PersonalInfoFormProps {
-  formData: any;
-  errors: any;
+  formData: Partial<Candidate>;
+  errors: Record<string, string>;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   isLoading: boolean;
 }

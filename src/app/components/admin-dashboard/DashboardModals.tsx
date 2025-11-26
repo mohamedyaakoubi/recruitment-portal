@@ -45,13 +45,25 @@ interface DashboardModalsProps {
     message: string;
     onConfirm: () => void;
   };
-  setConfirmationModal: (modal: any) => void;
+  setConfirmationModal: (
+    modal: {
+      isOpen: boolean;
+      title: string;
+      message: string;
+      onConfirm: () => void;
+      onCancel: () => void;
+    } | null
+  ) => void;
   toast: {
     message: string;
     type: 'success' | 'error' | 'warning' | 'info';
     isVisible: boolean;
   };
-  setToast: (toast: any) => void;
+  setToast: (toast: {
+    message: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+    isVisible: boolean;
+  }) => void;
 }
 
 const DashboardModals: React.FC<DashboardModalsProps> = ({
@@ -115,14 +127,14 @@ const DashboardModals: React.FC<DashboardModalsProps> = ({
         title={confirmationModal.title}
         message={confirmationModal.message}
         onConfirm={confirmationModal.onConfirm}
-        onCancel={() => setConfirmationModal((prev: any) => ({ ...prev, isOpen: false }))}
+        onCancel={() => setConfirmationModal(null)}
       />
 
       <Toast
         message={toast.message}
         type={toast.type}
         isVisible={toast.isVisible}
-        onClose={() => setToast((prev: any) => ({ ...prev, isVisible: false }))}
+        onClose={() => setToast({ ...toast, isVisible: false })}
       />
     </>
   );

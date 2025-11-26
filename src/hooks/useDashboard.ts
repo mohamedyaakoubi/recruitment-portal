@@ -241,6 +241,7 @@ export const useDashboard = () => {
     filterNationality,
     filterJobTitle,
     filterCategory,
+    filterSpecialty,
     filterAgeMin,
     filterAgeMax,
     activeTab,

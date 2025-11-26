@@ -9,10 +9,10 @@ import JobInfoForm from './JobInfoForm';
 interface EditCandidateFormProps {
   formData: Partial<Candidate>;
   errors: Record<string, string>;
-  jobCategories: any[];
+  jobCategories: string[];
   loadingJobs: boolean;
   availableSpecialties: string[];
-  filteredJobs: any[];
+  filteredJobs: { id: string; title: string; category: string; specialty?: string }[];
   handleInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => void;

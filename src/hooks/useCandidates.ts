@@ -11,7 +11,12 @@ import { db } from '@/lib/firebase';
 import { Candidate } from '@/types';
 import logger from '@/lib/logger';
 
-export const useCandidates = (user: any) => {
+interface User {
+  uid: string;
+  email: string | null;
+}
+
+export const useCandidates = (user: User | null) => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loadingCandidates, setLoadingCandidates] = useState(true);
 

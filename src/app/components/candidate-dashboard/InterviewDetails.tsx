@@ -4,7 +4,7 @@ import { Candidate } from '@/types';
 
 interface InterviewDetailsProps {
   applications: Candidate[];
-  formatDate: (timestamp: any) => string;
+  formatDate: (timestamp: { toDate?: () => Date } | Date | string | null | undefined) => string;
 }
 
 const InterviewDetails: React.FC<InterviewDetailsProps> = ({ applications, formatDate }) => {

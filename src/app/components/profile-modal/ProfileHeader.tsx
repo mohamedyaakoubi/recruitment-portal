@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { FiX, FiUser, FiEdit } from 'react-icons/fi';
 import type { Candidate } from '@/types';
 
@@ -23,10 +24,12 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 p-5 dark:border-gray-700">
       <div className="flex items-center">
         {candidate.photoUrl ? (
-          <img
+          <Image
             src={candidate.photoUrl}
             alt={candidate.fullName}
             className="mr-4 h-12 w-12 rounded-full border-2 border-white object-cover shadow dark:border-gray-700"
+            width={48}
+            height={48}
           />
         ) : (
           <div

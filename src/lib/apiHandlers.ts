@@ -6,8 +6,16 @@ export const createApiHandlers = (
   closeScoringModal: () => void,
   closeProfileModal: () => void,
   setIsInterviewSchedulingOpen: (isOpen: boolean) => void,
-  setConfirmationModal: (modal: any) => void,
-  setStatusUpdateLoading: (loading: any) => void,
+  setConfirmationModal: (
+    modal: {
+      isOpen: boolean;
+      title: string;
+      message: string;
+      onConfirm: () => void;
+      onCancel: () => void;
+    } | null
+  ) => void,
+  setStatusUpdateLoading: (loading: boolean) => void,
   setIsScoring: (isScoring: boolean) => void,
   setScoringError: (error: string | null) => void,
   setIsScheduling: (isScheduling: boolean) => void,
@@ -49,7 +57,7 @@ export const createApiHandlers = (
     newStatus: string,
     interviewTimestampISO?: string
   ) => {
-    setStatusUpdateLoading((prev: any) => ({ ...prev, [candidateId]: true }));
+    setStatusUpdateLoading((prev: Record<string, boolean>) => ({ ...prev, [candidateId]: true }));
     try {
       const response = await fetch('/api/update-status', {
         method: 'POST',
@@ -90,7 +98,10 @@ export const createApiHandlers = (
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       showToast(`Failed to update status: ${errorMessage}`, 'error');
     } finally {
-      setStatusUpdateLoading((prev: any) => ({ ...prev, [candidateId]: false }));
+      setStatusUpdateLoading((prev: Record<string, boolean>) => ({
+        ...prev,
+        [candidateId]: false,
+      }));
     }
   };
 
@@ -106,7 +117,7 @@ export const createApiHandlers = (
         title: 'Confirm Candidate Rejection',
         message: `Are you sure you want to reject ${candidate?.fullName || 'this candidate'}? This action cannot be undone.`,
         onConfirm: async () => {
-          setConfirmationModal((prev: any) => ({ ...prev, isOpen: false }));
+          setConfirmationModal(null);
           await performStatusChange(candidateId, newStatus, interviewTimestampISO);
         },
       });
@@ -172,8 +183,11 @@ export const createApiHandlers = (
       title: 'Cancel Scheduled Interview',
       message: `Are you sure you want to cancel the interview for ${candidate?.fullName || 'this candidate'}? This will delete the calendar event and notify the candidate.`,
       onConfirm: async () => {
-        setConfirmationModal((prev: any) => ({ ...prev, isOpen: false }));
-        setStatusUpdateLoading((prev: any) => ({ ...prev, [candidateId]: true }));
+        setConfirmationModal(null);
+        setStatusUpdateLoading((prev: Record<string, boolean>) => ({
+          ...prev,
+          [candidateId]: true,
+        }));
 
         try {
           const response = await fetch('/api/cancel-interview', {
@@ -199,7 +213,10 @@ export const createApiHandlers = (
             'error'
           );
         } finally {
-          setStatusUpdateLoading((prev: any) => ({ ...prev, [candidateId]: false }));
+          setStatusUpdateLoading((prev: Record<string, boolean>) => ({
+            ...prev,
+            [candidateId]: false,
+          }));
         }
       },
     });

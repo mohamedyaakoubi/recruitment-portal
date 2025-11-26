@@ -15,13 +15,15 @@ const formatMessage = (level: LogLevel, message: string, context?: LogContext): 
 export const logger = {
   debug: (message: string, context?: LogContext): void => {
     if (isDevelopment) {
-      console.debug(formatMessage('debug', message, context));
+      // Use console.warn in development for debug messages
+      console.warn(formatMessage('debug', message, context));
     }
   },
 
   info: (message: string, context?: LogContext): void => {
     if (isDevelopment) {
-      console.info(formatMessage('info', message, context));
+      // Use console.warn in development for info messages
+      console.warn(formatMessage('info', message, context));
     }
   },
 
@@ -40,10 +42,10 @@ export const logger = {
   // For API routes - always log in production for monitoring
   api: {
     request: (method: string, path: string, context?: LogContext): void => {
-      console.info(formatMessage('info', `API ${method} ${path}`, context));
+      console.warn(formatMessage('info', `API ${method} ${path}`, context));
     },
     response: (method: string, path: string, status: number, duration: number): void => {
-      console.info(formatMessage('info', `API ${method} ${path} -> ${status} (${duration}ms)`));
+      console.warn(formatMessage('info', `API ${method} ${path} -> ${status} (${duration}ms)`));
     },
     error: (method: string, path: string, error: unknown): void => {
       logger.error(`API ${method} ${path} failed`, error);

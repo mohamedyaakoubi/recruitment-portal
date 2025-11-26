@@ -6,7 +6,7 @@ import StatusBadge from '../ui/StatusBadge';
 
 interface ApplicationCardProps {
   candidate: Candidate;
-  formatDate: (timestamp: any) => string;
+  formatDate: (timestamp: { toDate?: () => Date } | Date | string | null | undefined) => string;
 }
 
 const ApplicationCard: React.FC<ApplicationCardProps> = ({ candidate: app, formatDate }) => {

@@ -251,12 +251,12 @@ export interface InterviewEvent extends CalendarEvent {
 
 export interface ApplicationStatusProps {
   applications: Candidate[];
-  formatDate: (timestamp: any) => string;
+  formatDate: (timestamp: { toDate?: () => Date } | Date | string | null | undefined) => string;
 }
 
 export interface InterviewDetailsProps {
   applications: Candidate[];
-  formatDate: (timestamp: any) => string;
+  formatDate: (timestamp: { toDate?: () => Date } | Date | string | null | undefined) => string;
 }
 
 export interface AdditionalInfoSectionProps {
