@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -6,16 +5,16 @@ import PersonalInfoSection from '../PersonalInfoSection';
 import '@testing-library/jest-dom';
 
 vi.mock('../../ui/SearchableDropdown', () => ({
-    __esModule: true,
-    default: ({ value, onChange, placeholder, disabled }: any) => (
-        <input
-            data-testid={placeholder}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            disabled={disabled}
-        />
-    ),
+  __esModule: true,
+  default: ({ value, onChange, placeholder, disabled }: any) => (
+    <input
+      data-testid={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+    />
+  ),
 }));
 
 describe('PersonalInfoSection', () => {
@@ -71,9 +70,15 @@ describe('PersonalInfoSection', () => {
     expect(screen.getByLabelText(/Date of Birth/)).toHaveValue('1990-01-01');
     expect(screen.getByLabelText(/Phone Number/)).toHaveValue('1234567890');
     expect(screen.getByLabelText(/City/)).toHaveValue('Test City');
-    expect(screen.getByPlaceholderText('Search and select your country')).toHaveValue('Test Country');
-    expect(screen.getByPlaceholderText('Search and select your nationality')).toHaveValue('Test Nationality');
-    expect(screen.getByPlaceholderText('Search and select second nationality')).toHaveValue('Test Second Nationality');
+    expect(screen.getByPlaceholderText('Search and select your country')).toHaveValue(
+      'Test Country'
+    );
+    expect(screen.getByPlaceholderText('Search and select your nationality')).toHaveValue(
+      'Test Nationality'
+    );
+    expect(screen.getByPlaceholderText('Search and select second nationality')).toHaveValue(
+      'Test Second Nationality'
+    );
   });
 
   it('should call the setter functions when the input values are changed', () => {
@@ -90,11 +95,17 @@ describe('PersonalInfoSection', () => {
     expect(setPhoneNumberMock).toHaveBeenCalledWith('0987654321');
     fireEvent.change(screen.getByLabelText(/City/), { target: { value: 'New City' } });
     expect(setCityMock).toHaveBeenCalledWith('New City');
-    fireEvent.change(screen.getByPlaceholderText('Search and select your country'), { target: { value: 'New Country' } });
+    fireEvent.change(screen.getByPlaceholderText('Search and select your country'), {
+      target: { value: 'New Country' },
+    });
     expect(setCountryMock).toHaveBeenCalledWith('New Country');
-    fireEvent.change(screen.getByPlaceholderText('Search and select your nationality'), { target: { value: 'New Nationality' } });
+    fireEvent.change(screen.getByPlaceholderText('Search and select your nationality'), {
+      target: { value: 'New Nationality' },
+    });
     expect(setNationalityMock).toHaveBeenCalledWith('New Nationality');
-    fireEvent.change(screen.getByPlaceholderText('Search and select second nationality'), { target: { value: 'New Second Nationality' } });
+    fireEvent.change(screen.getByPlaceholderText('Search and select second nationality'), {
+      target: { value: 'New Second Nationality' },
+    });
     expect(setDoubleNationalityMock).toHaveBeenCalledWith('New Second Nationality');
   });
 

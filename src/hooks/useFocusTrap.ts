@@ -5,17 +5,17 @@ import { useEffect, useRef } from 'react';
 /**
  * Custom hook for implementing focus trap in modal/dialog components
  * Ensures keyboard focus stays within the component for accessibility
- * 
+ *
  * @param isActive - Whether the focus trap is currently active
  * @returns ref - Ref to attach to the container element
- * 
+ *
  * @example
  * ```tsx
  * function Modal({ isOpen, onClose }) {
  *   const modalRef = useFocusTrap(isOpen);
- *   
+ *
  *   if (!isOpen) return null;
- *   
+ *
  *   return (
  *     <div ref={modalRef} role="dialog" aria-modal="true">
  *       <button onClick={onClose}>Close</button>
@@ -33,7 +33,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(isActive: b
     if (!isActive || !containerRef.current) return;
 
     const container = containerRef.current;
-    
+
     // Get all focusable elements
     const getFocusableElements = () => {
       const focusableSelectors = [
@@ -44,10 +44,10 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(isActive: b
         'select:not([disabled])',
         '[tabindex]:not([tabindex="-1"])',
       ];
-      
+
       return Array.from(
         container.querySelectorAll<HTMLElement>(focusableSelectors.join(','))
-      ).filter(el => {
+      ).filter((el) => {
         // Exclude hidden elements
         return el.offsetParent !== null;
       });
@@ -68,7 +68,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(isActive: b
           e.preventDefault();
           lastElement.focus();
         }
-      } 
+      }
       // Tab (going forwards)
       else {
         if (document.activeElement === lastElement) {

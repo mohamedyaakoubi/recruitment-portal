@@ -40,12 +40,12 @@ describe('Job Service', () => {
         { id: '2', title: 'Job 2', category: 'Services', specialties: ['UX'] },
       ];
       mockCollection.get.mockResolvedValue({
-        docs: mockJobs.map(job => ({ id: job.id, data: () => job })),
+        docs: mockJobs.map((job) => ({ id: job.id, data: () => job })),
       });
 
       const { jobs, categories } = await getJobs();
 
-      expect(jobs).toEqual(mockJobs.map(j => ({ ...j, specialties: j.specialties || [] })));
+      expect(jobs).toEqual(mockJobs.map((j) => ({ ...j, specialties: j.specialties || [] })));
       expect(categories).toEqual(JOB_CATEGORIES);
       expect(mockDb.collection).toHaveBeenCalledWith('jobs');
       expect(mockCollection.orderBy).toHaveBeenCalledWith('category');
@@ -73,14 +73,18 @@ describe('Job Service', () => {
       const { jobId } = await createJob(jobData as any);
 
       expect(jobId).toBe(mockJobRef.id);
-      expect(mockCollection.add).toHaveBeenCalledWith(expect.objectContaining({
-        ...jobData,
-        isActive: true,
-      }));
+      expect(mockCollection.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...jobData,
+          isActive: true,
+        })
+      );
     });
 
     it('should throw an error for missing required fields', async () => {
-      await expect(createJob({} as any)).rejects.toThrow('Missing title, description, category, or specialties');
+      await expect(createJob({} as any)).rejects.toThrow(
+        'Missing title, description, category, or specialties'
+      );
     });
 
     it('should throw an error for invalid category', async () => {
@@ -100,9 +104,11 @@ describe('Job Service', () => {
       const jobData = { title: 'Updated Title' };
       await updateJob(jobId, jobData);
       expect(mockCollection.doc).toHaveBeenCalledWith(jobId);
-      expect(mockCollection.update).toHaveBeenCalledWith(expect.objectContaining({
-        ...jobData,
-      }));
+      expect(mockCollection.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...jobData,
+        })
+      );
     });
 
     it('should throw an error for missing jobId', async () => {
@@ -110,7 +116,9 @@ describe('Job Service', () => {
     });
 
     it('should throw an error for invalid category', async () => {
-      await expect(updateJob('job-1', { category: 'Invalid Category' })).rejects.toThrow('Invalid category');
+      await expect(updateJob('job-1', { category: 'Invalid Category' })).rejects.toThrow(
+        'Invalid category'
+      );
     });
   });
 

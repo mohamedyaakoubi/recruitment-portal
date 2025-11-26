@@ -1,5 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
-import logger from "@/lib/logger";
+import { useMutation } from '@tanstack/react-query';
+import logger from '@/lib/logger';
 
 interface PhoneValidationResult {
   isValid: boolean;
@@ -19,14 +19,14 @@ interface PhoneValidationParams {
 }
 
 async function validatePhoneApi(params: PhoneValidationParams): Promise<PhoneValidationResult> {
-  const response = await fetch("/api/validate-phone", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+  const response = await fetch('/api/validate-phone', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   });
 
   if (!response.ok) {
-    throw new Error("Phone validation failed");
+    throw new Error('Phone validation failed');
   }
 
   return response.json();
@@ -39,7 +39,7 @@ export function usePhoneValidation() {
   return useMutation({
     mutationFn: validatePhoneApi,
     onError: (error) => {
-      logger.error("Phone validation failed", error);
+      logger.error('Phone validation failed', error);
     },
   });
 }

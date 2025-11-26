@@ -20,10 +20,10 @@ export async function POST(request: NextRequest) {
   try {
     const jobData = await request.json();
     const { jobId } = await createJob(jobData);
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       jobId,
-      message: 'Job created successfully'
+      message: 'Job created successfully',
     });
   } catch (error) {
     logger.error('Error creating job', error);
@@ -36,9 +36,9 @@ export async function PUT(request: NextRequest) {
   try {
     const { jobId, ...jobData } = await request.json();
     await updateJob(jobId, jobData);
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Job updated successfully'
+    return NextResponse.json({
+      success: true,
+      message: 'Job updated successfully',
     });
   } catch (error) {
     logger.error('Error updating job', error);
@@ -54,9 +54,9 @@ export async function DELETE(request: NextRequest) {
     if (jobId) {
       await deleteJob(jobId);
     }
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Job deleted successfully'
+    return NextResponse.json({
+      success: true,
+      message: 'Job deleted successfully',
     });
   } catch (error) {
     logger.error('Error deleting job', error);

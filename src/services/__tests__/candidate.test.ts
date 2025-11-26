@@ -31,7 +31,6 @@ const mockDoc = {
 (mockCollection.where as vi.Mock).mockReturnThis();
 (mockCollection.orderBy as vi.Mock).mockReturnThis();
 
-
 describe('Candidate Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,13 +48,17 @@ describe('Candidate Service', () => {
     });
 
     it('should return null for empty date', () => {
-        expect(calculateAge('')).toBeNull();
-      });
+      expect(calculateAge('')).toBeNull();
+    });
   });
 
   describe('updateCandidateStatus', () => {
     it('should update status and send rejection email', async () => {
-      const candidateData = { email: 'test@example.com', fullName: 'Test User', jobTitleText: 'Developer' };
+      const candidateData = {
+        email: 'test@example.com',
+        fullName: 'Test User',
+        jobTitleText: 'Developer',
+      };
       mockDoc.get.mockResolvedValue({ exists: true, data: () => candidateData });
       const sendRejectionEmailSpy = vi.spyOn(emailService, 'sendRejectionEmail');
       const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -63,40 +66,54 @@ describe('Candidate Service', () => {
       await updateCandidateStatus('1', 'rejected');
 
       expect(mockDoc.update).toHaveBeenCalledWith({ status: 'rejected' });
-      expect(sendRejectionEmailSpy).toHaveBeenCalledWith(candidateData.email, candidateData.fullName, candidateData.jobTitleText);
+      expect(sendRejectionEmailSpy).toHaveBeenCalledWith(
+        candidateData.email,
+        candidateData.fullName,
+        candidateData.jobTitleText
+      );
       consoleLogSpy.mockRestore();
     });
 
     it('should update status and send interview email', async () => {
-        const candidateData = { email: 'test@example.com', fullName: 'Test User' };
-        mockDoc.get.mockResolvedValue({ exists: true, data: () => candidateData });
-        const sendNotificationEmailSpy = vi.spyOn(emailService, 'sendNotificationEmail');
-        const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-        const interviewDate = new Date();
-    
-        await updateCandidateStatus('1', 'interview_scheduled', interviewDate.toISOString());
-    
-        expect(mockDoc.update).toHaveBeenCalledWith(expect.objectContaining({ status: 'interview_scheduled' }));
-        expect(sendNotificationEmailSpy).toHaveBeenCalled();
-        consoleLogSpy.mockRestore();
-      });
+      const candidateData = { email: 'test@example.com', fullName: 'Test User' };
+      mockDoc.get.mockResolvedValue({ exists: true, data: () => candidateData });
+      const sendNotificationEmailSpy = vi.spyOn(emailService, 'sendNotificationEmail');
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const interviewDate = new Date();
+
+      await updateCandidateStatus('1', 'interview_scheduled', interviewDate.toISOString());
+
+      expect(mockDoc.update).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'interview_scheduled' })
+      );
+      expect(sendNotificationEmailSpy).toHaveBeenCalled();
+      consoleLogSpy.mockRestore();
+    });
 
     it('should throw error for invalid status', async () => {
-      await expect(updateCandidateStatus('1', 'invalid_status')).rejects.toThrow('Invalid status provided');
+      await expect(updateCandidateStatus('1', 'invalid_status')).rejects.toThrow(
+        'Invalid status provided'
+      );
     });
   });
 
   describe('exportCandidates', () => {
     it('should return filtered candidates', async () => {
-        const mockCandidates = [
-            { id: '1', data: () => ({ fullName: 'John Doe', status: 'approved', nationality: 'American' }) },
-            { id: '2', data: () => ({ fullName: 'Jane Doe', status: 'rejected', nationality: 'Canadian' }) },
-        ];
-        mockCollection.get.mockResolvedValue({ docs: mockCandidates });
+      const mockCandidates = [
+        {
+          id: '1',
+          data: () => ({ fullName: 'John Doe', status: 'approved', nationality: 'American' }),
+        },
+        {
+          id: '2',
+          data: () => ({ fullName: 'Jane Doe', status: 'rejected', nationality: 'Canadian' }),
+        },
+      ];
+      mockCollection.get.mockResolvedValue({ docs: mockCandidates });
 
-        const result = await exportCandidates('all', 'Doe', 'American');
-        expect(result).toHaveLength(1);
-        expect(result[0].fullName).toBe('John Doe');
+      const result = await exportCandidates('all', 'Doe', 'American');
+      expect(result).toHaveLength(1);
+      expect(result[0].fullName).toBe('John Doe');
     });
   });
 });

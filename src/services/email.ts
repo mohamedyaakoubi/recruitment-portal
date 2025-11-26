@@ -12,33 +12,37 @@ const SMTP_FROM = process.env.SMTP_FROM_EMAIL;
 const smtpConfigured = SMTP_HOST && SMTP_USER && SMTP_PASS && SMTP_FROM;
 
 if (!smtpConfigured) {
-  logger.warn("SMTP environment variables are not fully set. Email notifications will be disabled.");
+  logger.warn(
+    'SMTP environment variables are not fully set. Email notifications will be disabled.'
+  );
 }
 
-const transporter = smtpConfigured ? nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_PORT === 465,
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-  connectionTimeout: 15000,
-  greetingTimeout: 10000,
-  socketTimeout: 20000,
-  pool: true,
-  maxConnections: 3,
-  maxMessages: 50,
-  tls: {
-    rejectUnauthorized: false,
-    minVersion: 'TLSv1.2'
-  },
-  debug: process.env.NODE_ENV === 'development',
-  logger: process.env.NODE_ENV === 'development'
-}) : null;
+const transporter = smtpConfigured
+  ? nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
+      pool: true,
+      maxConnections: 3,
+      maxMessages: 50,
+      tls: {
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2',
+      },
+      debug: process.env.NODE_ENV === 'development',
+      logger: process.env.NODE_ENV === 'development',
+    })
+  : null;
 
 if (transporter && process.env.NODE_ENV === 'development') {
-  transporter.verify((error, success) => {
+  transporter.verify((error, _success) => {
     if (error) {
       logger.error('SMTP connection failed', error);
     } else {
@@ -48,33 +52,58 @@ if (transporter && process.env.NODE_ENV === 'development') {
 }
 
 const getTemplate = (templateName: string, type: 'html' | 'txt') => {
-  const filePath = path.join(process.cwd(), 'src', 'lib', 'emailTemplates', `${templateName}.${type}`);
+  const filePath = path.join(
+    process.cwd(),
+    'src',
+    'lib',
+    'emailTemplates',
+    `${templateName}.${type}`
+  );
   return readFileSync(filePath, 'utf8');
 };
 
-export const sendNotificationEmail = async (to: string, status: string, candidateName: string, interviewDate?: Date, meetLink?: string) => {
+export const sendNotificationEmail = async (
+  to: string,
+  status: string,
+  candidateName: string,
+  interviewDate?: Date,
+  _meetLink?: string
+) => {
   if (!transporter) {
-    logger.info("SMTP not configured, skipping email notification");
+    logger.info('SMTP not configured, skipping email notification');
     return;
   }
 
   let subject = '';
   let htmlBody = '';
   let textBody = '';
-  const companyName = "International Skills Labor Company";
+  const companyName = 'International Skills Labor Company';
   let fromAddress = SMTP_FROM || 'noreply@internationalskills.fi';
   let replyToAddress = 'Apply@internationalskills.fi';
 
   if (status === 'rejected') {
     subject = `Application Status Update - ${companyName}`;
-    htmlBody = getTemplate('statusRejected', 'html').replace(/\${companyName}/g, companyName).replace(/\${candidateName}/g, candidateName);
-    textBody = getTemplate('statusRejected', 'txt').replace(/\${companyName}/g, companyName).replace(/\${candidateName}/g, candidateName);
+    htmlBody = getTemplate('statusRejected', 'html')
+      .replace(/\${companyName}/g, companyName)
+      .replace(/\${candidateName}/g, candidateName);
+    textBody = getTemplate('statusRejected', 'txt')
+      .replace(/\${companyName}/g, companyName)
+      .replace(/\${candidateName}/g, candidateName);
   } else if (status === 'interview_scheduled' && interviewDate) {
     subject = `Interview Invitation from ${companyName}`;
     fromAddress = 'recruit@internationalskills.fi';
     replyToAddress = 'recruit@internationalskills.fi';
-    const formattedDate = interviewDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const formattedTime = interviewDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
+    const formattedDate = interviewDate.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    const formattedTime = interviewDate.toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short',
+    });
     htmlBody = getTemplate('statusInterviewScheduled', 'html')
       .replace(/\${companyName}/g, companyName)
       .replace(/\${candidateName}/g, candidateName)
@@ -93,13 +122,13 @@ export const sendNotificationEmail = async (to: string, status: string, candidat
   const mailOptions = {
     from: {
       name: 'International Skills Labor Company',
-      address: fromAddress
+      address: fromAddress,
     },
     to: to,
     subject: subject,
     html: htmlBody,
     text: textBody,
-    replyTo: replyToAddress
+    replyTo: replyToAddress,
   };
 
   try {
@@ -120,7 +149,7 @@ export const sendApplicationConfirmationEmail = async ({
   jobCategory,
   specialty,
   applicationId,
-  submissionDate
+  submissionDate,
 }: {
   candidateEmail: string;
   candidateName: string;
@@ -131,7 +160,7 @@ export const sendApplicationConfirmationEmail = async ({
   submissionDate: Date;
 }) => {
   if (!transporter) {
-    logger.warn("SMTP not configured, skipping confirmation email");
+    logger.warn('SMTP not configured, skipping confirmation email');
     return;
   }
 
@@ -142,7 +171,7 @@ export const sendApplicationConfirmationEmail = async ({
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    timeZone: 'Europe/Helsinki'
+    timeZone: 'Europe/Helsinki',
   });
 
   let htmlTemplate = getTemplate('applicationConfirmation', 'html')
@@ -186,19 +215,22 @@ export const sendApplicationConfirmationEmail = async ({
   const mailOptions = {
     from: {
       name: 'International Skills Labor Company',
-      address: SMTP_FROM || 'noreply@internationalskills.fi'
+      address: SMTP_FROM || 'noreply@internationalskills.fi',
     },
     to: candidateEmail,
     subject: `✅ Application Confirmed - ${jobTitle} Position | Application #${applicationId}`,
     text: textTemplate,
     html: htmlTemplate,
-    replyTo: 'Apply@internationalskills.fi'
+    replyTo: 'Apply@internationalskills.fi',
   };
 
   try {
     logger.info('Sending confirmation email', { candidateEmail });
     const info = await transporter.sendMail(mailOptions);
-    logger.info('Confirmation email sent successfully', { messageId: info.messageId, candidateEmail });
+    logger.info('Confirmation email sent successfully', {
+      messageId: info.messageId,
+      candidateEmail,
+    });
     return info;
   } catch (error) {
     logger.error('Error sending confirmation email', error, { candidateEmail });
@@ -206,13 +238,17 @@ export const sendApplicationConfirmationEmail = async ({
   }
 };
 
-export const sendRejectionEmail = async (candidateEmail: string, candidateName: string, jobTitle: string) => {
+export const sendRejectionEmail = async (
+  candidateEmail: string,
+  candidateName: string,
+  jobTitle: string
+) => {
   if (!candidateEmail || !candidateName) {
     throw new Error('Missing required fields');
   }
 
   if (!transporter) {
-    logger.warn("SMTP not configured, skipping rejection email");
+    logger.warn('SMTP not configured, skipping rejection email');
     return;
   }
 
@@ -229,14 +265,13 @@ export const sendRejectionEmail = async (candidateEmail: string, candidateName: 
   const mailOptions = {
     from: {
       name: 'International Skills Labor Company',
-      address: SMTP_FROM || 'noreply@internationalskills.fi'
-
+      address: SMTP_FROM || 'noreply@internationalskills.fi',
     },
     to: candidateEmail,
     subject: `Application Status Update - International Skills Labor Company`,
     text: textTemplate,
     html: htmlTemplate,
-    replyTo: 'Apply@internationalskills.fi'
+    replyTo: 'Apply@internationalskills.fi',
   };
 
   try {
@@ -254,7 +289,7 @@ export const sendCancellationEmail = async ({
   candidateEmail,
   candidateName,
   jobTitle,
-  reason
+  reason,
 }: {
   candidateEmail: string;
   candidateName: string;
@@ -262,7 +297,7 @@ export const sendCancellationEmail = async ({
   reason: string;
 }) => {
   if (!transporter) {
-    logger.warn("SMTP not configured, skipping cancellation email");
+    logger.warn('SMTP not configured, skipping cancellation email');
     return;
   }
 
@@ -281,13 +316,13 @@ export const sendCancellationEmail = async ({
   const mailOptions = {
     from: {
       name: 'International Skills Labor Company',
-      address: SMTP_FROM || 'noreply@internationalskills.fi'
+      address: SMTP_FROM || 'noreply@internationalskills.fi',
     },
     to: candidateEmail,
     subject: `⚠️ Interview Cancelled - ${jobTitle || 'Position'} at International Skills`,
     html: htmlTemplate,
     text: textTemplate,
-    replyTo: 'Apply@internationalskills.fi'
+    replyTo: 'Apply@internationalskills.fi',
   };
 
   try {

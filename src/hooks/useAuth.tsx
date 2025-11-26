@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useContext, createContext, ReactNode } from 'react';
 // import { useRouter } from 'next/navigation'; // Removed as it's unused here
@@ -7,8 +7,8 @@ import {
   onAuthStateChanged,
   signOut as firebaseSignOut,
   signInWithEmailAndPassword,
-  User
-} from "firebase/auth";
+  User,
+} from 'firebase/auth';
 import { AuthContextType } from '@/types';
 import logger from '@/lib/logger';
 
@@ -39,9 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.error('Firebase Sign In Error', err, { email });
       // Type assertion for error object
       if (err instanceof Error) {
-        setError(err.message || "Failed to sign in");
+        setError(err.message || 'Failed to sign in');
       } else {
-        setError("Failed to sign in: An unknown error occurred");
+        setError('Failed to sign in: An unknown error occurred');
       }
     } finally {
       setLoading(false);
@@ -59,9 +59,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.error('Firebase Sign Out Error', err);
       // Type assertion for error object
       if (err instanceof Error) {
-        setError(err.message || "Failed to sign out");
+        setError(err.message || 'Failed to sign out');
       } else {
-        setError("Failed to sign out: An unknown error occurred");
+        setError('Failed to sign out: An unknown error occurred');
       }
     } finally {
       setLoading(false);
@@ -82,8 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
-

@@ -1,7 +1,7 @@
 module.exports = {
   ...jest.requireActual('react-dom'),
   createRoot: () => ({
-    render: (app) => {
+    render: (_app) => {
       // No-op
     },
     unmount: () => {

@@ -13,8 +13,24 @@ describe('JobManagement', () => {
   const onClose = vi.fn();
 
   const mockJobs: Job[] = [
-    { id: '1', title: 'Software Engineer', description: 'Develop amazing things', category: 'IT', specialties: ['Frontend'], isActive: true, createdAt: { toDate: () => new Date() } },
-    { id: '2', title: 'Data Scientist', description: 'Analyze data', category: 'Data', specialties: ['Machine Learning'], isActive: false, createdAt: { toDate: () => new Date() } },
+    {
+      id: '1',
+      title: 'Software Engineer',
+      description: 'Develop amazing things',
+      category: 'IT',
+      specialties: ['Frontend'],
+      isActive: true,
+      createdAt: { toDate: () => new Date() },
+    },
+    {
+      id: '2',
+      title: 'Data Scientist',
+      description: 'Analyze data',
+      category: 'Data',
+      specialties: ['Machine Learning'],
+      isActive: false,
+      createdAt: { toDate: () => new Date() },
+    },
   ];
 
   beforeEach(() => {

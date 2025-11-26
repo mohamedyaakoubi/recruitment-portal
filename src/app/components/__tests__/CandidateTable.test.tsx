@@ -15,7 +15,9 @@ vi.mock('../candidate-table/CandidateTableHeader', () => ({
   default: ({ sortField, sortDirection, handleSort }: any) => (
     <thead>
       <tr>
-        <th onClick={() => handleSort('fullName')}>Name ({sortField === 'fullName' ? sortDirection : ''})</th>
+        <th onClick={() => handleSort('fullName')}>
+          Name ({sortField === 'fullName' ? sortDirection : ''})
+        </th>
       </tr>
     </thead>
   ),
@@ -25,7 +27,9 @@ vi.mock('../candidate-table/CandidateTableRow', () => ({
   default: ({ candidate, onViewCandidate }: any) => (
     <tr>
       <td>{candidate.fullName}</td>
-      <td><button onClick={() => onViewCandidate(candidate)}>View</button></td>
+      <td>
+        <button onClick={() => onViewCandidate(candidate)}>View</button>
+      </td>
     </tr>
   ),
 }));

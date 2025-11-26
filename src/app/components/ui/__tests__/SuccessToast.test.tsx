@@ -43,7 +43,7 @@ describe('SuccessToast', () => {
     render(<SuccessToast {...defaultProps} />);
     fireEvent.click(screen.getByText(/Close/));
     act(() => {
-        vi.advanceTimersByTime(300); // for fade out animation
+      vi.advanceTimersByTime(300); // for fade out animation
     });
     expect(onCloseMock).toHaveBeenCalledTimes(1);
   });

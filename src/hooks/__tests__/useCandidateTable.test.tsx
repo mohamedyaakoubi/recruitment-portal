@@ -1,5 +1,3 @@
-
-
 /**
  * @jest-environment jsdom
  */
@@ -9,8 +7,6 @@ import { useCandidateTable } from '../useCandidateTable';
 import { Candidate } from '@/types';
 import React from 'react';
 import { vi } from 'vitest';
-
-
 
 // Mock browser APIs
 const mockCreateObjectURL = vi.fn();
@@ -68,7 +64,7 @@ const mockCandidates: Candidate[] = [
     startDate: '',
     comments: '',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   },
   {
     id: '2',
@@ -100,7 +96,7 @@ const mockCandidates: Candidate[] = [
     startDate: '',
     comments: '',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   },
   {
     id: '3',
@@ -132,7 +128,7 @@ const mockCandidates: Candidate[] = [
     startDate: '',
     comments: '',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   },
 ];
 
@@ -145,8 +141,6 @@ describe('useCandidateTable', () => {
       json: () => Promise.resolve({ data: [], filename: 'test.xlsx', count: 0 }),
       blob: () => Promise.resolve(new Blob()),
     });
-
-
 
     // Fix for spyOn recursion:
     const originalCreateElement = document.createElement.bind(document);
@@ -285,17 +279,17 @@ describe('useCandidateTable', () => {
 
     expect(result.current.splitName('John Doe')).toEqual({
       firstName: 'John',
-      lastName: 'Doe'
+      lastName: 'Doe',
     });
 
     expect(result.current.splitName('Mary Jane Smith')).toEqual({
       firstName: 'Mary',
-      lastName: 'Jane Smith'
+      lastName: 'Jane Smith',
     });
 
     expect(result.current.splitName('Madonna')).toEqual({
       firstName: 'Madonna',
-      lastName: ''
+      lastName: '',
     });
   });
 
@@ -332,7 +326,7 @@ describe('useCandidateTable', () => {
 
   it('should set isExporting state during export', async () => {
     let resolvePromise: (value: any) => void;
-    const exportPromise = new Promise(resolve => {
+    const exportPromise = new Promise((resolve) => {
       resolvePromise = resolve;
     });
 

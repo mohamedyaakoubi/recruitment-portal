@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
+import logger from '@/lib/logger';
 
 interface CandidateApplication {
   id: string;
@@ -38,18 +39,15 @@ export async function POST(request: NextRequest) {
     const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
     const searchEmail = email.toLowerCase().trim();
-    console.log('🔍 Fetching applications for email:', searchEmail);
+    logger.info('Fetching applications for email', { email: searchEmail });
 
     const db = getFirestoreAdmin();
     const candidatesRef = db.collection('candidates');
-    
+
     // Get all applications for this email, ordered by submission date (newest first)
     const snapshot = await candidatesRef
       .where('email', '==', searchEmail)
@@ -59,9 +57,9 @@ export async function POST(request: NextRequest) {
     const applications: CandidateApplication[] = [];
 
     if (!snapshot.empty) {
-      snapshot.forEach(doc => {
+      snapshot.forEach((doc) => {
         const data = doc.data();
-        
+
         // Convert Firestore data to JavaScript objects
         const application: CandidateApplication = {
           id: doc.id,
@@ -92,22 +90,21 @@ export async function POST(request: NextRequest) {
           interviewDate: data.interviewDate ? data.interviewDate.toDate().toISOString() : null,
           meetLink: data.meetLink || '',
           calendarEventId: data.calendarEventId || '',
-          duration: data.duration || null
+          duration: data.duration || null,
         };
-        
+
         applications.push(application);
       });
     }
 
-    console.log(`✅ Found ${applications.length} applications for ${searchEmail}`);
+    logger.info('Found applications', { count: applications.length, email: searchEmail });
 
     return NextResponse.json({
       applications,
-      count: applications.length
+      count: applications.length,
     });
-
   } catch (error) {
-    console.error('❌ Get candidate applications error:', error);
+    logger.error('Get candidate applications error', error);
     return NextResponse.json(
       { error: 'Internal server error while fetching applications' },
       { status: 500 }

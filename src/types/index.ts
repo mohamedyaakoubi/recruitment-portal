@@ -1,52 +1,53 @@
+import React from 'react';
 import { Timestamp } from 'firebase/firestore';
 import { JobCategory } from '@/lib/job-categories';
 import { User } from 'firebase/auth';
 import { Event as CalendarEvent } from 'react-big-calendar';
 
 export interface Candidate {
-    id: string;
-    fullName: string;
-    firstName?: string;
-    lastName?: string;
-    email: string;
-    gender?: string;
-    phoneNumber?: string;
-    countryCode?: string;
-    dateOfBirth?: string;
-    age?: number;
-    city?: string;
-    country?: string;
-    nationality?: string;
-    doubleNationality?: string;
-    jobTitle?: string;
-    jobTitleText?: string;
-    jobCategory?: string;
-    specialty?: string;
-    websites: string[];
-    cvUrl: string;
-    passportUrl: string;
-    photoUrl?: string;
-    submittedAt: Timestamp;
-    status: 'submitted' | 'rejected' | 'interview_scheduled' | 'approved' | string;
-    score: number | null;
-    scoreAnalysis?: string;
-    // 🔥 NEW: Enhanced scoring fields for Gemini 2.5 Pro
-    keyStrengths?: string[];
-    areasForImprovement?: string[];
-    aiRecommendation?: 'highly_recommended' | 'recommended' | 'conditional' | 'not_recommended';
-    scoringVersion?: string; // Track which AI version was used
-    lastScoredAt?: Timestamp;
-    interviewDate?: Timestamp;
-    calendarEventId?: string;
-    meetLink?: string;
-    meetSpaceId?: string;
-    duration?: number;
-    // 🔥 NEW: Support for additional candidate information
-    additionalInfo?: {
-        type: 'link' | 'file' | 'text';
-        content: string;
-        fileUrl?: string;
-    }[];
+  id: string;
+  fullName: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  gender?: string;
+  phoneNumber?: string;
+  countryCode?: string;
+  dateOfBirth?: string;
+  age?: number;
+  city?: string;
+  country?: string;
+  nationality?: string;
+  doubleNationality?: string;
+  jobTitle?: string;
+  jobTitleText?: string;
+  jobCategory?: string;
+  specialty?: string;
+  websites: string[];
+  cvUrl: string;
+  passportUrl: string;
+  photoUrl?: string;
+  submittedAt: Timestamp;
+  status: 'submitted' | 'rejected' | 'interview_scheduled' | 'approved' | string;
+  score: number | null;
+  scoreAnalysis?: string;
+  // 🔥 NEW: Enhanced scoring fields for Gemini 2.5 Pro
+  keyStrengths?: string[];
+  areasForImprovement?: string[];
+  aiRecommendation?: 'highly_recommended' | 'recommended' | 'conditional' | 'not_recommended';
+  scoringVersion?: string; // Track which AI version was used
+  lastScoredAt?: Timestamp;
+  interviewDate?: Timestamp;
+  calendarEventId?: string;
+  meetLink?: string;
+  meetSpaceId?: string;
+  duration?: number;
+  // 🔥 NEW: Support for additional candidate information
+  additionalInfo?: {
+    type: 'link' | 'file' | 'text';
+    content: string;
+    fileUrl?: string;
+  }[];
 }
 
 export interface Job {
@@ -61,12 +62,12 @@ export interface Job {
 }
 
 export interface ScoringModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    candidate: Candidate | null;
-    onSubmit: (jobId: string, jobTitle: string, jobDescription: string) => Promise<void>;
-    isLoading: boolean;
-    error: string | null;
+  isOpen: boolean;
+  onClose: () => void;
+  candidate: Candidate | null;
+  onSubmit: (jobId: string, jobTitle: string, jobDescription: string) => Promise<void>;
+  isLoading: boolean;
+  error: string | null;
 }
 
 export interface CandidateTableProps {
@@ -90,18 +91,31 @@ export interface CandidateTableProps {
   };
 }
 
-export type SortField = 'firstName' | 'lastName' | 'email' | 'age' | 'city' | 'country' | 'submittedAt' | 'status' | 'score';
+export type SortField =
+  | 'firstName'
+  | 'lastName'
+  | 'email'
+  | 'age'
+  | 'city'
+  | 'country'
+  | 'submittedAt'
+  | 'status'
+  | 'score';
 export type SortDirection = 'asc' | 'desc';
 
 export interface CandidateProfileModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    candidate: Candidate | null;
-    onStatusChange: (candidateId: string, newStatus: string, interviewTimestampISO?: string) => Promise<void>;
-    onCancelInterview: (candidateId: string, reason?: string) => Promise<void>;
-    statusUpdateLoading: boolean;
-    onScheduleInterview: () => void;
-    onEditCandidate?: (candidateId: string, updatedData: Partial<Candidate>) => Promise<void>; // 🔥 NEW
+  isOpen: boolean;
+  onClose: () => void;
+  candidate: Candidate | null;
+  onStatusChange: (
+    candidateId: string,
+    newStatus: string,
+    interviewTimestampISO?: string
+  ) => Promise<void>;
+  onCancelInterview: (candidateId: string, reason?: string) => Promise<void>;
+  statusUpdateLoading: boolean;
+  onScheduleInterview: () => void;
+  onEditCandidate?: (candidateId: string, updatedData: Partial<Candidate>) => Promise<void>; // 🔥 NEW
 }
 
 export interface JobManagementProps {
@@ -156,8 +170,8 @@ export interface ScoreDistributionData {
 }
 
 export interface DashboardChartsProps {
-  statusChartData: { name: string; value: number; }[];
-  scoreDistributionData: { name: string; count: number; }[];
+  statusChartData: { name: string; value: number }[];
+  scoreDistributionData: { name: string; count: number }[];
 }
 
 export interface DashboardHeaderProps {
@@ -171,9 +185,9 @@ export interface InterviewSchedulingModalProps {
   onClose: () => void;
   candidate: Candidate | null;
   onSchedule: (
-    candidateId: string, 
-    date: string, 
-    time: string, 
+    candidateId: string,
+    date: string,
+    time: string,
     duration: number,
     adminEmail: string,
     notes?: string
@@ -209,7 +223,7 @@ export interface TabProps {
 export interface TabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
-  tabs: { label: string; value: string; }[];
+  tabs: { label: string; value: string }[];
   children: React.ReactNode;
 }
 
@@ -230,11 +244,10 @@ export interface AuthContextType {
 }
 
 export interface InterviewEvent extends CalendarEvent {
-    resource: Candidate;
-    isCompleted: boolean;
-    eventType: 'scheduled' | 'completed';
+  resource: Candidate;
+  isCompleted: boolean;
+  eventType: 'scheduled' | 'completed';
 }
-
 
 export interface ApplicationStatusProps {
   applications: Candidate[];

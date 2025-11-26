@@ -1,6 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Job } from "@/types";
-import logger from "@/lib/logger";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Job } from '@/types';
+import logger from '@/lib/logger';
 
 interface JobsResponse {
   jobs: Job[];
@@ -11,46 +11,46 @@ interface JobsResponse {
 async function fetchJobs(activeOnly: boolean = true): Promise<JobsResponse> {
   const response = await fetch(`/api/jobs?activeOnly=${activeOnly}`);
   if (!response.ok) {
-    throw new Error("Failed to fetch jobs");
+    throw new Error('Failed to fetch jobs');
   }
   return response.json();
 }
 
 // Create job
 async function createJobApi(jobData: Partial<Job>): Promise<{ jobId: string }> {
-  const response = await fetch("/api/jobs", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+  const response = await fetch('/api/jobs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(jobData),
   });
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || "Failed to create job");
+    throw new Error(error.error || 'Failed to create job');
   }
   return response.json();
 }
 
 // Update job
 async function updateJobApi(jobId: string, jobData: Partial<Job>): Promise<void> {
-  const response = await fetch("/api/jobs", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
+  const response = await fetch('/api/jobs', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jobId, ...jobData }),
   });
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || "Failed to update job");
+    throw new Error(error.error || 'Failed to update job');
   }
 }
 
 // Delete job
 async function deleteJobApi(jobId: string): Promise<void> {
   const response = await fetch(`/api/jobs?jobId=${jobId}`, {
-    method: "DELETE",
+    method: 'DELETE',
   });
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || "Failed to delete job");
+    throw new Error(error.error || 'Failed to delete job');
   }
 }
 
@@ -59,7 +59,7 @@ async function deleteJobApi(jobId: string): Promise<void> {
  */
 export function useJobs(activeOnly: boolean = true) {
   return useQuery({
-    queryKey: ["jobs", { activeOnly }],
+    queryKey: ['jobs', { activeOnly }],
     queryFn: () => fetchJobs(activeOnly),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -74,11 +74,11 @@ export function useCreateJob() {
   return useMutation({
     mutationFn: createJobApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
-      logger.info("Job created successfully");
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      logger.info('Job created successfully');
     },
     onError: (error) => {
-      logger.error("Failed to create job", error);
+      logger.error('Failed to create job', error);
     },
   });
 }
@@ -93,11 +93,11 @@ export function useUpdateJob() {
     mutationFn: ({ jobId, data }: { jobId: string; data: Partial<Job> }) =>
       updateJobApi(jobId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
-      logger.info("Job updated successfully");
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      logger.info('Job updated successfully');
     },
     onError: (error) => {
-      logger.error("Failed to update job", error);
+      logger.error('Failed to update job', error);
     },
   });
 }
@@ -111,11 +111,11 @@ export function useDeleteJob() {
   return useMutation({
     mutationFn: deleteJobApi,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
-      logger.info("Job deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      logger.info('Job deleted successfully');
     },
     onError: (error) => {
-      logger.error("Failed to delete job", error);
+      logger.error('Failed to delete job', error);
     },
   });
 }

@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import logger from "@/lib/logger";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import logger from '@/lib/logger';
 
 interface ScheduleInterviewParams {
   candidateId: string;
@@ -25,16 +25,18 @@ interface ScheduleInterviewResult {
   };
 }
 
-async function scheduleInterviewApi(params: ScheduleInterviewParams): Promise<ScheduleInterviewResult> {
-  const response = await fetch("/api/schedule-interview-meet", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+async function scheduleInterviewApi(
+  params: ScheduleInterviewParams
+): Promise<ScheduleInterviewResult> {
+  const response = await fetch('/api/schedule-interview-meet', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(params),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || "Failed to schedule interview");
+    throw new Error(error.error || 'Failed to schedule interview');
   }
 
   return response.json();
@@ -49,14 +51,14 @@ export function useScheduleInterview() {
   return useMutation({
     mutationFn: scheduleInterviewApi,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["candidates"] });
-      logger.info("Interview scheduled successfully", {
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      logger.info('Interview scheduled successfully', {
         candidateId: variables.candidateId,
         meetLink: data.data.meetLink,
       });
     },
     onError: (error) => {
-      logger.error("Failed to schedule interview", error);
+      logger.error('Failed to schedule interview', error);
     },
   });
 }

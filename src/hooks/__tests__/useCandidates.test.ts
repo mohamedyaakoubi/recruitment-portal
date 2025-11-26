@@ -48,10 +48,12 @@ describe('useCandidates', () => {
     await act(async () => {
       onSnapshotCallback({
         forEach: (cb: (doc: any) => void) => {
-          mockCandidates.forEach(candidate => cb({
-            id: candidate.id,
-            data: () => candidate,
-          }));
+          mockCandidates.forEach((candidate) =>
+            cb({
+              id: candidate.id,
+              data: () => candidate,
+            })
+          );
         },
       });
     });
@@ -68,12 +70,14 @@ describe('useCandidates', () => {
     const errorMessage = 'Failed to fetch';
 
     let onErrorCallback: (error: Error) => void;
-    mockOnSnapshot.mockImplementation((q: any, successCb: (snapshot: any) => void, errorCb: (error: Error) => void) => {
-      onErrorCallback = errorCb;
-      return vi.fn();
-    });
+    mockOnSnapshot.mockImplementation(
+      (q: any, successCb: (snapshot: any) => void, errorCb: (error: Error) => void) => {
+        onErrorCallback = errorCb;
+        return vi.fn();
+      }
+    );
 
-    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const { result } = renderHook(() => useCandidates(mockUser));
 
     await act(async () => {
@@ -82,7 +86,10 @@ describe('useCandidates', () => {
 
     expect(result.current.loadingCandidates).toBe(false);
     expect(result.current.candidates).toEqual([]);
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Error fetching candidates: ', new Error(errorMessage));
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Error fetching candidates: ',
+      new Error(errorMessage)
+    );
     consoleErrorSpy.mockRestore();
   });
 

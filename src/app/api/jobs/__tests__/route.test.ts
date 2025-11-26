@@ -4,86 +4,86 @@ import { NextRequest } from 'next/server';
 
 // Mock jobs service BEFORE importing route
 vi.mock('@/services/jobs', () => ({
-    getJobs: vi.fn(),
-    createJob: vi.fn(),
-    updateJob: vi.fn(),
-    deleteJob: vi.fn()
+  getJobs: vi.fn(),
+  createJob: vi.fn(),
+  updateJob: vi.fn(),
+  deleteJob: vi.fn(),
 }));
 
 import * as jobsService from '@/services/jobs';
 
 describe('GET /api/jobs', () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return job listings successfully', async () => {
+    const mockJobs = [
+      { id: 'frontend-dev', title: 'Frontend Developer', category: 'Engineering' },
+      { id: 'backend-dev', title: 'Backend Developer', category: 'Engineering' },
+    ];
+
+    vi.mocked(jobsService.getJobs).mockResolvedValue({
+      jobs: mockJobs,
+      categories: ['Engineering'],
     });
 
-    it('should return job listings successfully', async () => {
-        const mockJobs = [
-            { id: 'frontend-dev', title: 'Frontend Developer', category: 'Engineering' },
-            { id: 'backend-dev', title: 'Backend Developer', category: 'Engineering' }
-        ];
+    const request = {
+      url: 'http://localhost:3000/api/jobs',
+    } as NextRequest;
 
-        vi.mocked(jobsService.getJobs).mockResolvedValue({
-            jobs: mockJobs,
-            categories: ['Engineering']
-        });
+    const response = await GET(request);
+    const data = await response.json();
 
-        const request = {
-            url: 'http://localhost:3000/api/jobs'
-        } as NextRequest;
+    expect(data.jobs).toEqual(mockJobs);
+    expect(data.categories).toEqual(['Engineering']);
+    expect(jobsService.getJobs).toHaveBeenCalledWith(false);
+  });
 
-        const response = await GET(request);
-        const data = await response.json();
-
-        expect(data.jobs).toEqual(mockJobs);
-        expect(data.categories).toEqual(['Engineering']);
-        expect(jobsService.getJobs).toHaveBeenCalledWith(false);
+  it('should filter active jobs only', async () => {
+    vi.mocked(jobsService.getJobs).mockResolvedValue({
+      jobs: [],
+      categories: [],
     });
 
-    it('should filter active jobs only', async () => {
-        vi.mocked(jobsService.getJobs).mockResolvedValue({
-            jobs: [],
-            categories: []
-        });
+    const request = {
+      url: 'http://localhost:3000/api/jobs?activeOnly=true',
+    } as NextRequest;
 
-        const request = {
-            url: 'http://localhost:3000/api/jobs?activeOnly=true'
-        } as NextRequest;
+    const response = await GET(request);
+    await response.json();
 
-        const response = await GET(request);
-        await response.json();
+    expect(jobsService.getJobs).toHaveBeenCalledWith(true);
+  });
 
-        expect(jobsService.getJobs).toHaveBeenCalledWith(true);
+  it('should return empty arrays when no jobs', async () => {
+    vi.mocked(jobsService.getJobs).mockResolvedValue({
+      jobs: [],
+      categories: [],
     });
 
-    it('should return empty arrays when no jobs', async () => {
-        vi.mocked(jobsService.getJobs).mockResolvedValue({
-            jobs: [],
-            categories: []
-        });
+    const request = {
+      url: 'http://localhost:3000/api/jobs',
+    } as NextRequest;
 
-        const request = {
-            url: 'http://localhost:3000/api/jobs'
-        } as NextRequest;
+    const response = await GET(request);
+    const data = await response.json();
 
-        const response = await GET(request);
-        const data = await response.json();
+    expect(data.jobs).toEqual([]);
+    expect(data.categories).toEqual([]);
+  });
 
-        expect(data.jobs).toEqual([]);
-        expect(data.categories).toEqual([]);
-    });
+  it('should handle database errors', async () => {
+    vi.mocked(jobsService.getJobs).mockRejectedValue(new Error('Database error'));
 
-    it('should handle database errors', async () => {
-        vi.mocked(jobsService.getJobs).mockRejectedValue(new Error('Database error'));
+    const request = {
+      url: 'http://localhost:3000/api/jobs',
+    } as NextRequest;
 
-        const request = {
-            url: 'http://localhost:3000/api/jobs'
-        } as NextRequest;
+    const response = await GET(request);
+    const data = await response.json();
 
-        const response = await GET(request);
-        const data = await response.json();
-
-        expect(response.status).toBe(500);
-        expect(data.error).toBe('Database error');
-    });
+    expect(response.status).toBe(500);
+    expect(data.error).toBe('Database error');
+  });
 });

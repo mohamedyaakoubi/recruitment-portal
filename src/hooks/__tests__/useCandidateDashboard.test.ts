@@ -16,13 +16,13 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 describe('useCandidateDashboard', () => {
-    beforeEach(() => {
-        mockUseRouter.mockReturnValue({
-            push: mockPush,
-        });
-        mockFetch.mockClear();
-        mockPush.mockClear();
+  beforeEach(() => {
+    mockUseRouter.mockReturnValue({
+      push: mockPush,
     });
+    mockFetch.mockClear();
+    mockPush.mockClear();
+  });
 
   it('should redirect to home if email is not in URL params', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -35,7 +35,31 @@ describe('useCandidateDashboard', () => {
 
   it('should fetch applications when email is in URL params', async () => {
     const mockApplications: Candidate[] = [
-      { id: '1', email: 'test@example.com', status: 'Pending', score: 0, fullName: '', phone: '', availability: [], city: '', country: '', linkedin: '', github: '', resume: '', coverLetter: '', jobTitle: '', jobCategory: '', yearsOfExperience: 0, skills: [], referral: '', source: '', startDate: '', comments: '', createdAt: new Date(), updatedAt: new Date() },
+      {
+        id: '1',
+        email: 'test@example.com',
+        status: 'Pending',
+        score: 0,
+        fullName: '',
+        phone: '',
+        availability: [],
+        city: '',
+        country: '',
+        linkedin: '',
+        github: '',
+        resume: '',
+        coverLetter: '',
+        jobTitle: '',
+        jobCategory: '',
+        yearsOfExperience: 0,
+        skills: [],
+        referral: '',
+        source: '',
+        startDate: '',
+        comments: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     ];
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -45,13 +69,13 @@ describe('useCandidateDashboard', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     let result: any;
     await act(async () => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('email', 'test@example.com');
-        window.history.pushState({}, '', url.toString());
-        const { result: r } = renderHook(() => useCandidateDashboard());
-        result = r;
+      const url = new URL(window.location.href);
+      url.searchParams.set('email', 'test@example.com');
+      window.history.pushState({}, '', url.toString());
+      const { result: r } = renderHook(() => useCandidateDashboard());
+      result = r;
     });
-    
+
     expect(result.current.isLoading).toBe(false);
     expect(result.current.applications).toEqual(mockApplications);
     expect(result.current.error).toBeNull();
@@ -68,11 +92,11 @@ describe('useCandidateDashboard', () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     let result: any;
     await act(async () => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('email', 'test@example.com');
-        window.history.pushState({}, '', url.toString());
-        const { result: r } = renderHook(() => useCandidateDashboard());
-        result = r;
+      const url = new URL(window.location.href);
+      url.searchParams.set('email', 'test@example.com');
+      window.history.pushState({}, '', url.toString());
+      const { result: r } = renderHook(() => useCandidateDashboard());
+      result = r;
     });
 
     expect(result.current.isLoading).toBe(false);
@@ -90,9 +114,9 @@ describe('useCandidateDashboard', () => {
     });
 
     act(() => {
-        const url = new URL(window.location.href);
-        url.searchParams.set('email', 'test@example.com');
-        window.history.pushState({}, '', url.toString());
+      const url = new URL(window.location.href);
+      url.searchParams.set('email', 'test@example.com');
+      window.history.pushState({}, '', url.toString());
     });
 
     act(() => {
@@ -130,30 +154,30 @@ describe('useCandidateDashboard', () => {
     });
 
     it('should format a string date', async () => {
-        let result: any;
-        await act(async () => {
-          const { result: r } = renderHook(() => useCandidateDashboard());
-          result = r;
-        });
-        const dateString = '2023-10-27T10:00:00Z';
-        const formattedDate = result.current.formatDate(dateString);
-        expect(formattedDate).not.toBe('N/A');
-        expect(formattedDate).toContain('2023');
+      let result: any;
+      await act(async () => {
+        const { result: r } = renderHook(() => useCandidateDashboard());
+        result = r;
       });
-  
-      it('should format a Firestore timestamp-like object', async () => {
-        let result: any;
-        await act(async () => {
-          const { result: r } = renderHook(() => useCandidateDashboard());
-          result = r;
-        });
-        const timestamp = {
-          toDate: () => new Date('2023-10-27T10:00:00Z'),
-        };
-        const formattedDate = result.current.formatDate(timestamp);
-        expect(formattedDate).not.toBe('N/A');
-        expect(formattedDate).toContain('2023');
+      const dateString = '2023-10-27T10:00:00Z';
+      const formattedDate = result.current.formatDate(dateString);
+      expect(formattedDate).not.toBe('N/A');
+      expect(formattedDate).toContain('2023');
+    });
+
+    it('should format a Firestore timestamp-like object', async () => {
+      let result: any;
+      await act(async () => {
+        const { result: r } = renderHook(() => useCandidateDashboard());
+        result = r;
       });
+      const timestamp = {
+        toDate: () => new Date('2023-10-27T10:00:00Z'),
+      };
+      const formattedDate = result.current.formatDate(timestamp);
+      expect(formattedDate).not.toBe('N/A');
+      expect(formattedDate).toContain('2023');
+    });
 
     it('should return "N/A" for an invalid date', async () => {
       let result: any;

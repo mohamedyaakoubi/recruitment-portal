@@ -5,7 +5,7 @@ import CandidateTableRow from '../CandidateTableRow';
 import '@testing-library/jest-dom';
 
 vi.mock('../CandidateTableActions', () => ({
-  default: () => <td data-testid="actions-mock">Actions</td>
+  default: () => <td data-testid="actions-mock">Actions</td>,
 }));
 
 describe('CandidateTableRow', () => {
@@ -51,7 +51,13 @@ describe('CandidateTableRow', () => {
 
   it('should display "N/A" for age if dateOfBirth is not provided', () => {
     const candidateWithoutDob = { ...candidate, dateOfBirth: undefined };
-    renderInTable(<CandidateTableRow {...defaultProps} candidate={candidateWithoutDob} calculateAge={() => null} />);
+    renderInTable(
+      <CandidateTableRow
+        {...defaultProps}
+        candidate={candidateWithoutDob}
+        calculateAge={() => null}
+      />
+    );
     expect(screen.getAllByText('N/A').length).toBeGreaterThan(0);
   });
 

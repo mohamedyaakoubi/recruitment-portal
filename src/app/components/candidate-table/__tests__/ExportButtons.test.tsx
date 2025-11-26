@@ -44,9 +44,9 @@ describe('ExportButtons', () => {
   it('should disable the buttons and show "Exporting..." when isExporting is true', () => {
     render(<ExportButtons {...defaultProps} isExporting={true} />);
     const buttons = screen.getAllByRole('button');
-    buttons.forEach(button => {
-        expect(button).toBeDisabled();
-        expect(button).toHaveTextContent('Exporting...');
+    buttons.forEach((button) => {
+      expect(button).toBeDisabled();
+      expect(button).toHaveTextContent('Exporting...');
     });
   });
 });

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -33,12 +32,16 @@ describe('InterviewCard', () => {
   });
 
   it('should not render if the candidate status is not "interview_scheduled"', () => {
-    const { container } = render(<InterviewCard {...defaultProps} candidate={{ ...candidate, status: 'submitted' }} />);
+    const { container } = render(
+      <InterviewCard {...defaultProps} candidate={{ ...candidate, status: 'submitted' }} />
+    );
     expect(container.firstChild).toBeNull();
   });
 
   it('should not render if interviewDate is not provided', () => {
-    const { container } = render(<InterviewCard {...defaultProps} candidate={{ ...candidate, interviewDate: undefined }} />);
+    const { container } = render(
+      <InterviewCard {...defaultProps} candidate={{ ...candidate, interviewDate: undefined }} />
+    );
     expect(container.firstChild).toBeNull();
   });
 

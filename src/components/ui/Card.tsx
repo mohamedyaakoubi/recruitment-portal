@@ -28,12 +28,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className={cn(
-          baseStyles,
-          variants[variant],
-          paddings[padding],
-          className
-        )}
+        className={cn(baseStyles, variants[variant], paddings[padding], className)}
         {...props}
       >
         {children}

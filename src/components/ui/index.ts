@@ -13,13 +13,7 @@ export type { BadgeProps } from './Badge';
 export { default as Card } from './Card';
 export type { CardProps } from './Card';
 
-export {
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from './CardComponents';
+export { CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './CardComponents';
 export type {
   CardHeaderProps,
   CardTitleProps,

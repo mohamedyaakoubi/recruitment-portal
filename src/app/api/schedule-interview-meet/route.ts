@@ -5,16 +5,16 @@ import logger from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
-    const { 
-      candidateId, 
-      candidateEmail, 
-      candidateName, 
-      interviewDate, 
-      interviewTime, 
+    const {
+      candidateId,
+      candidateEmail,
+      candidateName,
+      interviewDate,
+      interviewTime,
       duration = 30,
-      jobTitle, 
+      jobTitle,
       adminEmail,
-      notes 
+      notes,
     } = await request.json();
 
     const data = await scheduleInterview(
@@ -30,18 +30,17 @@ export async function POST(request: NextRequest) {
       request.nextUrl.origin
     );
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'Interview scheduled successfully with Google Meet',
-      data
+      data,
     });
-
   } catch (error) {
     logger.error('Error scheduling interview', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to schedule interview', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+      {
+        error: 'Failed to schedule interview',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

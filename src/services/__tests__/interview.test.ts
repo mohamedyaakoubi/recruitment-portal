@@ -22,7 +22,12 @@ vi.mock('@/lib/googleOAuth');
 vi.mock('../email');
 const mockDoc = {
   exists: true,
-  data: () => ({ calendarEventId: 'existing-event-id', email: 'test@example.com', fullName: 'John Doe', jobTitleText: 'Developer' }),
+  data: () => ({
+    calendarEventId: 'existing-event-id',
+    email: 'test@example.com',
+    fullName: 'John Doe',
+    jobTitleText: 'Developer',
+  }),
 };
 
 const mockCollection = {
@@ -49,7 +54,7 @@ vi.mock('@/lib/firebase-admin', () => ({
       doc: vi.fn().mockReturnValue({
         get: mockAdminGet,
         update: mockAdminUpdate,
-      })
+      }),
     }),
   }),
 }));
@@ -73,7 +78,12 @@ describe('Interview Service', () => {
     vi.clearAllMocks();
     mockAdminGet.mockResolvedValue({
       exists: true,
-      data: () => ({ calendarEventId: 'existing-event-id', email: 'test@example.com', fullName: 'John Doe', jobTitleText: 'Developer' }),
+      data: () => ({
+        calendarEventId: 'existing-event-id',
+        email: 'test@example.com',
+        fullName: 'John Doe',
+        jobTitleText: 'Developer',
+      }),
     });
   });
 
@@ -88,7 +98,16 @@ describe('Interview Service', () => {
       (fetch as vi.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
 
       const result = await scheduleInterview(
-        'c1', 'c@test.com', 'C Name', '2025-12-25', '10:00', 30, 'Dev', 'a@test.com', 'notes', 'http://localhost'
+        'c1',
+        'c@test.com',
+        'C Name',
+        '2025-12-25',
+        '10:00',
+        30,
+        'Dev',
+        'a@test.com',
+        'notes',
+        'http://localhost'
       );
 
       expect(mockEventsInsert).toHaveBeenCalled();
@@ -101,11 +120,15 @@ describe('Interview Service', () => {
   describe('cancelInterview', () => {
     it('should cancel an interview and send an email', async () => {
       const sendCancellationEmailSpy = vi.spyOn(emailService, 'sendCancellationEmail');
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => { });
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
       await cancelInterview('c1', 'reason');
 
-      expect(mockEventsDelete).toHaveBeenCalledWith({ calendarId: 'primary', eventId: 'existing-event-id', sendUpdates: 'all' });
+      expect(mockEventsDelete).toHaveBeenCalledWith({
+        calendarId: 'primary',
+        eventId: 'existing-event-id',
+        sendUpdates: 'all',
+      });
       expect(mockAdminUpdate).toHaveBeenCalled();
       expect(sendCancellationEmailSpy).toHaveBeenCalled();
       consoleLogSpy.mockRestore();

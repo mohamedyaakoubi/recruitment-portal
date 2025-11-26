@@ -1,14 +1,8 @@
 // src/app/components/Toast.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { ToastProps } from '@/types';
 
-const Toast: React.FC<ToastProps> = ({ 
-  message, 
-  type, 
-  isVisible, 
-  onClose, 
-  duration = 5000 
-}) => {
+const Toast: React.FC<ToastProps> = ({ message, type, isVisible, onClose, duration = 5000 }) => {
   useEffect(() => {
     if (isVisible && duration > 0) {
       const timer = setTimeout(() => {
@@ -21,8 +15,9 @@ const Toast: React.FC<ToastProps> = ({
   if (!isVisible) return null;
 
   const getToastStyles = () => {
-    const baseStyles = "fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm w-full transform transition-all duration-300 ease-in-out";
-    
+    const baseStyles =
+      'fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm w-full transform transition-all duration-300 ease-in-out';
+
     switch (type) {
       case 'success':
         return `${baseStyles} bg-green-500 text-white`;
@@ -56,7 +51,7 @@ const Toast: React.FC<ToastProps> = ({
     <div className={getToastStyles()} data-testid="toast">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <span className="text-lg mr-2">{getIcon()}</span>
+          <span className="mr-2 text-lg">{getIcon()}</span>
           <span className="text-sm font-medium">{message}</span>
         </div>
         <button
@@ -71,4 +66,3 @@ const Toast: React.FC<ToastProps> = ({
 };
 
 export default Toast;
-

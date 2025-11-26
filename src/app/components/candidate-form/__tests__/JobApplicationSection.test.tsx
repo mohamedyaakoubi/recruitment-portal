@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -16,8 +15,20 @@ describe('JobApplicationSection', () => {
     handleCategorySelection: handleCategorySelectionMock,
     jobTitle: 'job1',
     handleJobSelection: handleJobSelectionMock,
-    filteredJobs: [{ id: 'job1', title: 'Software Engineer', description: 'Job description', category: 'Development & IT' }],
-    selectedJob: { id: 'job1', title: 'Software Engineer', description: 'Job description', category: 'Development & IT' },
+    filteredJobs: [
+      {
+        id: 'job1',
+        title: 'Software Engineer',
+        description: 'Job description',
+        category: 'Development & IT',
+      },
+    ],
+    selectedJob: {
+      id: 'job1',
+      title: 'Software Engineer',
+      description: 'Job description',
+      category: 'Development & IT',
+    },
     specialty: 'Frontend',
     setSpecialty: setSpecialtyMock,
     specialtySearch: 'Frontend',
@@ -72,7 +83,9 @@ describe('JobApplicationSection', () => {
 
   it('should show a message when no specialties are available', () => {
     render(<JobApplicationSection {...defaultProps} availableSpecialties={[]} />);
-    expect(screen.getByText('No specialties defined for this job position. Please contact admin.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No specialties defined for this job position. Please contact admin.')
+    ).toBeInTheDocument();
   });
 
   it('should disable the form fields when isLoading is true', () => {

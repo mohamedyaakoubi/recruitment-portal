@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+
 
 export const phonePatterns: Record<string, RegExp> = {
   // North America
@@ -426,7 +426,7 @@ export function getCountryName(countryCode: string): string {
     '+222': 'Mauritania',
     '+223': 'Mali',
     '+224': 'Guinea',
-    '+225': 'Côte d\'Ivoire',
+    '+225': "Côte d'Ivoire",
     '+226': 'Burkina Faso',
     '+227': 'Niger',
     '+228': 'Togo',
@@ -499,6 +499,6 @@ export function getCountryName(countryCode: string): string {
     '+670': 'Timor-Leste',
     '+383': 'Kosovo',
   };
-  
+
   return countryMap[countryCode] || 'Unknown Country';
 }

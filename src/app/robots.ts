@@ -7,25 +7,13 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: [
-          '/',
-          '/candidate-form',
-          '/candidate-choices',
-        ],
-        disallow: [
-          '/admin-dashboard-secret',
-          '/candidate-dashboard',
-          '/api/',
-        ],
+        allow: ['/', '/candidate-form', '/candidate-choices'],
+        disallow: ['/admin-dashboard-secret', '/candidate-dashboard', '/api/'],
       },
       {
         userAgent: 'Googlebot',
         allow: '/',
-        disallow: [
-          '/admin-dashboard-secret',
-          '/candidate-dashboard',
-          '/api/',
-        ],
+        disallow: ['/admin-dashboard-secret', '/candidate-dashboard', '/api/'],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

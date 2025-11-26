@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Recruitment Management System',
     short_name: 'RMS',
-    description: 'A comprehensive recruitment and candidate management application with AI-powered scoring',
+    description:
+      'A comprehensive recruitment and candidate management application with AI-powered scoring',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

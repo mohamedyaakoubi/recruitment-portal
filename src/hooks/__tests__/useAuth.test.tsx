@@ -26,7 +26,7 @@ describe('useAuth Hook', () => {
 
   it('should initialize with loading state', () => {
     // Mock onAuthStateChanged to not immediately resolve
-    (onAuthStateChanged as any).mockImplementation(() => () => { });
+    (onAuthStateChanged as any).mockImplementation(() => () => {});
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -42,7 +42,7 @@ describe('useAuth Hook', () => {
     // Mock onAuthStateChanged to immediately call callback with user
     (onAuthStateChanged as any).mockImplementation((auth: any, callback: any) => {
       callback(mockUser);
-      return () => { };
+      return () => {};
     });
 
     const { result } = renderHook(() => useAuth(), {
@@ -60,7 +60,7 @@ describe('useAuth Hook', () => {
     // Setup initial state
     (onAuthStateChanged as any).mockImplementation((auth: any, callback: any) => {
       callback(null); // Start as logged out
-      return () => { };
+      return () => {};
     });
 
     const { result } = renderHook(() => useAuth(), {
@@ -80,7 +80,7 @@ describe('useAuth Hook', () => {
     // Setup initial state
     (onAuthStateChanged as any).mockImplementation((auth: any, callback: any) => {
       callback({ uid: '123' }); // Start as logged in
-      return () => { };
+      return () => {};
     });
 
     const { result } = renderHook(() => useAuth(), {

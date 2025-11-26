@@ -6,7 +6,9 @@ import { ScoreDistributionData, StatusChartData } from '@/types';
 
 // Mock the recharts library
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
   PieChart: ({ children }: any) => <div data-testid="pie-chart">{children}</div>,
   Pie: ({ children }: any) => <div data-testid="pie">{children}</div>,
   Cell: ({ children }: any) => <div data-testid="cell">{children}</div>,
@@ -18,8 +20,6 @@ vi.mock('recharts', () => ({
   YAxis: ({ children }: any) => <div data-testid="y-axis">{children}</div>,
   CartesianGrid: ({ children }: any) => <div data-testid="cartesian-grid">{children}</div>,
 }));
-
-
 
 describe('Sanity Check', () => {
   it('renders a simple div', () => {
@@ -55,13 +55,17 @@ describe('DashboardCharts', () => {
   ];
 
   it('renders the chart titles', () => {
-    render(<DashboardCharts statusChartData={mockStatusData} scoreDistributionData={mockScoreData} />);
+    render(
+      <DashboardCharts statusChartData={mockStatusData} scoreDistributionData={mockScoreData} />
+    );
     expect(screen.getByText('Candidate Status Distribution')).toBeInTheDocument();
     expect(screen.getByText('AI Score Distribution')).toBeInTheDocument();
   });
 
   it('renders the charts when data is provided', () => {
-    render(<DashboardCharts statusChartData={mockStatusData} scoreDistributionData={mockScoreData} />);
+    render(
+      <DashboardCharts statusChartData={mockStatusData} scoreDistributionData={mockScoreData} />
+    );
     expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
     expect(screen.getByTestId('bar-chart')).toBeInTheDocument();
   });
@@ -79,7 +83,9 @@ describe('DashboardCharts', () => {
       { name: '61-80', count: 0 },
       { name: '81-100', count: 0 },
     ];
-    render(<DashboardCharts statusChartData={mockStatusData} scoreDistributionData={emptyScoreData} />);
+    render(
+      <DashboardCharts statusChartData={mockStatusData} scoreDistributionData={emptyScoreData} />
+    );
     expect(screen.getByText('No scoring data available')).toBeInTheDocument();
   });
 });

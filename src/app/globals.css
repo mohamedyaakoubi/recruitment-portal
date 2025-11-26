@@ -23,7 +23,7 @@
   --input: 214.3 31.8% 91.4%;
   --ring: 222.2 84% 4.9%;
   --radius: 0.5rem;
-  --primary: #003A70;
+  --primary: #003a70;
 }
 
 .dark {
@@ -46,10 +46,8 @@
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
   --ring: 212.7 26.8% 83.9%;
-  --primary: #007BFF;
+  --primary: #007bff;
 }
-
-
 
 /* === Hourglass Loader Styles === */
 
@@ -85,7 +83,7 @@
   Create the hourglass shape using triangular/diamond sections
 */
 .blade::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 50%;
   width: 100%;
@@ -120,7 +118,8 @@
 
 /* Top section animation - expands and contracts */
 @keyframes blade-breathe-top {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scaleY(1);
   }
   50% {
@@ -130,7 +129,8 @@
 
 /* Bottom section animation - expands and contracts */
 @keyframes blade-breathe-bottom {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scaleY(1);
   }
   50% {

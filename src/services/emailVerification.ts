@@ -16,7 +16,7 @@ async function verifyEmailWithAbstractAPI(email: string): Promise<EmailVerificat
     }
 
     const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${encodeURIComponent(email)}`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -29,7 +29,7 @@ async function verifyEmailWithAbstractAPI(email: string): Promise<EmailVerificat
     }
 
     const data = await response.json();
-    
+
     return {
       isValid: data.deliverability === 'DELIVERABLE' && !data.is_disposable_email?.value,
       deliverable: data.deliverability === 'DELIVERABLE',
@@ -64,7 +64,7 @@ async function verifyEmailWithHunter(email: string): Promise<EmailVerificationRe
     }
 
     const data = await response.json();
-    
+
     return {
       isValid: data.data.result === 'deliverable',
       deliverable: data.data.result === 'deliverable',
@@ -78,17 +78,17 @@ async function verifyEmailWithHunter(email: string): Promise<EmailVerificationRe
 }
 
 // TypeScript version of the async HTTP function
-async function httpGetAsync(url: string): Promise<string> {
+async function _httpGetAsync(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
     fetch(url)
-      .then(response => {
+      .then((response) => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.text();
       })
-      .then(data => resolve(data))
-      .catch(error => reject(error));
+      .then((data) => resolve(data))
+      .catch((error) => reject(error));
   });
 }
 
@@ -99,42 +99,42 @@ function basicEmailValidation(email: string): boolean {
 }
 
 export const verifyEmail = async (email: string): Promise<EmailVerificationResponse> => {
-    // Basic format validation first
-    if (!basicEmailValidation(email)) {
-        return {
-            isValid: false,
-            error: 'Invalid email format'
-        };
-    }
+  // Basic format validation first
+  if (!basicEmailValidation(email)) {
+    return {
+      isValid: false,
+      error: 'Invalid email format',
+    };
+  }
 
-    // Try production email verification services
-    let verificationResult: EmailVerificationResponse;
+  // Try production email verification services
+  let verificationResult: EmailVerificationResponse;
 
-    try {
-        // Try Abstract API first (recommended)
-        if (process.env.ABSTRACT_API_KEY) {
-            verificationResult = await verifyEmailWithAbstractAPI(email);
-        }
-        // Fallback to Hunter.io
-        else if (process.env.HUNTER_API_KEY) {
-            verificationResult = await verifyEmailWithHunter(email);
-        }
-        // If no API keys are configured, use basic validation
-        else {
-            logger.warn('No email verification API configured. Using basic validation only');
-            verificationResult = {
-                isValid: true, // Allow through for basic validation
-            };
-        }
-    } catch (error) {
-        logger.error('Email verification service failed', error);
-        
-        // In production, you might want to be more restrictive
-        // For now, we'll allow the email through if the service fails
-        verificationResult = {
-            isValid: true,
-            error: 'Verification service temporarily unavailable'
-        };
+  try {
+    // Try Abstract API first (recommended)
+    if (process.env.ABSTRACT_API_KEY) {
+      verificationResult = await verifyEmailWithAbstractAPI(email);
     }
-    return verificationResult;
+    // Fallback to Hunter.io
+    else if (process.env.HUNTER_API_KEY) {
+      verificationResult = await verifyEmailWithHunter(email);
+    }
+    // If no API keys are configured, use basic validation
+    else {
+      logger.warn('No email verification API configured. Using basic validation only');
+      verificationResult = {
+        isValid: true, // Allow through for basic validation
+      };
+    }
+  } catch (error) {
+    logger.error('Email verification service failed', error);
+
+    // In production, you might want to be more restrictive
+    // For now, we'll allow the email through if the service fails
+    verificationResult = {
+      isValid: true,
+      error: 'Verification service temporarily unavailable',
+    };
+  }
+  return verificationResult;
 };

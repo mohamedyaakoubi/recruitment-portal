@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exportCandidates } from '@/services/candidate';
 import { generateCSV } from '@/lib/csvUtils';
 import { format } from 'date-fns';
+import logger from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     const filterAgeMin = searchParams.get('ageMin') || '';
     const filterAgeMax = searchParams.get('ageMax') || '';
 
-    console.log('🔍 Export request with filters:', {
+    logger.info('Export request with filters', {
       format: exportFormat,
       status: filterStatus,
       name: filterName,
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
       category: filterCategory,
       specialty: filterSpecialty,
       ageMin: filterAgeMin,
-      ageMax: filterAgeMax
+      ageMax: filterAgeMax,
     });
 
     const candidates = await exportCandidates(
@@ -45,33 +46,34 @@ export async function GET(request: NextRequest) {
       filterAgeMax
     );
 
-    console.log(`✅ Exporting ${candidates.length} candidates in ${exportFormat} format`);
+    logger.info('Exporting candidates', { count: candidates.length, format: exportFormat });
 
     const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm-ss');
     const baseFilename = `candidates_${timestamp}`;
 
     switch (exportFormat) {
-      case 'csv':
-        const csvContent = generateCSV(candidates);
-        return new NextResponse(csvContent, {
+      case 'csv': {
+        const csv = generateCSV(candidates);
+        return new NextResponse(csv, {
           headers: {
             'Content-Type': 'text/csv; charset=utf-8',
             'Content-Disposition': `attachment; filename="${baseFilename}.csv"`,
-            'Cache-Control': 'no-cache'
-          }
+            'Cache-Control': 'no-cache',
+          },
         });
+      }
 
       case 'xlsx':
-        return NextResponse.json({ 
+        return NextResponse.json({
           data: candidates,
           format: 'xlsx',
           filename: `${baseFilename}.xlsx`,
           count: candidates.length,
-          exportedAt: new Date().toISOString()
+          exportedAt: new Date().toISOString(),
         });
 
       case 'json':
-      default:
+      default: {
         const jsonData = {
           candidates,
           metadata: {
@@ -86,29 +88,32 @@ export async function GET(request: NextRequest) {
               jobTitle: filterJobTitle,
               category: filterCategory,
               specialty: filterSpecialty,
-              ageRange: filterAgeMin || filterAgeMax ? `${filterAgeMin || '0'}-${filterAgeMax || '∞'}` : null
+              ageRange:
+                filterAgeMin || filterAgeMax
+                  ? `${filterAgeMin || '0'}-${filterAgeMax || '∞'}`
+                  : null,
             },
-            format: 'json'
-          }
+            format: 'json',
+          },
         };
 
         return new NextResponse(JSON.stringify(jsonData, null, 2), {
           headers: {
             'Content-Type': 'application/json; charset=utf-8',
             'Content-Disposition': `attachment; filename="${baseFilename}.json"`,
-            'Cache-Control': 'no-cache'
-          }
+            'Cache-Control': 'no-cache',
+          },
         });
+      }
     }
-
   } catch (error) {
-    console.error('❌ Export candidates error:', error);
+    logger.error('Export candidates error', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to export candidates',
         details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      }, 
+        timestamp: new Date().toISOString(),
+      },
       { status: 500 }
     );
   }

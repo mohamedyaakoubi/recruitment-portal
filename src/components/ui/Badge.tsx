@@ -32,15 +32,7 @@ export default function Badge({
   };
 
   return (
-    <span
-      className={cn(
-        baseStyles,
-        variants[variant],
-        sizes[size],
-        className
-      )}
-      {...props}
-    >
+    <span className={cn(baseStyles, variants[variant], sizes[size], className)} {...props}>
       {children}
     </span>
   );

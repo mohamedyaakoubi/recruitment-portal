@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -8,9 +7,15 @@ import type { InterviewEvent } from '@/types';
 
 // Mock react-big-calendar
 vi.mock('react-big-calendar', () => ({
-  Calendar: ({ events, onSelectEvent }: { events: InterviewEvent[], onSelectEvent: (event: InterviewEvent) => void }) => (
+  Calendar: ({
+    events,
+    onSelectEvent,
+  }: {
+    events: InterviewEvent[];
+    onSelectEvent: (event: InterviewEvent) => void;
+  }) => (
     <div data-testid="mock-calendar">
-      {events.map(event => (
+      {events.map((event) => (
         <div key={event.title} onClick={() => onSelectEvent(event)}>
           {event.title}
         </div>

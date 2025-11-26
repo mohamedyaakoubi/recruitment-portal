@@ -1,6 +1,5 @@
 // src/services/interview.ts
 import { google } from 'googleapis';
-import { db } from '@/lib/firebase';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import { getAuthenticatedClient } from '@/lib/googleOAuth'; // 👈 CHANGE
 import { sendCancellationEmail } from './email';
@@ -8,9 +7,18 @@ import logger from '@/lib/logger';
 
 const generateMeetLink = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyz';
-  const part1 = Array.from({ length: 3 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  const part2 = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  const part3 = Array.from({ length: 3 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const part1 = Array.from(
+    { length: 3 },
+    () => chars[Math.floor(Math.random() * chars.length)]
+  ).join('');
+  const part2 = Array.from(
+    { length: 4 },
+    () => chars[Math.floor(Math.random() * chars.length)]
+  ).join('');
+  const part3 = Array.from(
+    { length: 3 },
+    () => chars[Math.floor(Math.random() * chars.length)]
+  ).join('');
 
   return `https://meet.google.com/${part1}-${part2}-${part3}`;
 };
@@ -37,7 +45,7 @@ export const scheduleInterview = async (
     throw new Error('Invalid date or time format');
   }
 
-  const endDateTime = new Date(interviewDateTime.getTime() + (duration * 60 * 1000));
+  const endDateTime = new Date(interviewDateTime.getTime() + duration * 60 * 1000);
 
   // Fetch the candidate document to check for an existing event
   const db = getFirestoreAdmin(); // 👈 CHANGE: Get Admin DB instance
@@ -51,7 +59,9 @@ export const scheduleInterview = async (
   try {
     const auth = await getAuthenticatedClient();
     if (!auth) {
-      throw new Error('Google Calendar is not connected. Please connect an account in the admin settings.');
+      throw new Error(
+        'Google Calendar is not connected. Please connect an account in the admin settings.'
+      );
     }
     const calendar = google.calendar({ version: 'v3', auth });
 
@@ -60,44 +70,44 @@ export const scheduleInterview = async (
       description: `Interview scheduled with ${candidateName} for ${jobTitle || 'the position'} at International Skills Labor Company.\n\nCandidate Email: ${candidateEmail}\nDuration: ${duration} minutes${notes ? `\n\nNotes: ${notes}` : ''}`,
       start: {
         dateTime: interviewDateTime.toISOString(),
-        timeZone: 'Europe/Helsinki'
+        timeZone: 'Europe/Helsinki',
       },
       end: {
         dateTime: endDateTime.toISOString(),
-        timeZone: 'Europe/Helsinki'
+        timeZone: 'Europe/Helsinki',
       },
       attendees: [
         {
           email: candidateEmail,
           displayName: candidateName,
-          responseStatus: 'needsAction'
+          responseStatus: 'needsAction',
         },
         {
           email: adminEmail || 'wassim@internationalskills.fi',
           displayName: 'International Skills Hiring',
-          responseStatus: 'accepted'
-        }
+          responseStatus: 'accepted',
+        },
       ],
       conferenceData: {
         createRequest: {
           requestId: `interview-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           conferenceSolutionKey: {
-            type: 'hangoutsMeet'
-          }
-        }
+            type: 'hangoutsMeet',
+          },
+        },
       },
       reminders: {
         useDefault: false,
         overrides: [
           { method: 'email', minutes: 24 * 60 },
           { method: 'email', minutes: 60 },
-          { method: 'popup', minutes: 30 }
-        ]
+          { method: 'popup', minutes: 30 },
+        ],
       },
       guestsCanModify: false,
       guestsCanInviteOthers: false,
       guestsCanSeeOtherGuests: true,
-      sendUpdates: 'all'
+      sendUpdates: 'all',
     };
 
     let response;
@@ -116,17 +126,17 @@ export const scheduleInterview = async (
         calendarId: 'primary',
         conferenceDataVersion: 1,
         sendUpdates: 'all',
-        requestBody: eventDetails
+        requestBody: eventDetails,
       });
     }
 
     if (response.data) {
       calendarEventId = response.data.id || '';
-      meetLink = response.data.conferenceData?.entryPoints?.[0]?.uri ||
+      meetLink =
+        response.data.conferenceData?.entryPoints?.[0]?.uri ||
         response.data.hangoutLink ||
         generateMeetLink();
     }
-
   } catch (googleError) {
     logger.error('Google Calendar API error', googleError);
     // Fallback to manual link generation if API fails but we don't want to block the whole process
@@ -147,7 +157,7 @@ export const scheduleInterview = async (
         interviewTimestampISO: interviewDateTime.toISOString(),
         meetLink: meetLink, // 👈 ADD THIS
         calendarEventId: calendarEventId, // 👈 ADD THIS
-        duration: duration // 👈 ADD THIS
+        duration: duration, // 👈 ADD THIS
       }),
     });
 
@@ -168,8 +178,8 @@ export const scheduleInterview = async (
     calendarEventId: calendarEventId,
     emailsSent: {
       candidate: candidateEmail,
-      interviewer: adminEmail || 'wassim@internationalskills.fi'
-    }
+      interviewer: adminEmail || 'wassim@internationalskills.fi',
+    },
   };
 };
 
@@ -200,10 +210,12 @@ export const cancelInterview = async (candidateId: string, reason: string) => {
         await calendar.events.delete({
           calendarId: 'primary',
           eventId: candidateData.calendarEventId,
-          sendUpdates: 'all'
+          sendUpdates: 'all',
         });
 
-        logger.info('Google Calendar event deleted successfully', { eventId: candidateData.calendarEventId });
+        logger.info('Google Calendar event deleted successfully', {
+          eventId: candidateData.calendarEventId,
+        });
       } else {
         logger.warn('Could not delete Google Calendar event: User is not authenticated');
       }
@@ -212,12 +224,13 @@ export const cancelInterview = async (candidateId: string, reason: string) => {
     }
   }
 
-  await candidateRef.update({ // 👈 CHANGE: Use Admin SDK syntax
+  await candidateRef.update({
+    // 👈 CHANGE: Use Admin SDK syntax
     status: 'submitted',
     interviewDate: null,
     calendarEventId: null,
     meetLink: null,
-    duration: null
+    duration: null,
   });
 
   if (candidateData.email) {
@@ -226,7 +239,7 @@ export const cancelInterview = async (candidateId: string, reason: string) => {
         candidateEmail: candidateData.email,
         candidateName: candidateData.fullName,
         jobTitle: candidateData.jobTitleText,
-        reason
+        reason,
       });
     } catch (emailError) {
       logger.error('Failed to send cancellation email', emailError);

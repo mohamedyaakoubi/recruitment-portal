@@ -73,7 +73,9 @@ describe('LocationInfoForm', () => {
       capturedValue = e.target.value;
     });
     render(<LocationInfoForm {...defaultProps} />);
-    fireEvent.change(screen.getByLabelText(/^Nationality/), { target: { value: 'New Nationality' } });
+    fireEvent.change(screen.getByLabelText(/^Nationality/), {
+      target: { value: 'New Nationality' },
+    });
     expect(handleInputChangeMock).toHaveBeenCalled();
     expect(capturedValue).toBe('New Nationality');
   });
@@ -84,7 +86,9 @@ describe('LocationInfoForm', () => {
       capturedValue = e.target.value;
     });
     render(<LocationInfoForm {...defaultProps} />);
-    fireEvent.change(screen.getByLabelText(/Second Nationality/), { target: { value: 'New Second Nationality' } });
+    fireEvent.change(screen.getByLabelText(/Second Nationality/), {
+      target: { value: 'New Second Nationality' },
+    });
     expect(handleInputChangeMock).toHaveBeenCalled();
     expect(capturedValue).toBe('New Second Nationality');
   });

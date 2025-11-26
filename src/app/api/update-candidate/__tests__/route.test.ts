@@ -7,133 +7,131 @@ import * as dateUtils from '@/lib/dateUtils';
 const mockGet = vi.fn();
 const mockUpdate = vi.fn();
 const mockDoc = vi.fn(() => ({
-    get: mockGet,
-    update: mockUpdate
+  get: mockGet,
+  update: mockUpdate,
 }));
 const mockCollection = vi.fn(() => ({
-    doc: mockDoc
+  doc: mockDoc,
 }));
 
 vi.mock('@/lib/firebase-admin', () => ({
-    getFirestoreAdmin: vi.fn(() => ({
-        collection: mockCollection
-    }))
+  getFirestoreAdmin: vi.fn(() => ({
+    collection: mockCollection,
+  })),
 }));
 
 vi.mock('firebase-admin', () => ({
-    default: {
-        firestore: {
-            FieldValue: {
-                serverTimestamp: vi.fn(() => 'TIMESTAMP')
-            }
-        }
-    }
+  default: {
+    firestore: {
+      FieldValue: {
+        serverTimestamp: vi.fn(() => 'TIMESTAMP'),
+      },
+    },
+  },
 }));
 
 vi.mock('@/lib/dateUtils');
 
 describe('PUT /api/update-candidate', () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-    it('should return 400 when candidate ID is missing', async () => {
-        const request = {
-            json: async () => ({ updatedData: { firstName: 'John' } })
-        } as unknown as NextRequest;
+  it('should return 400 when candidate ID is missing', async () => {
+    const request = {
+      json: async () => ({ updatedData: { firstName: 'John' } }),
+    } as unknown as NextRequest;
 
-        const response = await PUT(request);
-        const data = await response.json();
+    const response = await PUT(request);
+    const data = await response.json();
 
-        expect(response.status).toBe(400);
-        expect(data.error).toBe('Candidate ID is required');
-    });
+    expect(response.status).toBe(400);
+    expect(data.error).toBe('Candidate ID is required');
+  });
 
-    it('should return 400 when updated data is missing', async () => {
-        const request = {
-            json: async () => ({ candidateId: '123' })
-        } as unknown as NextRequest;
+  it('should return 400 when updated data is missing', async () => {
+    const request = {
+      json: async () => ({ candidateId: '123' }),
+    } as unknown as NextRequest;
 
-        const response = await PUT(request);
-        const data = await response.json();
+    const response = await PUT(request);
+    const data = await response.json();
 
-        expect(response.status).toBe(400);
-        expect(data.error).toBe('Updated data is required');
-    });
+    expect(response.status).toBe(400);
+    expect(data.error).toBe('Updated data is required');
+  });
 
-    it('should return 404 when candidate not found', async () => {
-        mockGet.mockResolvedValue({ exists: false });
+  it('should return 404 when candidate not found', async () => {
+    mockGet.mockResolvedValue({ exists: false });
 
-        const request = {
-            json: async () => ({
-                candidateId: '123',
-                updatedData: { firstName: 'John' }
-            })
-        } as unknown as NextRequest;
+    const request = {
+      json: async () => ({
+        candidateId: '123',
+        updatedData: { firstName: 'John' },
+      }),
+    } as unknown as NextRequest;
 
-        const response = await PUT(request);
-        const data = await response.json();
+    const response = await PUT(request);
+    const data = await response.json();
 
-        expect(response.status).toBe(404);
-        expect(data.error).toBe('Candidate not found');
-    });
+    expect(response.status).toBe(404);
+    expect(data.error).toBe('Candidate not found');
+  });
 
-    it('should update candidate successfully', async () => {
-        mockGet.mockResolvedValue({ exists: true });
-        mockUpdate.mockResolvedValue(undefined);
+  it('should update candidate successfully', async () => {
+    mockGet.mockResolvedValue({ exists: true });
+    mockUpdate.mockResolvedValue(undefined);
 
-        const request = {
-            json: async () => ({
-                candidateId: '123',
-                updatedData: { firstName: 'John', lastName: 'Doe' }
-            })
-        } as unknown as NextRequest;
+    const request = {
+      json: async () => ({
+        candidateId: '123',
+        updatedData: { firstName: 'John', lastName: 'Doe' },
+      }),
+    } as unknown as NextRequest;
 
-        const response = await PUT(request);
-        const data = await response.json();
+    const response = await PUT(request);
+    const data = await response.json();
 
-        expect(data.success).toBe(true);
-        expect(data.message).toBe('Candidate updated successfully');
-        expect(mockUpdate).toHaveBeenCalled();
-    });
+    expect(data.success).toBe(true);
+    expect(data.message).toBe('Candidate updated successfully');
+    expect(mockUpdate).toHaveBeenCalled();
+  });
 
-    it('should calculate age when dateOfBirth is updated', async () => {
-        mockGet.mockResolvedValue({ exists: true });
-        mockUpdate.mockResolvedValue(undefined);
-        vi.mocked(dateUtils.calculateAge).mockReturnValue(30);
+  it('should calculate age when dateOfBirth is updated', async () => {
+    mockGet.mockResolvedValue({ exists: true });
+    mockUpdate.mockResolvedValue(undefined);
+    vi.mocked(dateUtils.calculateAge).mockReturnValue(30);
 
-        const request = {
-            json: async () => ({
-                candidateId: '123',
-                updatedData: { dateOfBirth: '1994-01-01' }
-            })
-        } as unknown as NextRequest;
+    const request = {
+      json: async () => ({
+        candidateId: '123',
+        updatedData: { dateOfBirth: '1994-01-01' },
+      }),
+    } as unknown as NextRequest;
 
-        const response = await PUT(request);
-        const data = await response.json();
+    const response = await PUT(request);
+    const data = await response.json();
 
-        expect(data.success).toBe(true);
-        expect(dateUtils.calculateAge).toHaveBeenCalledWith('1994-01-01');
-        expect(mockUpdate).toHaveBeenCalledWith(
-            expect.objectContaining({ age: 30 })
-        );
-    });
+    expect(data.success).toBe(true);
+    expect(dateUtils.calculateAge).toHaveBeenCalledWith('1994-01-01');
+    expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ age: 30 }));
+  });
 
-    it('should handle update errors', async () => {
-        mockGet.mockResolvedValue({ exists: true });
-        mockUpdate.mockRejectedValue(new Error('Update failed'));
+  it('should handle update errors', async () => {
+    mockGet.mockResolvedValue({ exists: true });
+    mockUpdate.mockRejectedValue(new Error('Update failed'));
 
-        const request = {
-            json: async () => ({
-                candidateId: '123',
-                updatedData: { firstName: 'John' }
-            })
-        } as unknown as NextRequest;
+    const request = {
+      json: async () => ({
+        candidateId: '123',
+        updatedData: { firstName: 'John' },
+      }),
+    } as unknown as NextRequest;
 
-        const response = await PUT(request);
-        const data = await response.json();
+    const response = await PUT(request);
+    const data = await response.json();
 
-        expect(response.status).toBe(500);
-        expect(data.error).toBe('Failed to update candidate');
-    });
+    expect(response.status).toBe(500);
+    expect(data.error).toBe('Failed to update candidate');
+  });
 });

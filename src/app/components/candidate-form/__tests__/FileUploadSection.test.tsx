@@ -5,10 +5,10 @@ import FileUploadSection from '../FileUploadSection';
 import '@testing-library/jest-dom';
 
 vi.mock('../../ui/FileInput', () => ({
-    __esModule: true,
-    default: ({ label, name, disabled }: any) => (
-        <input type="file" data-testid={name} aria-label={label} disabled={disabled} />
-    ),
+  __esModule: true,
+  default: ({ label, name, disabled }: any) => (
+    <input type="file" data-testid={name} aria-label={label} disabled={disabled} />
+  ),
 }));
 
 describe('FileUploadSection', () => {
