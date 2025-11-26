@@ -3,15 +3,9 @@ import { renderHook, act } from '@testing-library/react';
 import { Candidate } from '@/types';
 
 // Mock dependencies BEFORE importing anything that uses them
-const mockOnSnapshot = vi.fn();
-
 vi.mock('@/hooks/useAuth');
 vi.mock('@/lib/firebase', () => ({ db: {} }));
-vi.mock('firebase/firestore', () => ({
-  collection: vi.fn(),
-  query: vi.fn(),
-  onSnapshot: mockOnSnapshot,
-}));
+vi.mock('firebase/firestore');
 vi.mock('next/navigation');
 vi.mock('@/lib/dashboardUtils');
 
@@ -19,6 +13,10 @@ vi.mock('@/lib/dashboardUtils');
 import { useDashboard } from '../useDashboard';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { onSnapshot } from 'firebase/firestore';
+
+// Use vi.mocked to get properly typed mocks
+const mockOnSnapshot = vi.mocked(onSnapshot);
 
 const mockUseAuth = useAuth as unknown as ReturnType<typeof vi.fn>;
 const mockUseRouter = useRouter as unknown as ReturnType<typeof vi.fn>;

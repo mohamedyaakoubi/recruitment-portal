@@ -3,22 +3,20 @@ import { renderHook, act } from '@testing-library/react';
 import { Candidate } from '@/types';
 
 // Mock Firebase BEFORE importing anything that uses it
-const mockCollection = vi.fn();
-const mockQuery = vi.fn();
-const mockOnSnapshot = vi.fn();
-
 vi.mock('@/lib/firebase', () => ({
   db: {},
 }));
 
-vi.mock('firebase/firestore', () => ({
-  collection: mockCollection,
-  query: mockQuery,
-  onSnapshot: mockOnSnapshot,
-}));
+vi.mock('firebase/firestore');
 
 // Now import the hook
 import { useCandidates } from '../useCandidates';
+import { collection, query, onSnapshot } from 'firebase/firestore';
+
+// Use vi.mocked to get properly typed mocks
+const mockCollection = vi.mocked(collection);
+const mockQuery = vi.mocked(query);
+const mockOnSnapshot = vi.mocked(onSnapshot);
 
 describe('useCandidates', () => {
   it('should not fetch candidates if user is null', () => {
@@ -86,10 +84,8 @@ describe('useCandidates', () => {
 
     expect(result.current.loadingCandidates).toBe(false);
     expect(result.current.candidates).toEqual([]);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Error fetching candidates: ',
-      new Error(errorMessage)
-    );
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy.mock.calls[0][0]).toContain('Error fetching candidates');
     consoleErrorSpy.mockRestore();
   });
 

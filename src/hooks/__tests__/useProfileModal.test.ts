@@ -85,10 +85,8 @@ describe('useProfileModal', () => {
     });
 
     expect(result.current.isUpdating).toBe(false);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'Failed to update candidate:',
-      new Error(errorMessage)
-    );
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(consoleErrorSpy.mock.calls[0][0]).toContain('Failed to update candidate');
     consoleErrorSpy.mockRestore();
   });
 

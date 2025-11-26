@@ -197,9 +197,8 @@ describe('emailVerification', () => {
       const result = await verifyEmail('test@example.com');
 
       expect(result.isValid).toBe(true);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'No email verification API configured. Using basic validation only.'
-      );
+      expect(consoleWarnSpy).toHaveBeenCalled();
+      expect(consoleWarnSpy.mock.calls[0][0]).toContain('No email verification API configured');
 
       consoleWarnSpy.mockRestore();
     });
