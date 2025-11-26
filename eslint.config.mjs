@@ -49,18 +49,19 @@ export default [
       ...hooksPlugin.configs.recommended.rules,
       ...nextPlugin.configs.recommended.rules,
 
-      // Custom rules
+      // Custom rules - STRICT MODE
       "react/react-in-jsx-scope": "off",
       "react/no-unescaped-entities": "off",
-      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-console": ["error", { allow: ["warn", "error"] }],
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/ban-ts-comment": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/ban-ts-comment": "error",
       "@typescript-eslint/no-empty-object-type": "off",
-      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/exhaustive-deps": "error",
       "react-hooks/purity": "off",
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/set-state-in-effect": "off",
+      "@next/next/no-img-element": "error",
       "no-undef": "off", // TypeScript handles this
     },
   },
