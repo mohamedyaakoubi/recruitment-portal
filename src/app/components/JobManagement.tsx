@@ -228,8 +228,14 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
           bValue = b.isActive ? 1 : 0;
           break;
         default:
-          aValue = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-          bValue = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          aValue =
+            a.createdAt && typeof a.createdAt === 'object' && 'toMillis' in a.createdAt
+              ? a.createdAt.toMillis()
+              : 0;
+          bValue =
+            b.createdAt && typeof b.createdAt === 'object' && 'toMillis' in b.createdAt
+              ? b.createdAt.toMillis()
+              : 0;
           break;
       }
       if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
@@ -455,7 +461,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                   <select
                     value={sortBy}
                     onChange={(e) =>
-                      setSortBy(e.target.value as 'createdAt' | 'updatedAt' | 'title')
+                      setSortBy(e.target.value as 'createdAt' | 'title' | 'category' | 'isActive')
                     }
                     className={`${inputFieldStyles} flex-1`}
                   >
@@ -613,7 +619,12 @@ const JobListItem: React.FC<JobListItemProps> = ({
         )}
         {job.createdAt && (
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            Created: {job.createdAt.toDate?.().toLocaleDateString() || 'Unknown'}
+            Created:{' '}
+            {typeof job.createdAt === 'object' &&
+            'toDate' in job.createdAt &&
+            typeof job.createdAt.toDate === 'function'
+              ? job.createdAt.toDate().toLocaleDateString()
+              : 'Unknown'}
           </p>
         )}
       </div>

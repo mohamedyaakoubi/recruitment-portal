@@ -28,7 +28,15 @@ export async function POST(request: NextRequest) {
     const duplicateSnapshot = await duplicateQuery.get();
 
     if (!duplicateSnapshot.empty) {
-      const lastApplication = duplicateSnapshot.docs[0].data();
+      const lastApplicationDoc = duplicateSnapshot.docs[0];
+      if (!lastApplicationDoc) {
+        return NextResponse.json({
+          isDuplicate: false,
+          message: 'No duplicate applications found',
+          lastApplicationDate: null,
+        });
+      }
+      const lastApplication = lastApplicationDoc.data();
       const lastSubmissionDate = lastApplication.submittedAt?.toDate();
 
       return NextResponse.json({

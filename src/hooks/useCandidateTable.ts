@@ -158,8 +158,11 @@ export const useCandidateTable = (candidates: Candidate[], filters: Filters) => 
           return 0;
       }
 
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      const aVal = aValue ?? 0;
+      const bVal = bValue ?? 0;
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
   }, [candidates, sortField, sortDirection]);

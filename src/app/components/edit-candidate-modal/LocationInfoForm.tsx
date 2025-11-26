@@ -53,7 +53,7 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({
           <SearchableDropdown
             id="country"
             options={countries}
-            value={formData.country}
+            value={formData.country || ''}
             onChange={(value) =>
               handleInputChange({
                 target: { name: 'country', value },
@@ -74,7 +74,7 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({
           <SearchableDropdown
             id="nationality"
             options={countries}
-            value={formData.nationality}
+            value={formData.nationality || ''}
             onChange={(value) =>
               handleInputChange({
                 target: { name: 'nationality', value },
@@ -95,7 +95,7 @@ const LocationInfoForm: React.FC<LocationInfoFormProps> = ({
           <SearchableDropdown
             id="doubleNationality"
             options={countries}
-            value={formData.doubleNationality}
+            value={formData.doubleNationality || ''}
             onChange={(value) =>
               handleInputChange({
                 target: { name: 'doubleNationality', value },

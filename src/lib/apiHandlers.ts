@@ -122,6 +122,7 @@ export const createApiHandlers = (
           setConfirmationModal(null);
           await performStatusChange(candidateId, newStatus, interviewTimestampISO);
         },
+        onCancel: () => setConfirmationModal(null),
       });
       return;
     }
@@ -221,6 +222,7 @@ export const createApiHandlers = (
           }));
         }
       },
+      onCancel: () => setConfirmationModal(null),
     });
   };
 
