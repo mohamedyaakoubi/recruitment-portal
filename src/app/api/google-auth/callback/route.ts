@@ -16,7 +16,21 @@ export async function GET(request: NextRequest) {
     const oauth2Client = getOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code);
 
-    await storeTokens(tokens);
+    if (!tokens.access_token) {
+      throw new Error('No access token received from Google');
+    }
+
+    await storeTokens({
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      expiry_date: tokens.expiry_date,
+      ...tokens,
+    } as {
+      access_token: string;
+      refresh_token?: string;
+      expiry_date?: number;
+      [key: string]: unknown;
+    });
 
     // Redirect to the dashboard or a settings page with a success message
     return NextResponse.redirect(`${appUrl}/admin-dashboard-secret?success=google_auth_complete`);

@@ -13,6 +13,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import logger from '@/lib/logger';
+import type { Job } from '@/types';
 
 export const useCandidateForm = () => {
   const router = useRouter();

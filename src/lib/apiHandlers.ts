@@ -15,7 +15,9 @@ export const createApiHandlers = (
       onCancel: () => void;
     } | null
   ) => void,
-  setStatusUpdateLoading: (loading: boolean) => void,
+  setStatusUpdateLoading: (
+    updater: (prev: Record<string, boolean>) => Record<string, boolean>
+  ) => void,
   setIsScoring: (isScoring: boolean) => void,
   setScoringError: (error: string | null) => void,
   setIsScheduling: (isScheduling: boolean) => void,

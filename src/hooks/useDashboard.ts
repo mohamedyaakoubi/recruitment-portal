@@ -65,7 +65,8 @@ export const useDashboard = () => {
     title: string;
     message: string;
     onConfirm: () => void;
-  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
+    onCancel?: () => void;
+  } | null>(null);
 
   // Authentication check
   useEffect(() => {

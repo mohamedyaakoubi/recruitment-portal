@@ -83,8 +83,21 @@ export async function getAuthenticatedClient() {
   oauth2Client.on('tokens', (newTokens) => {
     logger.info('Google Auth tokens were refreshed');
     // Update the stored tokens with the new ones (including a new access_token)
-    const updatedTokens = { ...tokens, ...newTokens };
-    storeTokens(updatedTokens);
+    const updatedTokens = {
+      ...tokens,
+      ...newTokens,
+      access_token: newTokens.access_token || tokens.access_token || '',
+    };
+    if (updatedTokens.access_token) {
+      storeTokens(
+        updatedTokens as {
+          access_token: string;
+          refresh_token?: string;
+          expiry_date?: number;
+          [key: string]: unknown;
+        }
+      );
+    }
   });
 
   return oauth2Client;

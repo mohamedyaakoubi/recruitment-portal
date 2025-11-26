@@ -1,7 +1,17 @@
 import { Candidate } from '@/types';
 
+type ExportCandidate = Omit<
+  Candidate,
+  'submittedAt' | 'interviewDate' | 'lastUpdated' | 'lastScoredAt'
+> & {
+  submittedAt?: string;
+  interviewDate?: string;
+  lastUpdated?: string;
+  lastScoredAt?: string;
+};
+
 // 🔥 UPDATED: Generate CSV with complete candidate information
-export function generateCSV(candidates: Candidate[]): string {
+export function generateCSV(candidates: Candidate[] | ExportCandidate[]): string {
   if (candidates.length === 0) {
     return 'No candidates found';
   }

@@ -8,7 +8,7 @@ import { startOfWeek } from 'date-fns/startOfWeek';
 import { getDay } from 'date-fns/getDay';
 import { enUS } from 'date-fns/locale/en-US';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import type { InterviewEvent } from '@/types';
+import type { Candidate, InterviewEvent } from '@/types';
 import GoogleAuthManager from './GoogleAuthManager'; // 👈 Import the new component
 
 const locales = { 'en-US': enUS };

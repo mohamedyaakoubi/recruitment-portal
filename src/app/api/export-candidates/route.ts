@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     switch (exportFormat) {
       case 'csv': {
-        const csv = generateCSV(candidates);
+        const csv = generateCSV(candidates as Parameters<typeof generateCSV>[0]);
         return new NextResponse(csv, {
           headers: {
             'Content-Type': 'text/csv; charset=utf-8',

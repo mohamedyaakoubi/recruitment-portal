@@ -44,7 +44,8 @@ interface DashboardModalsProps {
     title: string;
     message: string;
     onConfirm: () => void;
-  };
+    onCancel?: () => void;
+  } | null;
   setConfirmationModal: (
     modal: {
       isOpen: boolean;
@@ -123,10 +124,10 @@ const DashboardModals: React.FC<DashboardModalsProps> = ({
       />
 
       <ConfirmationModal
-        isOpen={confirmationModal.isOpen}
-        title={confirmationModal.title}
-        message={confirmationModal.message}
-        onConfirm={confirmationModal.onConfirm}
+        isOpen={confirmationModal?.isOpen ?? false}
+        title={confirmationModal?.title ?? ''}
+        message={confirmationModal?.message ?? ''}
+        onConfirm={confirmationModal?.onConfirm ?? (() => {})}
         onCancel={() => setConfirmationModal(null)}
       />
 
