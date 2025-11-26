@@ -1,40 +1,39 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Candidate Management Flow', () => {
-    test.beforeEach(async ({ page }) => {
-        // Mock authentication state or bypass login if possible
-        // For now, we assume we are on the dashboard or can navigate there
-        // In a real app, we'd use a setup step to log in or set a cookie
+  test('should show landing page with email collection', async ({ page }) => {
+    await page.goto('/');
 
-        // Since we can't easily bypass auth in this environment without more setup,
-        // we will test the public facing candidate form if it exists, 
-        // or assume we can access the dashboard for the purpose of this test structure.
+    // Verify landing page elements
+    await expect(page.getByRole('heading', { name: /Your Career Journey/i })).toBeVisible();
+    await expect(page.getByLabel(/Email Address/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: /Continue/i })).toBeVisible();
+  });
 
-        // If the app redirects to login, these tests might fail on the redirect check.
-        // We'll try to go to the dashboard.
-        await page.goto('/dashboard');
-    });
+  test('should have email form with proper labels', async ({ page }) => {
+    await page.goto('/');
 
-    test('should navigate to add candidate page', async ({ page }) => {
-        // If we are redirected to login, we can't test this. 
-        // But let's assume we can test the "Add Candidate" button if we were logged in.
+    // Check form structure
+    const emailInput = page.getByLabel(/Email Address/i);
+    await expect(emailInput).toHaveAttribute('type', 'email');
+    await expect(emailInput).toHaveAttribute('required');
+    await expect(emailInput).toHaveAttribute('placeholder');
+  });
 
-        // If we are on login page, skip
-        if (page.url().includes('login')) {
-            test.skip();
-            return;
-        }
+  test('should display features section', async ({ page }) => {
+    await page.goto('/');
 
-        await page.getByRole('button', { name: /Add Candidate/i }).click();
-        await expect(page).toHaveURL(/\/candidates\/new/);
-    });
+    // Check for feature cards
+    await expect(page.getByText(/Global Opportunities/i)).toBeVisible();
+    await expect(page.getByText(/Verified Process/i)).toBeVisible();
+    await expect(page.getByText(/Fast Track/i)).toBeVisible();
+  });
 
-    test('should display candidate list', async ({ page }) => {
-        if (page.url().includes('login')) {
-            test.skip();
-            return;
-        }
+  test('should display contact information', async ({ page }) => {
+    await page.goto('/');
 
-        await expect(page.getByRole('table')).toBeVisible();
-    });
+    // Check footer contact info (use first() to handle multiple matches)
+    await expect(page.getByText(/wassim@internationalskills.fi/i).first()).toBeVisible();
+    await expect(page.getByText(/\+358 452644966/).first()).toBeVisible();
+  });
 });
