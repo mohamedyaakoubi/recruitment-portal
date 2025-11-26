@@ -50,7 +50,10 @@ export async function POST(request: NextRequest) {
         phone: fullPhone,
         country: regexResult.country?.name,
       });
-      updateRateLimit(clientIP.split(',')[0], fullPhone, false);
+      const clientIPFirst = clientIP.split(',')[0];
+      if (clientIPFirst) {
+        updateRateLimit(clientIPFirst, fullPhone, false);
+      }
       return NextResponse.json({
         ...regexResult,
         message: `Phone number format is invalid for ${regexResult.country?.name || 'this country'}. Please check your input.`,
@@ -61,7 +64,12 @@ export async function POST(request: NextRequest) {
 
     // 🔥 STEP 3: Abstract API validation
     logger.debug('Phone validation step 3: Checking API rate limits');
-    const rateLimit = checkRateLimit(clientIP.split(',')[0], fullPhone);
+    const clientIPFirst = clientIP.split(',')[0];
+    if (!clientIPFirst) {
+      logger.error('No client IP found');
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    }
+    const rateLimit = checkRateLimit(clientIPFirst, fullPhone);
 
     if (!rateLimit.allowed) {
       logger.debug('Rate limit reached', { reason: rateLimit.reason, phone: fullPhone });
@@ -86,12 +94,14 @@ export async function POST(request: NextRequest) {
       if (process.env.ABSTRACT_PHONE_API_KEY) {
         logger.debug('Calling Abstract API for phone validation', { phone: fullPhone });
         const apiResult = await validatePhoneWithAbstractAPI(fullPhone);
-        updateRateLimit(clientIP.split(',')[0], fullPhone, true);
+        if (clientIPFirst) {
+          updateRateLimit(clientIPFirst, fullPhone, true);
+        }
 
         logger.info('API validation completed', { phone: fullPhone, isValid: apiResult.isValid });
 
-        if (!apiResult.isValid) {
-          updateRateLimit(clientIP.split(',')[0], fullPhone, false);
+        if (!apiResult.isValid && clientIPFirst) {
+          updateRateLimit(clientIPFirst, fullPhone, false);
         }
 
         return NextResponse.json({

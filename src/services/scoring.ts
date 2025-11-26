@@ -3,7 +3,7 @@ import admin from 'firebase-admin';
 import { DocumentData } from 'firebase-admin/firestore';
 import { GoogleGenerativeAI, Part } from '@google/generative-ai';
 import { GoogleAIFileManager } from '@google/generative-ai/server';
-import logger from "@/lib/logger";
+import logger from '@/lib/logger';
 
 // Gemini API type definitions
 interface GeminiFile {
@@ -95,6 +95,9 @@ async function uploadFileToGemini(fileUrl: string, mimeType: string) {
 // Function to get MIME type from URL
 function getMimeTypeFromUrl(url: string): string {
   const urlWithoutQuery = url.split('?')[0];
+  if (!urlWithoutQuery) {
+    return 'application/octet-stream';
+  }
   const extension = urlWithoutQuery.toLowerCase().split('.').pop();
 
   switch (extension) {
@@ -250,13 +253,14 @@ Phone: ${candidateData.phoneNumber || 'Not provided'}
 📄 **CV/RESUME:**
 ${cvFile ? "The candidate's CV/resume has been uploaded and is available for analysis. Please thoroughly analyze the document content including work experience, education, skills, achievements, and any other relevant information." : `CV Document URL: ${candidateData.cvUrl} - Please consider this contains the candidate's professional history.`}
 
-${additionalContent.length > 0
-        ? `
+${
+  additionalContent.length > 0
+    ? `
 🔍 **ADDITIONAL INFORMATION TO ANALYZE:**
 ${additionalContent.join('\n\n')}
 `
-        : ''
-      }
+    : ''
+}
 
 📊 **ANALYSIS REQUIREMENTS:**
 1. Analyze the CV/resume content thoroughly for technical skills, experience, and qualifications
@@ -309,10 +313,12 @@ Please provide a thorough assessment based on ALL available information includin
 
     // 🔥 FIXED: Use the correct API structure for content generation
     const result = await model.generateContent({
-      contents: [{
-        role: 'user',
-        parts: parts,
-      }],
+      contents: [
+        {
+          role: 'user',
+          parts: parts,
+        },
+      ],
     });
 
     // Handle potentially undefined responseText

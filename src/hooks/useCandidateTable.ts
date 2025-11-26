@@ -5,7 +5,11 @@ import * as XLSX from 'xlsx';
 import type { Candidate, SortDirection, SortField } from '@/types';
 import logger from '@/lib/logger';
 
-export const useCandidateTable = (candidates: Candidate[], filters: any) => {
+interface Filters {
+  [key: string]: string;
+}
+
+export const useCandidateTable = (candidates: Candidate[], filters: Filters) => {
   const [sortField, setSortField] = useState<SortField>('submittedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [isExporting, setIsExporting] = useState(false);
@@ -65,7 +69,7 @@ export const useCandidateTable = (candidates: Candidate[], filters: any) => {
         let filename = `candidates_${format}_${new Date().toISOString().split('T')[0]}`;
         if (contentDisposition) {
           const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
-          if (filenameMatch && filenameMatch.length > 1) {
+          if (filenameMatch && filenameMatch[1]) {
             filename = filenameMatch[1];
           }
         }
@@ -110,8 +114,8 @@ export const useCandidateTable = (candidates: Candidate[], filters: any) => {
 
   const sortedCandidates = useMemo(() => {
     return [...candidates].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number | null;
+      let bValue: string | number | null;
 
       switch (sortField) {
         case 'firstName':

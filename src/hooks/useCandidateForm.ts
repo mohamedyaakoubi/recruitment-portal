@@ -40,9 +40,9 @@ export const useCandidateForm = () => {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [passportFile, setPassportFile] = useState<File | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [jobs, setJobs] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -207,7 +207,8 @@ export const useCandidateForm = () => {
         clearTimeout(timeoutId);
       };
     }
-  }, [phoneNumber, countryCode, isExistingCandidate]); // Only these dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phoneNumber, countryCode, isExistingCandidate]); // validatePhoneNumber is stable
 
   const sendConfirmationEmail = async (candidateData: {
     email: string;
@@ -341,8 +342,11 @@ export const useCandidateForm = () => {
 
   const updateAdditionalInfo = (index: number, content: string, file?: File) => {
     const newInfo = [...additionalInfo];
-    newInfo[index] = { ...newInfo[index], content, file };
-    setAdditionalInfo(newInfo);
+    const currentItem = newInfo[index];
+    if (currentItem) {
+      newInfo[index] = { ...currentItem, content, file };
+      setAdditionalInfo(newInfo);
+    }
   };
 
   const addWebsite = () => {
@@ -399,7 +403,8 @@ export const useCandidateForm = () => {
       setSpecialty('');
       setSpecialtySearch('');
     }
-  }, [selectedJob]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedJob]); // specialty is derived from selectedJob
 
   const handleCategorySelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
@@ -415,12 +420,15 @@ export const useCandidateForm = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, files } = e.target;
     if (files && files.length > 0) {
-      if (name === 'cv') {
-        setCvFile(files[0]);
-      } else if (name === 'passport') {
-        setPassportFile(files[0]);
-      } else if (name === 'photo') {
-        setPhotoFile(files[0]);
+      const file = files[0];
+      if (file) {
+        if (name === 'cv') {
+          setCvFile(file);
+        } else if (name === 'passport') {
+          setPassportFile(file);
+        } else if (name === 'photo') {
+          setPhotoFile(file);
+        }
       }
     }
   };
@@ -442,18 +450,21 @@ export const useCandidateForm = () => {
       const duplicateSnapshot = await getDocs(duplicateQuery);
 
       if (!duplicateSnapshot.empty) {
-        const lastApplication = duplicateSnapshot.docs[0].data();
-        const lastSubmissionDate = lastApplication.submittedAt?.toDate();
-        const formattedDate = lastSubmissionDate?.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        });
+        const firstDoc = duplicateSnapshot.docs[0];
+        if (firstDoc) {
+          const lastApplication = firstDoc.data();
+          const lastSubmissionDate = lastApplication.submittedAt?.toDate();
+          const formattedDate = lastSubmissionDate?.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
 
-        return {
-          isDuplicate: true,
-          message: `You have already applied for this position on ${formattedDate}. You can apply again after 6 months.`,
-        };
+          return {
+            isDuplicate: true,
+            message: `You have already applied for this position on ${formattedDate}. You can apply again after 6 months.`,
+          };
+        }
       }
 
       const thirtyDaysAgo = new Date();

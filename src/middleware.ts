@@ -9,7 +9,7 @@ const MAX_REQUESTS_PER_WINDOW = 60; // 60 requests per minute
 
 function getRateLimitKey(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
-  const ip = forwarded ? forwarded.split(',')[0].trim() : 'anonymous';
+  const ip = forwarded ? (forwarded.split(',')[0]?.trim() ?? 'anonymous') : 'anonymous';
   return `${ip}:${request.nextUrl.pathname}`;
 }
 

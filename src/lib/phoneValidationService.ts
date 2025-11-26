@@ -64,6 +64,15 @@ export function validatePhoneWithRegex(fullPhone: string): PhoneValidationRespon
   }
 
   const pattern = phonePatterns[countryCode];
+  if (!pattern) {
+    return {
+      isValid: false,
+      phone: fullPhone,
+      format: { international: fullPhone, local: fullPhone },
+      validationLevel: 'low',
+    };
+  }
+
   const isValid = pattern.test(fullPhone);
 
   return {

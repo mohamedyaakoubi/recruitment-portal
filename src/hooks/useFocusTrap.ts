@@ -64,14 +64,14 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(isActive: b
 
       // Shift + Tab (going backwards)
       if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
+        if (document.activeElement === firstElement && lastElement) {
           e.preventDefault();
           lastElement.focus();
         }
       }
       // Tab (going forwards)
       else {
-        if (document.activeElement === lastElement) {
+        if (document.activeElement === lastElement && firstElement) {
           e.preventDefault();
           firstElement.focus();
         }
@@ -80,8 +80,9 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(isActive: b
 
     // Focus first element when trap activates
     const focusableElements = getFocusableElements();
-    if (focusableElements.length > 0) {
-      focusableElements[0].focus();
+    const firstFocusable = focusableElements[0];
+    if (firstFocusable) {
+      firstFocusable.focus();
     }
 
     // Add event listener

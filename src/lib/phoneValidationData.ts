@@ -1,5 +1,3 @@
-
-
 export const phonePatterns: Record<string, RegExp> = {
   // North America
   '+1': /^\+1[2-9]\d{2}[2-9]\d{2}\d{4}$/, // US/Canada

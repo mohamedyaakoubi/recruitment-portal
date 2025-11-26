@@ -54,7 +54,11 @@ export function generateCSV(candidates: Candidate[]): string {
         escapeCSV(candidate.phoneNumber),
         escapeCSV(candidate.countryCode),
         escapeCSV(candidate.dateOfBirth),
-        typeof candidate.age === 'number' ? candidate.age : typeof candidate.age === 'string' ? candidate.age : '',
+        typeof candidate.age === 'number'
+          ? candidate.age
+          : typeof candidate.age === 'string'
+            ? candidate.age
+            : '',
         escapeCSV(candidate.city),
         escapeCSV(candidate.country),
         escapeCSV(candidate.nationality),
@@ -84,7 +88,7 @@ export function generateCSV(candidates: Candidate[]): string {
   return csvRows.join('\n');
 }
 
-function escapeCSV(value: string | string[] | undefined | number | Date | any): string {
+function escapeCSV(value: string | string[] | undefined | number | Date | unknown): string {
   if (value === null || value === undefined) {
     return '';
   }
@@ -93,7 +97,12 @@ function escapeCSV(value: string | string[] | undefined | number | Date | any): 
     return escapeCSV(value.join('; '));
   }
   // Handle Timestamps and Dates
-  if (value && typeof value === 'object' && 'toDate' in value && typeof value.toDate === 'function') {
+  if (
+    value &&
+    typeof value === 'object' &&
+    'toDate' in value &&
+    typeof value.toDate === 'function'
+  ) {
     try {
       return escapeCSV(value.toDate().toISOString());
     } catch {
