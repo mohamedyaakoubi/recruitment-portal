@@ -53,6 +53,7 @@ coverage/
 
 # Ignore test result outputs (Vitest/Jest, etc.)
 test-results/
+test-results.json
 *.log
 
 # Ignore Playwright/Cypress test artifacts (optional if you use them)

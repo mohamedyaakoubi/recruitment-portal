@@ -10,6 +10,7 @@ import {
   onSnapshot,
   QueryDocumentSnapshot,
   DocumentData,
+  Timestamp,
 } from 'firebase/firestore';
 import type { Candidate, InterviewEvent } from '@/types';
 import { isBefore } from 'date-fns';
@@ -78,6 +79,59 @@ export const useDashboard = () => {
   // Data fetching
   useEffect(() => {
     if (user) {
+      // Check for mock mode (for E2E tests)
+      if (
+        typeof window !== 'undefined' &&
+        window.localStorage.getItem('USE_MOCK_DATA') === 'true'
+      ) {
+        const mockCandidates: Candidate[] = [
+          {
+            id: '1',
+            fullName: 'John Doe',
+            email: 'john@example.com',
+            phoneNumber: '+1234567890',
+            dateOfBirth: '1990-01-01',
+            nationality: 'US',
+            gender: 'Male',
+            city: 'New York',
+            country: 'USA',
+            jobCategory: 'Healthcare',
+            jobTitleText: 'Nurse',
+            status: 'submitted',
+            submittedAt: { toMillis: () => Date.now() - 86400000 } as unknown as Timestamp,
+            score: 85,
+            cvUrl: 'http://example.com/cv.pdf',
+            passportUrl: 'http://example.com/passport.jpg',
+            websites: [],
+          },
+          {
+            id: '2',
+            fullName: 'Jane Smith',
+            email: 'jane@example.com',
+            phoneNumber: '+0987654321',
+            dateOfBirth: '1992-02-02',
+            nationality: 'UK',
+            gender: 'Female',
+            city: 'London',
+            country: 'UK',
+            jobCategory: 'Engineering',
+            jobTitleText: 'Software Engineer',
+            status: 'interview_scheduled',
+            interviewDate: {
+              toDate: () => new Date(Date.now() + 86400000),
+            } as unknown as Timestamp,
+            submittedAt: { toMillis: () => Date.now() - 172800000 } as unknown as Timestamp,
+            score: 92,
+            cvUrl: 'http://example.com/cv.pdf',
+            passportUrl: 'http://example.com/passport.jpg',
+            websites: [],
+          },
+        ];
+        setCandidates(mockCandidates);
+        setLoadingCandidates(false);
+        return;
+      }
+
       setLoadingCandidates(true);
       const q = query(collection(db, 'candidates'));
       const unsubscribe = onSnapshot(

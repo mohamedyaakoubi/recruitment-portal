@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "firebase:authUser:test-api-key:[DEFAULT]",
+          "value": "{\"uid\":\"test-admin-uid\",\"email\":\"admin@example.com\",\"emailVerified\":true,\"displayName\":\"Test Admin\",\"stsTokenManager\":{\"refreshToken\":\"mock-refresh-token\",\"accessToken\":\"mock-access-token\",\"expirationTime\":1764262646608},\"createdAt\":\"1764259046608\",\"lastLoginAt\":\"1764259046608\"}"
+        }
+      ]
+    }
+  ]
+}

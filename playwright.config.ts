@@ -1,10 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as path from 'path';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: './e2e',
+
+  /* Global setup file */
+  globalSetup: path.resolve(__dirname, 'e2e', 'global-setup.ts'),
 
   /* Maximum time one test can run for */
   timeout: 30 * 1000, // 30 seconds per test
