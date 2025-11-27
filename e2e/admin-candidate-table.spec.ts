@@ -19,10 +19,27 @@ test.describe('Admin Dashboard - Candidate Table', () => {
     // Navigate to dashboard
     await adminPage.goto();
 
-    // Wait longer for the page to stabilize and mock data to load
-    await page.waitForTimeout(5000);
-  });
+    // Wait for localStorage to be set
+    await page.waitForFunction(
+      () => {
+        return window.localStorage.getItem('USE_MOCK_DATA') === 'true';
+      },
+      { timeout: 5000 }
+    );
 
+    // Wait for page to stabilize and mock data to load
+    await page.waitForTimeout(3000);
+
+    // Wait for either table or no-data message to appear
+    await page
+      .waitForSelector('table, [data-testid="no-candidates"], text=/no candidates/i', {
+        timeout: 10000,
+        state: 'visible',
+      })
+      .catch(() => {
+        // Continue even if neither appears - test will handle it
+      });
+  });
   test('should display candidate table with data', async ({ page }) => {
     // Wait for mock data to be processed
     await page.waitForTimeout(2000);
