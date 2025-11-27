@@ -91,7 +91,14 @@ test.describe('Responsive Design Tests', () => {
   });
 
   test.describe('Touch Device Compatibility', () => {
-    test('should work with touch events on mobile', async ({ page: _page, browser }) => {
+    test('should work with touch events on mobile', async ({
+      page: _page,
+      browser,
+      browserName,
+    }) => {
+      // Skip in Firefox - doesn't support isMobile in newContext
+      test.skip(browserName === 'firefox', 'Firefox does not support mobile device emulation');
+
       const mobileContext = await browser.newContext({
         ...devices['iPhone 12'],
       });

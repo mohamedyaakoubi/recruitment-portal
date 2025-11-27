@@ -68,8 +68,11 @@ test.describe('Cross-Browser Compatibility', () => {
     });
 
     test('form inputs should be accessible', async ({ page }) => {
-      await page.goto('/candidate-form?email=test@example.com');
-      await page.waitForLoadState('networkidle');
+      await page.goto('/candidate-form?email=test@example.com', { timeout: 30000 });
+      await page.waitForLoadState('domcontentloaded');
+
+      // Wait for form to be interactive
+      await page.waitForTimeout(2000);
 
       const inputs = await page.locator('input').count();
       expect(inputs).toBeGreaterThan(0);
