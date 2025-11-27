@@ -16,13 +16,20 @@ test.describe('Authentication Flow', () => {
     const emailInput = page.getByLabel(/Email Address/i);
     const submitButton = page.getByRole('button', { name: /Continue/i });
 
-    // Try invalid email
+    // Try to submit with invalid email
     await emailInput.fill('invalid-email');
     await submitButton.click();
 
-    // Browser should show validation error (HTML5 validation)
-    // We can check if the input has invalid state
-    await expect(emailInput).not.toHaveValue('');
+    // Wait a moment for any validation
+    await page.waitForTimeout(500);
+
+    // Check if HTML5 validation prevented the form submission
+    const isInvalid = await emailInput.evaluate((el: HTMLInputElement) => {
+      return !el.validity.valid;
+    });
+
+    // The email should either be invalid or an error message should show
+    expect(isInvalid).toBeTruthy();
   });
 
   test('should accept valid email format', async ({ page }) => {

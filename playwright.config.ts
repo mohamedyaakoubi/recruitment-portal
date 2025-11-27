@@ -14,7 +14,7 @@ export default defineConfig({
   timeout: 30 * 1000, // 30 seconds per test
 
   /* Maximum time for the entire test run */
-  globalTimeout: 10 * 60 * 1000, // 10 minutes
+  globalTimeout: 20 * 60 * 1000, // 20 minutes for 500+ tests
 
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -25,8 +25,8 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* Optimize workers for i5 11th gen with 16GB RAM - 3 workers to reduce memory pressure with 500+ tests */
+  workers: process.env.CI ? 1 : 3,
 
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: 'html',
@@ -36,14 +36,20 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: 'http://localhost:3000',
 
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    /* Disable trace to save CPU/memory */
+    trace: 'off',
 
-    /* Take screenshot on failure */
-    screenshot: 'only-on-failure',
+    /* Disable screenshots to save CPU/disk I/O */
+    screenshot: 'off',
 
-    /* Record video on failure */
-    video: 'retain-on-failure',
+    /* Disable video recording to save significant CPU/memory/disk */
+    video: 'off',
+
+    /* Reduce navigation timeout for faster test execution */
+    navigationTimeout: 20 * 1000,
+
+    /* Reduce action timeout for faster test execution */
+    actionTimeout: 8 * 1000,
   },
 
   /* Configure projects for major browsers */

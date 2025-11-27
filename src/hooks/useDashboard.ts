@@ -80,10 +80,12 @@ export const useDashboard = () => {
   useEffect(() => {
     if (user) {
       // Check for mock mode (for E2E tests)
-      if (
-        typeof window !== 'undefined' &&
-        window.localStorage.getItem('USE_MOCK_DATA') === 'true'
-      ) {
+      const useMock =
+        typeof window !== 'undefined' && window.localStorage.getItem('USE_MOCK_DATA') === 'true';
+      logger.info('useDashboard: Checking mock mode', { useMock, user: user.email });
+
+      if (useMock) {
+        logger.info('useDashboard: Using mock data');
         const mockCandidates: Candidate[] = [
           {
             id: '1',

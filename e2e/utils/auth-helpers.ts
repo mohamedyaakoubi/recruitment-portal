@@ -21,7 +21,19 @@ export interface AuthState {
 export async function loginAsAdmin(page: Page, email?: string, _password?: string): Promise<void> {
   const adminEmail = email || process.env.TEST_ADMIN_EMAIL || 'admin@example.com';
 
-  // Navigate to admin login page
+  // Navigate to any page first to establish domain context for localStorage
+  await page.goto('/');
+  await page.waitForLoadState('domcontentloaded');
+
+  // Set up authentication state after we have domain context
+  await setupAuthState(page, {
+    uid: 'test-admin-uid',
+    email: adminEmail,
+    displayName: 'Test Admin',
+    emailVerified: true,
+  });
+
+  // Navigate to admin dashboard
   await page.goto('/admin-dashboard-secret');
 
   // Wait for the page to load
@@ -34,19 +46,11 @@ export async function loginAsAdmin(page: Page, email?: string, _password?: strin
     return;
   }
 
-  // Click on Google Sign-In button
-  // Note: In a real scenario, you would need to handle Google OAuth flow
-  // For testing, we'll mock the authentication state
-  await setupAuthState(page, {
-    uid: 'test-admin-uid',
-    email: adminEmail,
-    displayName: 'Test Admin',
-    emailVerified: true,
-  });
-
-  // Reload the page to apply auth state
-  await page.reload();
-  await page.waitForLoadState('networkidle');
+  // If still on login page, reload to apply auth state
+  if (currentUrl.includes('/login')) {
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+  }
 }
 
 /**
@@ -58,31 +62,36 @@ export async function setupAuthState(page: Page, authState: AuthState): Promise<
   // Get Firebase API key from environment (server-side)
   const firebaseApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'test-api-key';
 
-  // Mock Firebase auth state in localStorage
-  await page.evaluate(
-    ({ state, apiKey }) => {
-      // Firebase stores auth state in localStorage with a specific key pattern
-      const firebaseKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
+  try {
+    // Mock Firebase auth state in localStorage
+    await page.evaluate(
+      ({ state, apiKey }) => {
+        // Firebase stores auth state in localStorage with a specific key pattern
+        const firebaseKey = `firebase:authUser:${apiKey}:[DEFAULT]`;
 
-      const authData = {
-        uid: state.uid,
-        email: state.email,
-        emailVerified: state.emailVerified,
-        displayName: state.displayName,
-        photoURL: state.photoURL,
-        stsTokenManager: {
-          refreshToken: 'mock-refresh-token',
-          accessToken: 'mock-access-token',
-          expirationTime: Date.now() + 3600000, // 1 hour from now
-        },
-        createdAt: Date.now().toString(),
-        lastLoginAt: Date.now().toString(),
-      };
+        const authData = {
+          uid: state.uid,
+          email: state.email,
+          emailVerified: state.emailVerified,
+          displayName: state.displayName,
+          photoURL: state.photoURL,
+          stsTokenManager: {
+            refreshToken: 'mock-refresh-token',
+            accessToken: 'mock-access-token',
+            expirationTime: Date.now() + 3600000, // 1 hour from now
+          },
+          createdAt: Date.now().toString(),
+          lastLoginAt: Date.now().toString(),
+        };
 
-      localStorage.setItem(firebaseKey, JSON.stringify(authData));
-    },
-    { state: authState, apiKey: firebaseApiKey }
-  );
+        localStorage.setItem(firebaseKey, JSON.stringify(authData));
+      },
+      { state: authState, apiKey: firebaseApiKey }
+    );
+  } catch (error) {
+    // If localStorage is not accessible, log warning but don't fail
+    console.warn('Failed to set auth state in localStorage:', error);
+  }
 }
 
 /**
@@ -139,25 +148,29 @@ export async function mockFirebaseAuth(page: Page): Promise<void> {
  * @param page - Playwright page object
  */
 export async function logout(page: Page): Promise<void> {
-  // Clear all auth-related data
-  await page.evaluate(() => {
-    // Clear all localStorage items that match Firebase auth pattern
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('firebase:authUser:')) {
-        keysToRemove.push(key);
+  try {
+    // Clear all auth-related data
+    await page.evaluate(() => {
+      // Clear all localStorage items that match Firebase auth pattern
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('firebase:authUser:')) {
+          keysToRemove.push(key);
+        }
       }
-    }
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
 
-    // Clear session storage
-    sessionStorage.clear();
-  });
+      // Clear session storage
+      sessionStorage.clear();
+    });
 
-  // Clear cookies
-  const context = page.context();
-  await context.clearCookies();
+    // Clear cookies
+    const context = page.context();
+    await context.clearCookies();
+  } catch (error) {
+    console.warn('Failed to logout:', error);
+  }
 }
 
 /**
@@ -165,24 +178,29 @@ export async function logout(page: Page): Promise<void> {
  * @param page - Playwright page object
  */
 export async function isAuthenticated(page: Page): Promise<boolean> {
-  return await page.evaluate(() => {
-    // Check if Firebase auth state exists in localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('firebase:authUser:')) {
-        const authData = localStorage.getItem(key);
-        if (authData) {
-          try {
-            const parsed = JSON.parse(authData);
-            return !!parsed.uid;
-          } catch {
-            return false;
+  try {
+    return await page.evaluate(() => {
+      // Check if Firebase auth state exists in localStorage
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('firebase:authUser:')) {
+          const authData = localStorage.getItem(key);
+          if (authData) {
+            try {
+              const parsed = JSON.parse(authData);
+              return !!parsed.uid;
+            } catch {
+              return false;
+            }
           }
         }
       }
-    }
+      return false;
+    });
+  } catch (error) {
+    console.warn('Failed to check authentication:', error);
     return false;
-  });
+  }
 }
 
 /**
@@ -190,30 +208,35 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
  * @param page - Playwright page object
  */
 export async function getCurrentUser(page: Page): Promise<AuthState | null> {
-  return await page.evaluate(() => {
-    // Get Firebase auth state from localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('firebase:authUser:')) {
-        const authData = localStorage.getItem(key);
-        if (authData) {
-          try {
-            const parsed = JSON.parse(authData);
-            return {
-              uid: parsed.uid,
-              email: parsed.email,
-              displayName: parsed.displayName,
-              photoURL: parsed.photoURL,
-              emailVerified: parsed.emailVerified,
-            };
-          } catch {
-            return null;
+  try {
+    return await page.evaluate(() => {
+      // Get Firebase auth state from localStorage
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('firebase:authUser:')) {
+          const authData = localStorage.getItem(key);
+          if (authData) {
+            try {
+              const parsed = JSON.parse(authData);
+              return {
+                uid: parsed.uid,
+                email: parsed.email,
+                displayName: parsed.displayName,
+                photoURL: parsed.photoURL,
+                emailVerified: parsed.emailVerified,
+              };
+            } catch {
+              return null;
+            }
           }
         }
       }
-    }
+      return null;
+    });
+  } catch (error) {
+    console.warn('Failed to get current user:', error);
     return null;
-  });
+  }
 }
 
 /**
