@@ -145,37 +145,41 @@ test.describe('Admin Dashboard - Candidate Actions', () => {
   test('should display CV link if available', async () => {
     const candidateCount = await adminPage.getCandidateCount();
 
-    if (candidateCount > 0) {
-      // Open candidate profile to see CV link
-      await adminPage.viewCandidateProfile(0);
-      await adminPage.profileModal.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
-
-      const cvLink = await adminPage.modalCVLink.isVisible().catch(() => false);
-
-      // CV link may or may not be present
-      expect(typeof cvLink).toBe('boolean');
-
-      // Close modal
-      await adminPage.closeProfileModal().catch(() => {});
-    } else {
+    // Skip test if no candidates
+    if (candidateCount === 0) {
       test.skip();
+      return;
     }
+
+    // Open candidate profile to see CV link
+    await adminPage.viewCandidateProfile(0);
+    await adminPage.profileModal.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+
+    const cvLink = await adminPage.modalCVLink.isVisible().catch(() => false);
+
+    // CV link may or may not be present
+    expect(typeof cvLink).toBe('boolean');
+
+    // Close modal
+    await adminPage.closeProfileModal().catch(() => {});
   });
 
   test('should allow copying email to clipboard', async ({ page }) => {
     const candidateCount = await adminPage.getCandidateCount();
 
-    if (candidateCount > 0) {
-      // Look for copy email button or email link
-      const emailLink = page
-        .locator('a[href^="mailto:"], button:has-text("copy"), .copy-email')
-        .first();
-      const emailVisible = await emailLink.isVisible().catch(() => false);
-
-      // Email link or copy button should exist
-      expect(typeof emailVisible).toBe('boolean');
-    } else {
+    // Skip test if no candidates
+    if (candidateCount === 0) {
       test.skip();
+      return;
     }
+
+    // Look for copy email button or email link
+    const emailLink = page
+      .locator('a[href^="mailto:"], button:has-text("copy"), .copy-email')
+      .first();
+    const emailVisible = await emailLink.isVisible().catch(() => false);
+
+    // Email link or copy button should exist
+    expect(typeof emailVisible).toBe('boolean');
   });
 });
