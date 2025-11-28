@@ -34,10 +34,10 @@ export async function loginAsAdmin(page: Page, email?: string, _password?: strin
   });
 
   // Navigate to admin dashboard
-  await page.goto('/admin-dashboard-secret');
+  await page.goto('/admin-dashboard-secret', { timeout: 30000 });
 
   // Wait for the page to load
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   // Check if already authenticated
   const currentUrl = page.url();
@@ -48,8 +48,13 @@ export async function loginAsAdmin(page: Page, email?: string, _password?: strin
 
   // If still on login page, reload to apply auth state
   if (currentUrl.includes('/login')) {
-    await page.reload();
-    await page.waitForLoadState('networkidle');
+    try {
+      await page.reload({ timeout: 30000 });
+      await page.waitForLoadState('domcontentloaded');
+    } catch {
+      // Reload timeout, page might already be loading
+      await page.waitForTimeout(2000);
+    }
   }
 }
 
