@@ -17,16 +17,23 @@ export async function requireAdminAuth(request: NextRequest) {
 
     // Check for token presence
     if (!authHeader && !adminSession) {
-      logSecurityEvent({
-        type: SecurityEventType.AUTH_FAILURE,
-        ...context,
-        details: { reason: 'No token provided' },
-      });
+      // Don't log security events for status-check endpoints - these are expected to fail
+      // before authentication is complete (e.g., checking Google OAuth status on page load)
+      const isStatusCheckEndpoint = request.nextUrl.pathname.includes('/status');
 
-      logger.warn('Unauthorized admin API access attempt', {
-        path: request.nextUrl.pathname,
-        ip: context.ip,
-      });
+      if (!isStatusCheckEndpoint) {
+        logSecurityEvent({
+          type: SecurityEventType.AUTH_FAILURE,
+          ...context,
+          details: { reason: 'No token provided' },
+        });
+
+        logger.warn('Unauthorized admin API access attempt', {
+          path: request.nextUrl.pathname,
+          ip: context.ip,
+        });
+      }
+
       return ApiErrors.unauthorized('Admin authentication required');
     }
 
