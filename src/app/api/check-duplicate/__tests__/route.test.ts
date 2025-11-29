@@ -43,6 +43,7 @@ describe('POST /api/check-duplicate', () => {
   it('should return 400 when required fields are missing', async () => {
     const request = {
       json: async () => ({ email: 'test@example.com' }),
+      headers: new Headers({ origin: 'http://localhost:3000' }),
     } as unknown as NextRequest;
 
     const response = await POST(request);
@@ -78,6 +79,7 @@ describe('POST /api/check-duplicate', () => {
         jobId: 'frontend-dev',
         jobCategory: 'Engineering',
       }),
+      headers: new Headers({ origin: 'http://localhost:3000' }),
     } as unknown as NextRequest;
 
     const response = await POST(request);
@@ -109,6 +111,7 @@ describe('POST /api/check-duplicate', () => {
         jobId: 'backend-dev',
         jobCategory: 'Engineering',
       }),
+      headers: new Headers({ origin: 'http://localhost:3000' }),
     } as unknown as NextRequest;
 
     const response = await POST(request);
@@ -139,6 +142,7 @@ describe('POST /api/check-duplicate', () => {
         jobId: 'frontend-dev',
         jobCategory: 'Engineering',
       }),
+      headers: new Headers({ origin: 'http://localhost:3000' }),
     } as unknown as NextRequest;
 
     const response = await POST(request);
@@ -161,6 +165,7 @@ describe('POST /api/check-duplicate', () => {
         jobId: 'frontend-dev',
         jobCategory: 'Engineering',
       }),
+      headers: new Headers({ origin: 'http://localhost:3000' }),
     } as unknown as NextRequest;
 
     const response = await POST(request);

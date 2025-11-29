@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useEditCandidateForm } from '@/hooks/useEditCandidateForm';
 import type { Candidate } from '@/types';
 import EditModalHeader from './edit-candidate-modal/EditModalHeader';
@@ -34,6 +35,7 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
     handleJobChange,
     handleSubmit,
   } = useEditCandidateForm(candidate, isOpen, onSave, onClose);
+  const modalRef = useFocusTrap(isOpen);
 
   if (!isOpen || !candidate) return null;
 
@@ -44,7 +46,10 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
       aria-modal="true"
       aria-labelledby="edit-modal-title"
     >
-      <div className="flex max-h-[95vh] w-full max-w-4xl flex-col rounded-xl bg-white shadow-2xl dark:bg-gray-800">
+      <div
+        ref={modalRef}
+        className="flex max-h-[95vh] w-full max-w-4xl flex-col rounded-xl bg-white shadow-2xl dark:bg-gray-800"
+      >
         <EditModalHeader onClose={onClose} isLoading={isLoading} />
         <div className="flex-grow overflow-y-auto p-6">
           <EditCandidateForm

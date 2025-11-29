@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
+import { calculateAge } from '@/lib/utils';
 import type { Candidate, SortDirection, SortField } from '@/types';
 import logger from '@/lib/logger';
 
@@ -95,23 +96,6 @@ export const useCandidateTable = (candidates: Candidate[], filters: Filters) => 
     return { firstName, lastName };
   };
 
-  const calculateAge = (dateOfBirth: string) => {
-    if (!dateOfBirth) return null;
-    try {
-      const birthDate = new Date(dateOfBirth);
-      const today = new Date();
-      if (isNaN(birthDate.getTime())) return null;
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age;
-    } catch {
-      return null;
-    }
-  };
-
   const sortedCandidates = useMemo(() => {
     return [...candidates].sort((a, b) => {
       let aValue: string | number | null;
@@ -131,8 +115,8 @@ export const useCandidateTable = (candidates: Candidate[], filters: Filters) => 
           bValue = b.email.toLowerCase();
           break;
         case 'age':
-          aValue = a.dateOfBirth ? calculateAge(a.dateOfBirth) : 0;
-          bValue = b.dateOfBirth ? calculateAge(b.dateOfBirth) : 0;
+          aValue = a.dateOfBirth ? (calculateAge(a.dateOfBirth) ?? 0) : 0;
+          bValue = b.dateOfBirth ? (calculateAge(b.dateOfBirth) ?? 0) : 0;
           break;
         case 'city':
           aValue = (a.city || '').toLowerCase();

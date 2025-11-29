@@ -14,12 +14,23 @@ const tokenStore = new Map<string, { secret: string; timestamp: number }>();
 // Token expiration time (15 minutes)
 const TOKEN_EXPIRATION_MS = 15 * 60 * 1000;
 
+// Maximum token store size (prevent memory leaks)
+const MAX_TOKEN_STORE_SIZE = 10000;
+
 /**
  * Generate a CSRF token for a session
  */
 export function generateCsrfToken(sessionId: string): string {
   // Clean up expired tokens periodically
   cleanupExpiredTokens();
+
+  // Enforce max size limit (LRU eviction: remove oldest)
+  if (tokenStore.size >= MAX_TOKEN_STORE_SIZE) {
+    const oldestKey = tokenStore.keys().next().value;
+    if (oldestKey) {
+      tokenStore.delete(oldestKey);
+    }
+  }
 
   // Generate a secret for this session
   const secret = tokens.secretSync();

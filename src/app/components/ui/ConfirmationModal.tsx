@@ -1,5 +1,6 @@
 // src/app/components/ConfirmationModal.tsx
 import React from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { ConfirmationModalProps } from '@/types';
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -12,6 +13,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onCancel,
   type = 'danger',
 }) => {
+  const modalRef = useFocusTrap(isOpen);
+
   if (!isOpen) return null;
 
   const getButtonStyles = () => {
@@ -48,7 +51,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
     >
-      <div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+      <div
+        ref={modalRef}
+        className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800"
+      >
         <div className="mb-4 flex items-center">
           <div
             className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${type === 'danger' ? 'bg-red-100 dark:bg-red-900/50' : type === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/50' : 'bg-blue-100 dark:bg-blue-900/50'}`}

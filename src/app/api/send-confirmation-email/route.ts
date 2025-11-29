@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { validateOrigin, getOriginValidationError } from '@/lib/origin-validation';
 import logger from '@/lib/logger';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
@@ -23,6 +24,12 @@ export const dynamic = 'force-dynamic';
  * Rate limiting is enforced by middleware
  */
 export async function POST(request: NextRequest) {
+  // Validate request origin for additional security
+  if (!validateOrigin(request)) {
+    const error = getOriginValidationError();
+    return ApiErrors.forbidden(error.error);
+  }
+
   try {
     const body = await request.json();
     const validatedData = confirmationEmailSchema.safeParse(body);

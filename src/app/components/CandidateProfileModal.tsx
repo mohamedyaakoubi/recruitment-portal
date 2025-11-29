@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useProfileModal } from '@/hooks/useProfileModal';
 import type { CandidateProfileModalProps } from '@/types';
 import EditCandidateModal from './EditCandidateModal';
@@ -19,6 +20,7 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
 }) => {
   const { isEditModalOpen, setIsEditModalOpen, isUpdating, handleEditCandidate, calculateAge } =
     useProfileModal(candidate, onEditCandidate);
+  const modalRef = useFocusTrap(isOpen);
 
   if (!isOpen || !candidate) return null;
 
@@ -32,7 +34,10 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
         aria-modal="true"
         aria-labelledby="profile-modal-title"
       >
-        <div className="flex max-h-[95vh] w-full max-w-5xl flex-col rounded-xl bg-gray-50 shadow-2xl dark:bg-gray-900">
+        <div
+          ref={modalRef}
+          className="flex max-h-[95vh] w-full max-w-5xl flex-col rounded-xl bg-gray-50 shadow-2xl dark:bg-gray-900"
+        >
           <ProfileHeader
             candidate={candidate}
             onClose={onClose}

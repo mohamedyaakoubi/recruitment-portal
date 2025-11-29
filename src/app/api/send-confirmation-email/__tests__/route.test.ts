@@ -35,6 +35,7 @@ describe('POST /api/send-confirmation-email', () => {
   it('should return 400 when required fields missing', async () => {
     const request = {
       json: async () => ({ candidateEmail: 'test@example.com' }),
+      headers: new Headers({ origin: 'http://localhost:3000' }),
     } as unknown as NextRequest;
 
     const response = await POST(request);
@@ -54,6 +55,7 @@ describe('POST /api/send-confirmation-email', () => {
         jobTitle: 'Developer',
         applicationId: 'app123',
       }),
+      headers: new Headers({ origin: 'http://localhost:3000' }),
     } as unknown as NextRequest;
 
     const response = await POST(request);
@@ -73,6 +75,7 @@ describe('POST /api/send-confirmation-email', () => {
         jobTitle: 'Developer',
         applicationId: 'app123',
       }),
+      headers: new Headers({ origin: 'http://localhost:3000' }),
     } as unknown as NextRequest;
 
     const response = await POST(request);

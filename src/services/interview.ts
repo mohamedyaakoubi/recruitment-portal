@@ -86,7 +86,7 @@ export const scheduleInterview = async (
           responseStatus: 'needsAction',
         },
         {
-          email: adminEmail || 'wassim@internationalskills.fi',
+          email: adminEmail || process.env.FALLBACK_ADMIN_EMAIL || 'admin@internationalskills.fi',
           displayName: 'International Skills Hiring',
           responseStatus: 'accepted',
         },

@@ -1,11 +1,18 @@
 import { NextRequest } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
+import { validateOrigin, getOriginValidationError } from '@/lib/origin-validation';
 import logger from '@/lib/logger';
 import { checkDuplicateSchema } from '@/lib/validations';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
 export async function POST(request: NextRequest) {
+  // Validate request origin for additional security
+  if (!validateOrigin(request)) {
+    const error = getOriginValidationError();
+    return ApiErrors.forbidden(error.error);
+  }
+
   try {
     const body = await request.json();
     const validatedData = checkDuplicateSchema.safeParse(body);

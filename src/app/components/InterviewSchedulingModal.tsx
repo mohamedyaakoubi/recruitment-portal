@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { format, addDays } from 'date-fns';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import logger from '@/lib/logger';
 
 import type { InterviewSchedulingModalProps } from '@/types';
@@ -14,8 +15,11 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
   const [interviewDate, setInterviewDate] = useState('');
   const [interviewTime, setInterviewTime] = useState('');
   const [duration, setDuration] = useState(30); // Default 30 minutes
-  const [adminEmail, setAdminEmail] = useState('wassim@internationalskills.fi');
+  const [adminEmail, setAdminEmail] = useState(
+    process.env.NEXT_PUBLIC_DEFAULT_ADMIN_EMAIL || 'admin@internationalskills.fi'
+  );
   const [notes, setNotes] = useState('');
+  const modalRef = useFocusTrap(isOpen);
 
   // Get tomorrow's date as minimum date
   const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd');
@@ -61,7 +65,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
         interviewDate,
         interviewTime,
         duration,
-        adminEmail || 'wassim@internationalskills.fi',
+        adminEmail || process.env.NEXT_PUBLIC_DEFAULT_ADMIN_EMAIL || 'admin@internationalskills.fi',
         notes
       );
 
@@ -93,7 +97,10 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
       aria-modal="true"
       aria-labelledby="interview-modal-title"
     >
-      <div className="mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+      <div
+        ref={modalRef}
+        className="mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800"
+      >
         <div className="mb-4 flex items-center justify-between">
           <h3
             id="interview-modal-title"

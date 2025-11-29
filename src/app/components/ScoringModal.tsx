@@ -1,5 +1,6 @@
 // src/components/ScoringModal.tsx
 import React, { useState, useEffect } from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { Job, ScoringModalProps } from '@/types';
 import logger from '@/lib/logger';
 
@@ -15,6 +16,7 @@ const ScoringModal: React.FC<ScoringModalProps> = ({
   const [selectedJobId, setSelectedJobId] = useState('');
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [loadingJobs, setLoadingJobs] = useState(false);
+  const modalRef = useFocusTrap(isOpen);
 
   useEffect(() => {
     if (isOpen) {
@@ -56,8 +58,17 @@ const ScoringModal: React.FC<ScoringModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
-        <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-200">
+      <div
+        ref={modalRef}
+        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="scoring-modal-title"
+      >
+        <h2
+          id="scoring-modal-title"
+          className="mb-4 text-xl font-semibold text-gray-900 dark:text-gray-200"
+        >
           Score Candidate: {candidate.fullName}
         </h2>
         <form onSubmit={handleSubmit}>

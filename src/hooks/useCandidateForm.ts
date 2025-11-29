@@ -15,6 +15,7 @@ import { db, storage } from '@/lib/firebase';
 import logger from '@/lib/logger';
 import { validateFile } from '@/lib/fileValidation';
 import { detectBot } from '@/lib/honeypot';
+import { calculateAge } from '@/lib/utils';
 import type { Job } from '@/types';
 
 export const useCandidateForm = (emailParam?: string) => {
@@ -527,19 +528,6 @@ export const useCandidateForm = (emailParam?: string) => {
     }
   };
 
-  const calculateAge = (dateOfBirth: string): number => {
-    if (!dateOfBirth) return 0;
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    if (isNaN(birthDate.getTime())) return 0;
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
   const validateAge = (
     dateOfBirth: string
   ): { isValid: boolean; age: number; message?: string } => {
@@ -547,11 +535,12 @@ export const useCandidateForm = (emailParam?: string) => {
       return { isValid: false, age: 0, message: 'Date of birth is required' };
     }
     const age = calculateAge(dateOfBirth);
-    if (age < 18) {
+    if (age === null || age < 18) {
       return {
         isValid: false,
-        age,
-        message: `You must be at least 18. Your age is ${age}.`,
+        age: age ?? 0,
+        message:
+          age === null ? 'Invalid date of birth' : `You must be at least 18. Your age is ${age}.`,
       };
     }
     return { isValid: true, age, message: '' };
