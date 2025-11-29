@@ -39,7 +39,7 @@ const CandidateTableRow: React.FC<CandidateTableRowProps> = ({
               <Image
                 className="h-10 w-10 rounded-full object-cover"
                 src={candidate.photoUrl}
-                alt=""
+                alt={`${firstName} ${lastName} profile photo`}
                 width={40}
                 height={40}
               />

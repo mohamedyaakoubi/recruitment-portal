@@ -83,21 +83,6 @@ async function verifyEmailWithHunter(email: string): Promise<EmailVerificationRe
   }
 }
 
-// TypeScript version of the async HTTP function
-async function _httpGetAsync(url: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    fetch(url)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.text();
-      })
-      .then((data) => resolve(data))
-      .catch((error) => reject(error));
-  });
-}
-
 // Basic email format validation as fallback
 function basicEmailValidation(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
