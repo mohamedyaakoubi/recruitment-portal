@@ -39,7 +39,9 @@ export const useCandidateDashboard = () => {
         throw new Error(result.error || 'Failed to load applications');
       }
 
-      setApplications(result.applications || []);
+      // Handle wrapped API response: { success: true, data: { applications, count } }
+      const applicationsData = result.data || result;
+      setApplications(applicationsData.applications || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {

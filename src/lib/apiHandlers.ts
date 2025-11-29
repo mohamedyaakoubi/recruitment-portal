@@ -43,7 +43,12 @@ export const createApiHandlers = (
       if (!response.ok) {
         throw new Error(result.error || 'Failed to score candidate');
       }
-      logger.info('Scoring successful', { candidateId: selectedCandidate.id, score: result.score });
+      // Handle wrapped API response: { success: true, data: { score, ... } }
+      const scoreData = result.data || result;
+      logger.info('Scoring successful', {
+        candidateId: selectedCandidate.id,
+        score: scoreData.score,
+      });
       showToast('Candidate scored successfully!', 'success');
       closeScoringModal();
     } catch (error) {
@@ -70,14 +75,16 @@ export const createApiHandlers = (
       if (!response.ok) {
         throw new Error(result.error || 'Failed to update status');
       }
+      // Handle wrapped API response: { success: true, data: { newStatus, emailSent, ... } }
+      const statusData = result.data || result;
       logger.info('Status update successful', {
         candidateId,
         newStatus,
-        emailSent: result.emailSent,
+        emailSent: statusData.emailSent,
       });
 
       if (newStatus === 'rejected') {
-        if (result.emailSent) {
+        if (statusData.emailSent) {
           showToast('Candidate rejected and email notification sent successfully!', 'success');
         } else {
           showToast(

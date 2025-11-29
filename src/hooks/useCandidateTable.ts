@@ -40,7 +40,10 @@ export const useCandidateTable = (candidates: Candidate[], filters: Filters) => 
       }
 
       if (format === 'xlsx') {
-        const { data, filename, count } = await response.json();
+        const result = await response.json();
+        // Handle wrapped API response: { success: true, data: { data, filename, count } }
+        const exportData = result.data || result;
+        const { data, filename, count } = exportData;
 
         const worksheet = XLSX.utils.json_to_sheet(data);
         const workbook = XLSX.utils.book_new();

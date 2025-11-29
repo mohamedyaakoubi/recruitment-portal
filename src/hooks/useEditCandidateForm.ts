@@ -46,12 +46,14 @@ export const useEditCandidateForm = (
     setLoadingJobs(true);
     try {
       const response = await fetch('/api/jobs?activeOnly=true');
-      const data = await response.json();
+      const result = await response.json();
       if (response.ok) {
-        setJobs(data.jobs || []);
-        setJobCategories(data.categories || []);
+        // Handle wrapped API response: { success: true, data: { jobs, categories } }
+        const jobsData = result.data || result;
+        setJobs(jobsData.jobs || []);
+        setJobCategories(jobsData.categories || []);
       } else {
-        logger.error('Failed to fetch jobs', new Error(data.error), { response: data });
+        logger.error('Failed to fetch jobs', new Error(result.error), { response: result });
       }
     } catch (error) {
       logger.error('Error fetching jobs', error);

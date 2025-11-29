@@ -13,7 +13,10 @@ async function fetchJobs(activeOnly: boolean = true): Promise<JobsResponse> {
   if (!response.ok) {
     throw new Error('Failed to fetch jobs');
   }
-  return response.json();
+  const result = await response.json();
+  // Handle wrapped API response: { success: true, data: { jobs, categories } }
+  const jobsData = result.data || result;
+  return jobsData;
 }
 
 // Create job
@@ -27,7 +30,9 @@ async function createJobApi(jobData: Partial<Job>): Promise<{ jobId: string }> {
     const error = await response.json();
     throw new Error(error.error || 'Failed to create job');
   }
-  return response.json();
+  const result = await response.json();
+  // Handle wrapped API response: { success: true, data: { jobId } }
+  return result.data || result;
 }
 
 // Update job

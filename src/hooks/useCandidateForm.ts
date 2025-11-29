@@ -315,8 +315,15 @@ export const useCandidateForm = (emailParam?: string) => {
 
       const result = await response.json();
 
-      if (response.ok && result.applications && result.applications.length > 0) {
-        const latestApplication = result.applications[0];
+      // Handle wrapped API response: { success: true, data: { applications, count } }
+      const applicationsData = result.data || result;
+
+      if (
+        response.ok &&
+        applicationsData.applications &&
+        applicationsData.applications.length > 0
+      ) {
+        const latestApplication = applicationsData.applications[0];
 
         setIsExistingCandidate(true);
 
@@ -432,9 +439,11 @@ export const useCandidateForm = (emailParam?: string) => {
     const loadJobs = async () => {
       try {
         const response = await fetch('/api/jobs?activeOnly=true');
-        const data = await response.json();
+        const result = await response.json();
         if (response.ok) {
-          setJobs(data.jobs || []);
+          // Handle wrapped API response: { success: true, data: { jobs, categories } }
+          const jobsData = result.data || result;
+          setJobs(jobsData.jobs || []);
         }
       } catch (error) {
         logger.error('Error loading jobs', error);
