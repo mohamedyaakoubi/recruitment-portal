@@ -40,11 +40,11 @@ describe('POST /api/check-candidate', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.exists).toBe(false);
-    expect(data.applications).toEqual([]);
-    expect(data.count).toBe(0);
+    expect(result.data.exists).toBe(false);
+    expect(result.data.applications).toEqual([]);
+    expect(result.data.count).toBe(0);
   });
 
   it('should return exists=true with applications when candidate found', async () => {
@@ -68,12 +68,12 @@ describe('POST /api/check-candidate', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.exists).toBe(true);
-    expect(data.applications.length).toBe(1);
-    expect(data.applications[0].id).toBe('123');
-    expect(data.count).toBe(1);
+    expect(result.data.exists).toBe(true);
+    expect(result.data.applications.length).toBe(1);
+    expect(result.data.applications[0].id).toBe('123');
+    expect(result.data.count).toBe(1);
   });
 
   it('should handle database errors', async () => {

@@ -8,3 +8,5 @@ applyTo: '**'
 - Respect the logger.ts architecture.
 
 - We only generate production ready code no skips or temporary fixes.
+
+- Wheenevr you write code always write tests for it or update existing tests to cover new functionality after executing them to see if they fai

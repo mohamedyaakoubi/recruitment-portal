@@ -38,10 +38,10 @@ describe('POST /api/verify-email', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.isValid).toBe(true);
-    expect(data.email).toBe('test@example.com');
+    expect(result.data.isValid).toBe(true);
+    expect(result.data.email).toBe('test@example.com');
     expect(emailVerification.verifyEmail).toHaveBeenCalledWith('test@example.com');
   });
 
@@ -60,10 +60,10 @@ describe('POST /api/verify-email', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.isValid).toBe(false);
-    expect(data.reason).toBe('Invalid domain');
+    expect(result.data.isValid).toBe(false);
+    expect(result.data.reason).toBe('Invalid domain');
   });
 
   it('should handle service errors', async () => {

@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { scoreCandidate } from '@/services/scoring';
 import logger from '@/lib/logger';
 import { scoreCandidateSchema } from '@/lib/validations';
+import { successResponse, ApiErrors, errorResponse } from '@/lib/apiResponse';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,10 +12,7 @@ export async function POST(request: NextRequest) {
     const validatedData = scoreCandidateSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validatedData.error.flatten() },
-        { status: 400 }
-      );
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
 
     const { candidateId, jobId, jobTitle, jobDescription } = validatedData.data;
@@ -25,8 +23,7 @@ export async function POST(request: NextRequest) {
 
     logger.info('Scoring completed', { candidateId, score: scoringResult.score });
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       score: scoringResult.score,
       analysis: scoringResult.analysis,
       keyStrengths: scoringResult.keyStrengths,
@@ -40,20 +37,12 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
     if (errorMessage.includes('AI Scoring is not configured')) {
-      return NextResponse.json(
-        {
-          error: 'AI Scoring is not configured on the server.',
-        },
-        { status: 503 }
-      );
+      return errorResponse('AI Scoring is not configured on the server.', {
+        status: 503,
+        code: 'SERVICE_UNAVAILABLE',
+      });
     }
 
-    return NextResponse.json(
-      {
-        error: 'Failed to score candidate with Gemini 2.5 Pro',
-        details: errorMessage,
-      },
-      { status: 500 }
-    );
+    return ApiErrors.internal('Failed to score candidate with Gemini 2.5 Pro', error);
   }
 }

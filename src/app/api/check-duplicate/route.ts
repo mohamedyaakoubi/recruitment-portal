@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import logger from '@/lib/logger';
 import { checkDuplicateSchema } from '@/lib/validations';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,10 +10,7 @@ export async function POST(request: NextRequest) {
     const validatedData = checkDuplicateSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validatedData.error.flatten() },
-        { status: 400 }
-      );
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
 
     const { email, jobId, jobCategory } = validatedData.data;
@@ -34,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (!duplicateSnapshot.empty) {
       const lastApplicationDoc = duplicateSnapshot.docs[0];
       if (!lastApplicationDoc) {
-        return NextResponse.json({
+        return successResponse({
           isDuplicate: false,
           message: 'No duplicate applications found',
           lastApplicationDate: null,
@@ -43,7 +41,7 @@ export async function POST(request: NextRequest) {
       const lastApplication = lastApplicationDoc.data();
       const lastSubmissionDate = lastApplication.submittedAt?.toDate();
 
-      return NextResponse.json({
+      return successResponse({
         isDuplicate: true,
         message: `You have already applied for this position on ${lastSubmissionDate?.toLocaleDateString()}. You can apply again after 6 months.`,
         lastApplicationDate: lastSubmissionDate?.toISOString(),
@@ -62,23 +60,20 @@ export async function POST(request: NextRequest) {
     const categorySnapshot = await categoryQuery.get();
 
     if (categorySnapshot.size >= 3) {
-      return NextResponse.json({
+      return successResponse({
         isDuplicate: true,
         message: `You have reached the maximum number of applications (3) for the "${jobCategory}" category this month.`,
         lastApplicationDate: null,
       });
     }
 
-    return NextResponse.json({
+    return successResponse({
       isDuplicate: false,
       message: 'No duplicate applications found',
       lastApplicationDate: null,
     });
   } catch (error) {
     logger.error('Check duplicate error', error);
-    return NextResponse.json(
-      { error: 'Internal server error while checking duplicates' },
-      { status: 500 }
-    );
+    return ApiErrors.internal('Internal server error while checking duplicates', error);
   }
 }

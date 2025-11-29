@@ -1,18 +1,18 @@
 // src/app/api/jobs/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getJobs, createJob, updateJob, deleteJob } from '@/services/jobs';
 import logger from '@/lib/logger';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('activeOnly') === 'true';
     const { jobs, categories } = await getJobs(activeOnly);
-    return NextResponse.json({ jobs, categories });
+    return successResponse({ jobs, categories });
   } catch (error) {
     logger.error('Error fetching jobs', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch jobs';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return ApiErrors.internal('Failed to fetch jobs', error);
   }
 }
 
@@ -20,15 +20,10 @@ export async function POST(request: NextRequest) {
   try {
     const jobData = await request.json();
     const { jobId } = await createJob(jobData);
-    return NextResponse.json({
-      success: true,
-      jobId,
-      message: 'Job created successfully',
-    });
+    return successResponse({ jobId }, { message: 'Job created successfully' });
   } catch (error) {
     logger.error('Error creating job', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create job';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return ApiErrors.internal('Failed to create job', error);
   }
 }
 
@@ -36,14 +31,10 @@ export async function PUT(request: NextRequest) {
   try {
     const { jobId, ...jobData } = await request.json();
     await updateJob(jobId, jobData);
-    return NextResponse.json({
-      success: true,
-      message: 'Job updated successfully',
-    });
+    return successResponse({ jobId }, { message: 'Job updated successfully' });
   } catch (error) {
     logger.error('Error updating job', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update job';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return ApiErrors.internal('Failed to update job', error);
   }
 }
 
@@ -54,13 +45,9 @@ export async function DELETE(request: NextRequest) {
     if (jobId) {
       await deleteJob(jobId);
     }
-    return NextResponse.json({
-      success: true,
-      message: 'Job deleted successfully',
-    });
+    return successResponse({ jobId }, { message: 'Job deleted successfully' });
   } catch (error) {
     logger.error('Error deleting job', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to delete job';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return ApiErrors.internal('Failed to delete job', error);
   }
 }

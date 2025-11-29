@@ -1,8 +1,9 @@
 // src/app/api/cancel-interview/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { cancelInterview } from '@/services/interview';
 import logger from '@/lib/logger';
 import { cancelInterviewSchema } from '@/lib/validations';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,28 +11,16 @@ export async function POST(request: NextRequest) {
     const validatedData = cancelInterviewSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validatedData.error.flatten() },
-        { status: 400 }
-      );
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
 
     const { candidateId, reason } = validatedData.data;
 
     await cancelInterview(candidateId, reason || 'Cancelled by admin');
 
-    return NextResponse.json({
-      success: true,
-      message: 'Interview cancelled successfully',
-    });
+    return successResponse({ candidateId }, { message: 'Interview cancelled successfully' });
   } catch (error) {
     logger.error('Error cancelling interview', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to cancel interview',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return ApiErrors.internal('Failed to cancel interview', error);
   }
 }

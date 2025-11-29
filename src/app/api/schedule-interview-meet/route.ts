@@ -1,8 +1,9 @@
 // src/app/api/schedule-interview-meet/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { scheduleInterview } from '@/services/interview';
 import logger from '@/lib/logger';
 import { scheduleInterviewSchema } from '@/lib/validations';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,10 +11,7 @@ export async function POST(request: NextRequest) {
     const validatedData = scheduleInterviewSchema.safeParse(body);
 
     if (!validatedData.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validatedData.error.flatten() },
-        { status: 400 }
-      );
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
 
     const {
@@ -41,19 +39,9 @@ export async function POST(request: NextRequest) {
       request.nextUrl.origin
     );
 
-    return NextResponse.json({
-      success: true,
-      message: 'Interview scheduled successfully with Google Meet',
-      data,
-    });
+    return successResponse(data, { message: 'Interview scheduled successfully with Google Meet' });
   } catch (error) {
     logger.error('Error scheduling interview', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to schedule interview',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
+    return ApiErrors.internal('Failed to schedule interview', error);
   }
 }

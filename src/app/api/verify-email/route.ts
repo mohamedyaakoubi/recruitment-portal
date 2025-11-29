@@ -1,23 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { verifyEmail } from '@/services/emailVerification';
 import logger from '@/lib/logger';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
 
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+      return ApiErrors.badRequest('Email is required');
     }
 
     const verificationResult = await verifyEmail(email);
 
-    return NextResponse.json(verificationResult);
+    return successResponse(verificationResult);
   } catch (error) {
     logger.error('Email verification error', error);
-    return NextResponse.json(
-      { error: 'Internal server error during email verification' },
-      { status: 500 }
-    );
+    return ApiErrors.internal('Internal server error during email verification', error);
   }
 }

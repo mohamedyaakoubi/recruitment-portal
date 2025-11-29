@@ -3,6 +3,7 @@ import { exportCandidates } from '@/services/candidate';
 import { generateCSV } from '@/lib/csvUtils';
 import { format } from 'date-fns';
 import logger from '@/lib/logger';
+import { ApiErrors } from '@/lib/apiResponse';
 
 export async function GET(request: NextRequest) {
   try {
@@ -108,13 +109,6 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     logger.error('Export candidates error', error);
-    return NextResponse.json(
-      {
-        error: 'Failed to export candidates',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      },
-      { status: 500 }
-    );
+    return ApiErrors.internal('Failed to export candidates', error);
   }
 }

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import {
   basicPhoneValidation,
   validatePhoneWithRegex,
@@ -7,6 +7,7 @@ import {
   updateRateLimit,
 } from '@/lib/phoneValidationService';
 import logger from '@/lib/logger';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
 
 // 🔥 MAIN API HANDLER
 export async function POST(request: NextRequest) {
@@ -14,10 +15,7 @@ export async function POST(request: NextRequest) {
     const { countryCode, phoneNumber } = await request.json();
 
     if (!countryCode || !phoneNumber) {
-      return NextResponse.json(
-        { error: 'Country code and phone number are required' },
-        { status: 400 }
-      );
+      return ApiErrors.badRequest('Country code and phone number are required');
     }
 
     const clientIP =
@@ -34,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     if (!basicResult.isValid) {
       logger.debug('Basic validation failed', { phone: fullPhone });
-      return NextResponse.json({
+      return successResponse({
         ...basicResult,
         message: 'Phone number format is invalid. Please check your input.',
       });
@@ -54,7 +52,7 @@ export async function POST(request: NextRequest) {
       if (clientIPFirst) {
         updateRateLimit(clientIPFirst, fullPhone, false);
       }
-      return NextResponse.json({
+      return successResponse({
         ...regexResult,
         message: `Phone number format is invalid for ${regexResult.country?.name || 'this country'}. Please check your input.`,
         suggestion: 'Please verify your phone number format and country code.',
@@ -67,7 +65,7 @@ export async function POST(request: NextRequest) {
     const clientIPFirst = clientIP.split(',')[0];
     if (!clientIPFirst) {
       logger.error('No client IP found');
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+      return ApiErrors.badRequest('Invalid request');
     }
     const rateLimit = checkRateLimit(clientIPFirst, fullPhone);
 
@@ -75,14 +73,14 @@ export async function POST(request: NextRequest) {
       logger.debug('Rate limit reached', { reason: rateLimit.reason, phone: fullPhone });
 
       if (rateLimit.isFailedNumber) {
-        return NextResponse.json({
+        return successResponse({
           ...regexResult,
           warning: 'This phone number was previously validated. Using cached result.',
           message: '⚠️ Phone number format appears valid (using pattern matching)',
         });
       }
 
-      return NextResponse.json({
+      return successResponse({
         ...regexResult,
         warning: 'API limit reached. Using pattern matching validation.',
         message: '⚠️ Phone number format appears valid (using pattern matching)',
@@ -104,7 +102,7 @@ export async function POST(request: NextRequest) {
           updateRateLimit(clientIPFirst, fullPhone, false);
         }
 
-        return NextResponse.json({
+        return successResponse({
           ...apiResult,
           message: apiResult.isValid
             ? `✅ Phone number verified for ${apiResult.country?.name || 'your country'}${apiResult.carrier ? ` (${apiResult.carrier})` : ''}`
@@ -117,7 +115,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       logger.warn('Abstract API failed, using regex result', { phone: fullPhone, error });
 
-      return NextResponse.json({
+      return successResponse({
         ...regexResult,
         warning: 'Phone verification service temporarily unavailable. Using pattern matching.',
         message: '⚠️ Phone number format appears valid (verification service unavailable)',
@@ -132,7 +130,7 @@ export async function POST(request: NextRequest) {
       const fullPhone = `${countryCode}${cleanPhone}`;
       const basicResult = basicPhoneValidation(fullPhone);
 
-      return NextResponse.json({
+      return successResponse({
         ...basicResult,
         warning: 'Validation service temporarily unavailable. Using basic format check.',
         message: basicResult.isValid
@@ -141,15 +139,7 @@ export async function POST(request: NextRequest) {
         error: 'Service temporarily unavailable',
       });
     } catch {
-      return NextResponse.json(
-        {
-          isValid: false,
-          error: 'Service temporarily unavailable',
-          fallbackUsed: 'failed',
-          validationLevel: 'low',
-        },
-        { status: 500 }
-      );
+      return ApiErrors.internal('Service temporarily unavailable');
     }
   }
 }

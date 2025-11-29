@@ -33,10 +33,10 @@ describe('GET /api/jobs', () => {
     } as NextRequest;
 
     const response = await GET(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.jobs).toEqual(mockJobs);
-    expect(data.categories).toEqual(['Engineering']);
+    expect(result.data.jobs).toEqual(mockJobs);
+    expect(result.data.categories).toEqual(['Engineering']);
     expect(jobsService.getJobs).toHaveBeenCalledWith(false);
   });
 
@@ -67,10 +67,10 @@ describe('GET /api/jobs', () => {
     } as NextRequest;
 
     const response = await GET(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.jobs).toEqual([]);
-    expect(data.categories).toEqual([]);
+    expect(result.data.jobs).toEqual([]);
+    expect(result.data.categories).toEqual([]);
   });
 
   it('should handle database errors', async () => {
@@ -81,9 +81,9 @@ describe('GET /api/jobs', () => {
     } as NextRequest;
 
     const response = await GET(request);
-    const data = await response.json();
+    const result = await response.json();
 
     expect(response.status).toBe(500);
-    expect(data.error).toBe('Database error');
+    expect(result.error).toBe('Failed to fetch jobs');
   });
 });

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { sendApplicationConfirmationEmail } from '@/services/email';
 import logger from '@/lib/logger';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,13 +10,8 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!candidateEmail || !candidateName || !jobTitle || !applicationId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            'Missing required fields: candidateEmail, candidateName, jobTitle, and applicationId are required',
-        },
-        { status: 400 }
+      return ApiErrors.badRequest(
+        'Missing required fields: candidateEmail, candidateName, jobTitle, and applicationId are required'
       );
     }
 
@@ -33,19 +29,9 @@ export async function POST(request: NextRequest) {
       submissionDate,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Confirmation email sent successfully',
-    });
+    return successResponse({ applicationId }, { message: 'Confirmation email sent successfully' });
   } catch (error) {
     logger.error('Error in send-confirmation-email API', error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to send confirmation email',
-      },
-      { status: 500 }
-    );
+    return ApiErrors.internal('Failed to send confirmation email', error);
   }
 }

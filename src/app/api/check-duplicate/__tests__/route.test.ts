@@ -67,10 +67,10 @@ describe('POST /api/check-duplicate', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.isDuplicate).toBe(true);
-    expect(data.message).toContain('already applied');
+    expect(result.data.isDuplicate).toBe(true);
+    expect(result.data.message).toContain('already applied');
   });
 
   it('should detect category limit exceeded', async () => {
@@ -98,10 +98,10 @@ describe('POST /api/check-duplicate', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.isDuplicate).toBe(true);
-    expect(data.message).toContain('maximum number of applications');
+    expect(result.data.isDuplicate).toBe(true);
+    expect(result.data.message).toContain('maximum number of applications');
   });
 
   it('should allow application when no duplicates found', async () => {
@@ -128,10 +128,10 @@ describe('POST /api/check-duplicate', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.isDuplicate).toBe(false);
-    expect(data.message).toBe('No duplicate applications found');
+    expect(result.data.isDuplicate).toBe(false);
+    expect(result.data.message).toBe('No duplicate applications found');
   });
 
   it('should handle database errors', async () => {

@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import logger from '@/lib/logger';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
 
 interface CandidateApplication {
   id: string;
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     const { email } = await request.json();
 
     if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+      return ApiErrors.badRequest('Email is required');
     }
 
     const searchEmail = email.toLowerCase().trim();
@@ -99,15 +100,12 @@ export async function POST(request: NextRequest) {
 
     logger.info('Found applications', { count: applications.length, email: searchEmail });
 
-    return NextResponse.json({
+    return successResponse({
       applications,
       count: applications.length,
     });
   } catch (error) {
     logger.error('Get candidate applications error', error);
-    return NextResponse.json(
-      { error: 'Internal server error while fetching applications' },
-      { status: 500 }
-    );
+    return ApiErrors.internal('Internal server error while fetching applications', error);
   }
 }

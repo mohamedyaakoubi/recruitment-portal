@@ -44,10 +44,10 @@ describe('POST /api/get-candidate-applications', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.applications).toEqual([]);
-    expect(data.count).toBe(0);
+    expect(result.data.applications).toEqual([]);
+    expect(result.data.count).toBe(0);
   });
 
   it('should return applications for existing candidate', async () => {
@@ -81,12 +81,12 @@ describe('POST /api/get-candidate-applications', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.applications.length).toBe(1);
-    expect(data.applications[0].id).toBe('123');
-    expect(data.applications[0].fullName).toBe('John Doe');
-    expect(data.count).toBe(1);
+    expect(result.data.applications.length).toBe(1);
+    expect(result.data.applications[0].id).toBe('123');
+    expect(result.data.applications[0].fullName).toBe('John Doe');
+    expect(result.data.count).toBe(1);
   });
 
   it('should handle database errors', async () => {

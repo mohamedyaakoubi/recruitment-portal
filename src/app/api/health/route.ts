@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { successResponse } from '@/lib/apiResponse';
 
 export async function GET() {
   const healthCheck = {
@@ -8,5 +8,5 @@ export async function GET() {
     environment: process.env.NODE_ENV,
   };
 
-  return NextResponse.json(healthCheck, { status: 200 });
+  return successResponse(healthCheck);
 }

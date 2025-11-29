@@ -42,10 +42,10 @@ describe('POST /api/score-candidate', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.score).toBe(85);
-    expect(data.analysis).toBeDefined();
+    expect(result.data.score).toBe(85);
+    expect(result.data.analysis).toBeDefined();
   });
 
   it('should handle scoring errors', async () => {

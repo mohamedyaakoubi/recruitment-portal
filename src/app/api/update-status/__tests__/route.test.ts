@@ -49,11 +49,10 @@ describe('POST /api/update-status', () => {
     } as unknown as NextRequest;
 
     const response = await POST(request);
-    const data = await response.json();
+    const result = await response.json();
 
-    expect(data.success).toBe(true);
-    expect(data.newStatus).toBe('approved');
-    expect(data.emailSent).toBe(true);
+    expect(result.data.newStatus).toBe('approved');
+    expect(result.data.emailSent).toBe(true);
     expect(candidateService.updateCandidateStatus).toHaveBeenCalledWith(
       '123',
       'approved',
