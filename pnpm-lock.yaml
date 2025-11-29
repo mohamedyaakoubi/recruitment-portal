@@ -99,6 +99,9 @@ importers:
       text-encoding:
         specifier: ^0.7.0
         version: 0.7.0
+      uuid:
+        specifier: ^13.0.0
+        version: 13.0.0
       whatwg-fetch:
         specifier: ^3.6.20
         version: 3.6.20
@@ -121,6 +124,9 @@ importers:
       '@eslint/eslintrc':
         specifier: ^3
         version: 3.3.1
+      '@eslint/js':
+        specifier: ^9.39.1
+        version: 9.39.1
       '@next/eslint-plugin-next':
         specifier: ^16.0.4
         version: 16.0.5
@@ -151,6 +157,9 @@ importers:
       '@types/react-dom':
         specifier: ^18
         version: 18.3.7(@types/react@18.3.27)
+      '@types/uuid':
+        specifier: ^11.0.0
+        version: 11.0.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.48.0
         version: 8.48.0(@typescript-eslint/parser@8.48.0(eslint@9.39.1(jiti@1.21.7))(typescript@5.8.3))(eslint@9.39.1(jiti@1.21.7))(typescript@5.8.3)
@@ -2123,6 +2132,10 @@ packages:
 
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
+
+  '@types/uuid@11.0.0':
+    resolution: {integrity: sha512-HVyk8nj2m+jcFRNazzqyVKiZezyhDKrGUA3jlEcg/nZ6Ms+qHwocba1Y/AaVaznJTAM9xpdFSh+ptbNrhOGvZA==}
+    deprecated: This is a stub types definition. uuid provides its own type definitions, so you do not need this installed.
 
   '@types/warning@3.0.3':
     resolution: {integrity: sha512-D1XC7WK8K+zZEveUPY+cf4+kgauk8N4eHr/XIHXGlGYkHLud6hK9lYfZk1ry1TNh798cZUCgb6MqGEG8DkJt6Q==}
@@ -4845,6 +4858,10 @@ packages:
     resolution: {integrity: sha512-0/A9rDy9P7cJ+8w1c9WD9V//9Wj15Ce2MPz8Ri6032usz+NfePxx5AcN3bN+r6ZL6jEo066/yNYB3tn4pQEx+A==}
     hasBin: true
 
+  uuid@13.0.0:
+    resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
+    hasBin: true
+
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
@@ -7132,6 +7149,10 @@ snapshots:
 
   '@types/trusted-types@2.0.7':
     optional: true
+
+  '@types/uuid@11.0.0':
+    dependencies:
+      uuid: 13.0.0
 
   '@types/warning@3.0.3': {}
 
@@ -10349,6 +10370,8 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@11.1.0: {}
+
+  uuid@13.0.0: {}
 
   uuid@8.3.2:
     optional: true
