@@ -21,3 +21,5 @@ export type {
   CardContentProps,
   CardFooterProps,
 } from './CardComponents';
+
+export { default as ErrorBoundary } from './ErrorBoundary';

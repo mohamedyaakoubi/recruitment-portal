@@ -68,7 +68,9 @@ export const useCandidateForm = () => {
     async (countryCode: string, phoneNumber: string): Promise<boolean> => {
       // 🔥 CRITICAL: Skip validation entirely for existing candidates
       if (isExistingCandidate) {
-        logger.debug('Skipping phone validation for existing candidate');
+        if (process.env.NODE_ENV === 'development') {
+          logger.debug('Skipping phone validation for existing candidate');
+        }
         setPhoneValidation({
           isValid: true, // Assume valid since it was previously accepted
           isValidating: false,
@@ -157,11 +159,13 @@ export const useCandidateForm = () => {
 
   // 🔥 FIXED: Single useEffect with proper debouncing
   useEffect(() => {
-    logger.debug('Phone validation useEffect triggered', {
-      phone: phoneNumber,
-      country: countryCode,
-      existing: isExistingCandidate,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Phone validation useEffect triggered', {
+        phone: phoneNumber,
+        country: countryCode,
+        existing: isExistingCandidate,
+      });
+    }
 
     // Skip validation entirely for existing candidates
     if (isExistingCandidate) {
@@ -194,19 +198,27 @@ export const useCandidateForm = () => {
 
     // Only validate for new candidates with valid input
     if (phoneNumber.trim() && countryCode && phoneNumber.trim().length >= 6) {
-      logger.debug('Setting up debounced validation', {
-        fullPhone: `${countryCode}${phoneNumber}`,
-      });
-
-      const timeoutId = setTimeout(() => {
-        logger.debug('Executing debounced validation', {
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Setting up debounced validation', {
           fullPhone: `${countryCode}${phoneNumber}`,
         });
+      }
+
+      const timeoutId = setTimeout(() => {
+        if (process.env.NODE_ENV === 'development') {
+          logger.debug('Executing debounced validation', {
+            fullPhone: `${countryCode}${phoneNumber}`,
+          });
+        }
         validatePhoneNumber(countryCode, phoneNumber);
       }, 2000); // 🔥 INCREASED: 2 seconds debounce to prevent excessive calls
 
       return () => {
-        logger.debug('Clearing validation timeout', { fullPhone: `${countryCode}${phoneNumber}` });
+        if (process.env.NODE_ENV === 'development') {
+          logger.debug('Clearing validation timeout', {
+            fullPhone: `${countryCode}${phoneNumber}`,
+          });
+        }
         clearTimeout(timeoutId);
       };
     }
@@ -611,7 +623,9 @@ export const useCandidateForm = () => {
 
     // Phone validation only for new candidates
     if (!isExistingCandidate) {
-      logger.debug('Starting phone validation before submission for new candidate');
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Starting phone validation before submission for new candidate');
+      }
       const isPhoneValid = await validatePhoneNumber(countryCode, phoneNumber);
 
       if (!isPhoneValid) {
@@ -619,7 +633,9 @@ export const useCandidateForm = () => {
         return;
       }
     } else {
-      logger.debug('Skipping phone validation for existing candidate');
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Skipping phone validation for existing candidate');
+      }
     }
 
     // Enhanced validation with specific missing field messages
@@ -642,29 +658,31 @@ export const useCandidateForm = () => {
     if (!passportFile) missingFields.push('Passport/ID');
 
     // Debug log
-    logger.debug('Form validation debug', {
-      firstName,
-      lastName,
-      firstNameValid: !firstNameError,
-      lastNameValid: !lastNameError,
-      candidateEmail,
-      gender,
-      countryCode,
-      phoneNumber,
-      phoneValidation,
-      dateOfBirth,
-      city,
-      country,
-      nationality,
-      selectedCategory,
-      jobTitle,
-      specialty,
-      cvFile: cvFile ? cvFile.name : 'Missing',
-      passportFile: passportFile ? passportFile.name : 'Missing',
-      availableSpecialties,
-      specialtyValid: availableSpecialties.includes(specialty),
-      isExistingCandidate,
-    });
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Form validation debug', {
+        firstName,
+        lastName,
+        firstNameValid: !firstNameError,
+        lastNameValid: !lastNameError,
+        candidateEmail,
+        gender,
+        countryCode,
+        phoneNumber,
+        phoneValidation,
+        dateOfBirth,
+        city,
+        country,
+        nationality,
+        selectedCategory,
+        jobTitle,
+        specialty,
+        cvFile: cvFile ? cvFile.name : 'Missing',
+        passportFile: passportFile ? passportFile.name : 'Missing',
+        availableSpecialties,
+        specialtyValid: availableSpecialties.includes(specialty),
+        isExistingCandidate,
+      });
+    }
 
     if (missingFields.length > 0) {
       setError(`Missing required fields: ${missingFields.join(', ')}`);

@@ -5,6 +5,7 @@
 
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import logger from './logger';
 
 // Fallback to in-memory for development
 let ratelimit: Ratelimit | null = null;
@@ -39,7 +40,7 @@ function getRateLimiter(): Ratelimit | null {
 
       return ratelimit;
     } catch (error) {
-      console.error('Failed to initialize Upstash rate limiter:', error);
+      logger.error('Failed to initialize Upstash rate limiter', error);
       return null;
     }
   }
@@ -114,7 +115,7 @@ export async function checkRateLimit(
         reset: result.reset,
       };
     } catch (error) {
-      console.error('Rate limit check failed, falling back to in-memory:', error);
+      logger.error('Rate limit check failed, falling back to in-memory', error);
       // Fall through to in-memory implementation
     }
   }

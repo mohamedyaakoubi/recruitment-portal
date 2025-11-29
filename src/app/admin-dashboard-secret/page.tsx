@@ -13,6 +13,7 @@ import CandidateFilters from '../components/CandidateFilters';
 import CandidateManagement from '../components/admin-dashboard/CandidateManagement';
 import CalendarSection from '../components/admin-dashboard/CalendarSection';
 import DashboardModals from '../components/admin-dashboard/DashboardModals';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 
 function DashboardContent() {
   const {
@@ -217,5 +218,9 @@ function DashboardContent() {
 }
 
 export default function AdminDashboard() {
-  return <DashboardContent />;
+  return (
+    <ErrorBoundary>
+      <DashboardContent />
+    </ErrorBoundary>
+  );
 }

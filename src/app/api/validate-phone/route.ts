@@ -45,27 +45,37 @@ export async function POST(request: NextRequest) {
     logger.info('Starting phone validation', { phone: fullPhone });
 
     // 🔥 STEP 1: Basic format validation
-    logger.debug('Phone validation step 1: Basic format');
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Phone validation step 1: Basic format');
+    }
     const basicResult = basicPhoneValidation(fullPhone);
 
     if (!basicResult.isValid) {
-      logger.debug('Basic validation failed', { phone: fullPhone });
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Basic validation failed', { phone: fullPhone });
+      }
       return successResponse({
         ...basicResult,
         message: 'Phone number format is invalid. Please check your input.',
       });
     }
-    logger.debug('Basic validation passed', { phone: fullPhone });
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Basic validation passed', { phone: fullPhone });
+    }
 
     // 🔥 STEP 2: Regex pattern validation
-    logger.debug('Phone validation step 2: Regex pattern');
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Phone validation step 2: Regex pattern');
+    }
     const regexResult = validatePhoneWithRegex(fullPhone);
 
     if (!regexResult.isValid) {
-      logger.debug('Regex validation failed', {
-        phone: fullPhone,
-        country: regexResult.country?.name,
-      });
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Regex validation failed', {
+          phone: fullPhone,
+          country: regexResult.country?.name,
+        });
+      }
       const clientIPFirst = clientIP.split(',')[0];
       if (clientIPFirst) {
         updateRateLimit(clientIPFirst, fullPhone, false);
@@ -76,10 +86,14 @@ export async function POST(request: NextRequest) {
         suggestion: 'Please verify your phone number format and country code.',
       });
     }
-    logger.debug('Regex validation passed', { phone: fullPhone });
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Regex validation passed', { phone: fullPhone });
+    }
 
     // 🔥 STEP 3: Abstract API validation
-    logger.debug('Phone validation step 3: Checking API rate limits');
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Phone validation step 3: Checking API rate limits');
+    }
     const clientIPFirst = clientIP.split(',')[0];
     if (!clientIPFirst) {
       logger.error('No client IP found');
@@ -88,7 +102,9 @@ export async function POST(request: NextRequest) {
     const rateLimit = checkRateLimit(clientIPFirst, fullPhone);
 
     if (!rateLimit.allowed) {
-      logger.debug('Rate limit reached', { reason: rateLimit.reason, phone: fullPhone });
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Rate limit reached', { reason: rateLimit.reason, phone: fullPhone });
+      }
 
       if (rateLimit.isFailedNumber) {
         return successResponse({
@@ -108,7 +124,9 @@ export async function POST(request: NextRequest) {
     // Try Abstract API
     try {
       if (process.env.ABSTRACT_PHONE_API_KEY) {
-        logger.debug('Calling Abstract API for phone validation', { phone: fullPhone });
+        if (process.env.NODE_ENV === 'development') {
+          logger.debug('Calling Abstract API for phone validation', { phone: fullPhone });
+        }
         const apiResult = await validatePhoneWithAbstractAPI(fullPhone);
         if (clientIPFirst) {
           updateRateLimit(clientIPFirst, fullPhone, true);
