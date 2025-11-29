@@ -29,7 +29,9 @@ async function scoreCandidateApi(params: ScoringParams): Promise<ScoringResult> 
     throw new Error(error.error || 'Scoring failed');
   }
 
-  return response.json();
+  const result = await response.json();
+  // Handle wrapped API response: { success: true, data: { score, analysis, ... } }
+  return result.data || result;
 }
 
 /**

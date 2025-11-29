@@ -16,7 +16,10 @@ async function fetchJobs(activeOnly: boolean = true): Promise<JobsResponse> {
   const result = await response.json();
   // Handle wrapped API response: { success: true, data: { jobs, categories } }
   const jobsData = result.data || result;
-  return jobsData;
+  return {
+    jobs: Array.isArray(jobsData?.jobs) ? jobsData.jobs : [],
+    categories: Array.isArray(jobsData?.categories) ? jobsData.categories : [],
+  };
 }
 
 // Create job

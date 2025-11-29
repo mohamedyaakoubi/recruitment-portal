@@ -35,9 +35,11 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
     setError(null);
     try {
       const response = await fetch('/api/jobs');
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to fetch jobs');
-      setJobs(data.jobs || []);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to fetch jobs');
+      // Handle wrapped API response: { success: true, data: { jobs, categories } }
+      const jobsData = result.data || result;
+      setJobs(Array.isArray(jobsData?.jobs) ? jobsData.jobs : []);
     } catch (err) {
       logger.error('Error fetching jobs', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch jobs');

@@ -28,9 +28,12 @@ const ScoringModal: React.FC<ScoringModalProps> = ({
     setLoadingJobs(true);
     try {
       const response = await fetch('/api/jobs');
-      const data = await response.json();
+      const result = await response.json();
       if (response.ok) {
-        const activeJobs = data.jobs.filter((job: Job) => job.isActive);
+        // Handle wrapped API response: { success: true, data: { jobs, categories } }
+        const jobsData = result.data || result;
+        const jobsList = Array.isArray(jobsData?.jobs) ? jobsData.jobs : [];
+        const activeJobs = jobsList.filter((job: Job) => job.isActive);
         setJobs(activeJobs);
       }
     } catch (error) {

@@ -443,10 +443,12 @@ export const useCandidateForm = (emailParam?: string) => {
         if (response.ok) {
           // Handle wrapped API response: { success: true, data: { jobs, categories } }
           const jobsData = result.data || result;
-          setJobs(jobsData.jobs || []);
+          const jobsList = jobsData?.jobs || [];
+          setJobs(Array.isArray(jobsList) ? jobsList : []);
         }
       } catch (error) {
         logger.error('Error loading jobs', error);
+        setJobs([]); // Ensure jobs is always an array on error
       }
     };
     loadJobs();

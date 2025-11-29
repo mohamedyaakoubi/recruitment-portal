@@ -50,13 +50,19 @@ export const useEditCandidateForm = (
       if (response.ok) {
         // Handle wrapped API response: { success: true, data: { jobs, categories } }
         const jobsData = result.data || result;
-        setJobs(jobsData.jobs || []);
-        setJobCategories(jobsData.categories || []);
+        const jobsList = jobsData?.jobs || [];
+        const categoriesList = jobsData?.categories || [];
+        setJobs(Array.isArray(jobsList) ? jobsList : []);
+        setJobCategories(Array.isArray(categoriesList) ? categoriesList : []);
       } else {
         logger.error('Failed to fetch jobs', new Error(result.error), { response: result });
+        setJobs([]);
+        setJobCategories([]);
       }
     } catch (error) {
       logger.error('Error fetching jobs', error);
+      setJobs([]);
+      setJobCategories([]);
     } finally {
       setLoadingJobs(false);
     }

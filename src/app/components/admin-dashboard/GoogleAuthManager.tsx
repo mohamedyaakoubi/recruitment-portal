@@ -15,9 +15,11 @@ const GoogleAuthManager = () => {
       try {
         const response = await fetch('/api/google-auth/status');
         if (response.ok) {
-          const data = await response.json();
-          setIsConnected(data.isConnected);
-          setConnectedEmail(data.email);
+          const result = await response.json();
+          // Handle wrapped API response: { success: true, data: { isConnected, email } }
+          const statusData = result.data || result;
+          setIsConnected(statusData.isConnected ?? false);
+          setConnectedEmail(statusData.email ?? null);
         } else {
           setIsConnected(false);
           setConnectedEmail(null);

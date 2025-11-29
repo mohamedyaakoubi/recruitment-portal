@@ -39,7 +39,14 @@ async function scheduleInterviewApi(
     throw new Error(error.error || 'Failed to schedule interview');
   }
 
-  return response.json();
+  const result = await response.json();
+  // Handle wrapped API response: { success: true, data: { interviewDateTime, ... } }
+  const interviewData = result.data || result;
+  return {
+    success: true,
+    message: result.message || 'Interview scheduled successfully',
+    data: interviewData,
+  };
 }
 
 /**
