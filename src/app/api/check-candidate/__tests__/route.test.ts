@@ -15,6 +15,20 @@ vi.mock('@/lib/firebase-admin', () => ({
   })),
 }));
 
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    CANDIDATE_CHECK_FAILED: 'candidate_check_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
+
 describe('POST /api/check-candidate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -29,7 +43,7 @@ describe('POST /api/check-candidate', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Email is required');
+    expect(data.error).toBe('Invalid email address');
   });
 
   it('should return exists=false when candidate not found', async () => {

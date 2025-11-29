@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCsrfToken, generateSessionId } from '@/lib/csrf';
+import logger from '@/lib/logger';
 
 export const runtime = 'nodejs'; // Force Node.js runtime for crypto module
 

@@ -5,6 +5,21 @@ import * as scoringService from '@/services/scoring';
 
 vi.mock('@/services/scoring');
 
+// Mock security logger
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    SCORING_FAILED: 'scoring_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
+
 // Mock auth module
 vi.mock('@/lib/auth', () => ({
   requireAdminAuth: vi.fn(async () => null),

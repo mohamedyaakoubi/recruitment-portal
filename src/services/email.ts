@@ -53,7 +53,16 @@ if (transporter && process.env.NODE_ENV === 'development') {
   });
 }
 
+// Cache email templates for better performance
+const templateCache = new Map<string, string>();
+
 const getTemplate = (templateName: string, type: 'html' | 'txt') => {
+  const cacheKey = `${templateName}.${type}`;
+
+  if (templateCache.has(cacheKey)) {
+    return templateCache.get(cacheKey)!;
+  }
+
   const filePath = path.join(
     process.cwd(),
     'src',
@@ -61,7 +70,11 @@ const getTemplate = (templateName: string, type: 'html' | 'txt') => {
     'emailTemplates',
     `${templateName}.${type}`
   );
-  return readFileSync(filePath, 'utf8');
+
+  const template = readFileSync(filePath, 'utf8');
+  templateCache.set(cacheKey, template);
+
+  return template;
 };
 
 export const sendNotificationEmail = async (

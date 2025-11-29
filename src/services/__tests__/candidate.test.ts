@@ -4,7 +4,8 @@ import { vi } from 'vitest';
  * @jest-environment node
  */
 
-import { calculateAge, updateCandidateStatus, exportCandidates } from '../candidate';
+import { updateCandidateStatus, exportCandidates } from '../candidate';
+import { calculateAge } from '@/lib/dateUtils';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import * as emailService from '../email';
 

@@ -5,6 +5,21 @@ import * as interviewService from '@/services/interview';
 
 vi.mock('@/services/interview');
 
+// Mock security logger
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    INTERVIEW_CANCELLATION_FAILED: 'interview_cancellation_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
+
 // Mock auth module
 vi.mock('@/lib/auth', () => ({
   requireAdminAuth: vi.fn(async () => null),

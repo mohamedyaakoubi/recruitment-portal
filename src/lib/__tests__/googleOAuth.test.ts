@@ -65,7 +65,12 @@ describe('googleOAuth', () => {
       await storeTokens(tokens);
 
       expect(mockDoc).toHaveBeenCalledWith('settings/google_auth_tokens');
-      expect(mockSet).toHaveBeenCalledWith(tokens);
+      expect(mockSet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          encrypted: expect.any(String),
+          updatedAt: expect.any(String),
+        })
+      );
     });
   });
 

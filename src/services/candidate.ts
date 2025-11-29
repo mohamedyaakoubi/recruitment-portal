@@ -5,31 +5,7 @@ import { sendNotificationEmail, sendRejectionEmail } from './email';
 import { format } from 'date-fns';
 import logger from '@/lib/logger';
 import { CANDIDATE_STATUSES } from '@/lib/constants';
-
-// 🔥 NEW: Helper function to calculate age
-export const calculateAge = (dateOfBirth: string): number | null => {
-  if (!dateOfBirth) return null;
-
-  try {
-    const birthDate = new Date(dateOfBirth);
-    const today = new Date();
-
-    // Check if date is valid
-    if (isNaN(birthDate.getTime())) return null;
-
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    // If birth month hasn't occurred this year, or it's the birth month but the day hasn't occurred
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-
-    return age;
-  } catch {
-    return null;
-  }
-};
+import { calculateAge } from '@/lib/utils';
 
 export const updateCandidateStatus = async (
   candidateId: string,

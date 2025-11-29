@@ -5,6 +5,21 @@ import * as emailService from '@/services/email';
 
 vi.mock('@/services/email');
 
+// Mock security logger
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    EMAIL_SEND_FAILED: 'email_send_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
+
 // Mock auth module
 vi.mock('@/lib/auth', () => ({
   requireAdminAuth: vi.fn(async () => null),
@@ -26,7 +41,7 @@ describe('POST /api/send-confirmation-email', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('required');
+    expect(data.error).toBe('Validation failed');
   });
 
   it('should send confirmation email successfully', async () => {

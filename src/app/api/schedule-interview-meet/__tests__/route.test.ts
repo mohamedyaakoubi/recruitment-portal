@@ -4,6 +4,19 @@ import { NextRequest } from 'next/server';
 import * as interviewService from '@/services/interview';
 
 vi.mock('@/services/interview');
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    INTERVIEW_SCHEDULING_FAILED: 'interview_scheduling_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
 
 // Mock auth module
 vi.mock('@/lib/auth', () => ({
@@ -19,15 +32,9 @@ describe('POST /api/schedule-interview-meet', () => {
 
   it('should schedule interview successfully', async () => {
     const mockResult = {
-      interviewDateTime: '2024-02-01T10:00:00Z',
-      endDateTime: '2024-02-01T11:00:00Z',
-      duration: 60,
       meetLink: 'https://meet.google.com/abc-defg-hij',
       calendarEventId: 'event123',
-      emailsSent: {
-        candidate: 'john@example.com',
-        interviewer: 'admin@example.com',
-      },
+      interviewTimestampISO: '2024-02-01T10:00:00Z',
     };
 
     vi.mocked(interviewService.scheduleInterview).mockResolvedValue(mockResult);

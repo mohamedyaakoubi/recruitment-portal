@@ -17,6 +17,20 @@ vi.mock('@/lib/firebase-admin', () => ({
   })),
 }));
 
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    APPLICATION_FETCH_FAILED: 'application_fetch_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
+
 describe('POST /api/get-candidate-applications', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -33,7 +47,7 @@ describe('POST /api/get-candidate-applications', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Email is required');
+    expect(data.error).toBe('Invalid email address');
   });
 
   it('should return empty array when no applications found', async () => {

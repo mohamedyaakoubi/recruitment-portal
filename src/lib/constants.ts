@@ -66,3 +66,9 @@ export const SECURITY_CONFIG = {
   MAX_LOGIN_ATTEMPTS: 5,
   LOGIN_LOCKOUT_DURATION_MS: 15 * 60 * 1000, // 15 minutes
 } as const;
+
+// Re-export constants from submodules for convenience
+export { ERROR_MESSAGES } from './constants/errors';
+export type { ErrorMessageKey } from './constants/errors';
+export { EMAIL_ADDRESSES } from './constants/emails';
+export type { EmailAddress } from './constants/emails';

@@ -2,11 +2,11 @@ import React from 'react';
 import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CandidateFilters from '../CandidateFilters';
-import { Candidate } from '@/types';
+import { createMockCandidate } from '@/__tests__/utils/factories';
 
 // Mock candidates data for testing
-const mockCandidates: Partial<Candidate>[] = [
-  {
+const mockCandidates = [
+  createMockCandidate({
     id: '1',
     fullName: 'Alice Smith',
     city: 'New York',
@@ -17,13 +17,8 @@ const mockCandidates: Partial<Candidate>[] = [
     specialty: 'Frontend',
     age: 28,
     status: 'submitted',
-    email: '',
-    websites: [],
-    cvUrl: '',
-    passportUrl: '',
-    submittedAt: { toMillis: () => 1000 } as any,
-  },
-  {
+  }),
+  createMockCandidate({
     id: '2',
     fullName: 'Bob Johnson',
     city: 'London',
@@ -34,12 +29,7 @@ const mockCandidates: Partial<Candidate>[] = [
     specialty: 'Machine Learning',
     age: 35,
     status: 'interview_scheduled',
-    email: '',
-    websites: [],
-    cvUrl: '',
-    passportUrl: '',
-    submittedAt: { toMillis: () => 2000 } as any,
-  },
+  }),
 ];
 
 describe('CandidateFilters', () => {

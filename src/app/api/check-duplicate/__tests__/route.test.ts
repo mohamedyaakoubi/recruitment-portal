@@ -21,6 +21,20 @@ vi.mock('@/lib/firebase-admin', () => ({
   })),
 }));
 
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    DUPLICATE_CHECK_FAILED: 'duplicate_check_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
+
 describe('POST /api/check-duplicate', () => {
   beforeEach(() => {
     vi.clearAllMocks();

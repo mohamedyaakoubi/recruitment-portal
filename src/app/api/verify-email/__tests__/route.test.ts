@@ -6,6 +6,21 @@ import * as emailVerification from '@/services/emailVerification';
 // Mock the email verification service
 vi.mock('@/services/emailVerification');
 
+// Mock security logger
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    EMAIL_VERIFICATION_FAILED: 'email_verification_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
+
 describe('POST /api/verify-email', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -20,7 +35,7 @@ describe('POST /api/verify-email', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Email is required');
+    expect(data.error).toBe('Invalid email address');
   });
 
   it('should verify email successfully', async () => {

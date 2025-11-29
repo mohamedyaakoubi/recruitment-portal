@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET } from '../route';
+import { POST } from '../route';
 import { NextRequest } from 'next/server';
 import * as candidateService from '@/services/candidate';
 
@@ -7,25 +7,79 @@ vi.mock('@/services/candidate');
 vi.mock('@/lib/csvUtils', () => ({
   generateCSV: vi.fn((candidates) => `CSV data for ${candidates.length} candidates`),
 }));
+vi.mock('@/lib/auth', () => ({
+  requireAdminAuth: vi.fn(() => null),
+}));
+vi.mock('@/lib/csrf-middleware', () => ({
+  withCsrfProtection: (handler: unknown) => handler,
+}));
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    ADMIN_DATA_EXPORTED: 'admin_data_exported',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
 
-describe('GET /api/export-candidates', () => {
+describe('POST /api/export-candidates', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('should export candidates as CSV when format=csv', async () => {
     const mockCandidates = [
-      { id: '1', fullName: 'John Doe', email: 'john@example.com' },
-      { id: '2', fullName: 'Jane Smith', email: 'jane@example.com' },
+      {
+        id: '1',
+        fullName: 'John Doe',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        gender: 'male',
+        phoneNumber: '1234567890',
+        countryCode: '+1',
+        dateOfBirth: '1990-01-01',
+        age: 33,
+        city: 'Test City',
+        country: 'Test Country',
+        nationality: 'Test',
+        doubleNationality: '',
+        jobTitle: 'test-job',
+        jobTitleText: 'Test Job',
+        jobCategory: 'Technology',
+        specialty: 'Test Specialty',
+        websites: [],
+        status: 'submitted',
+        score: null,
+        scoreAnalysis: '',
+        submittedAt: '2024-01-01 00:00:00',
+        interviewDate: '',
+        meetLink: '',
+        calendarEventId: '',
+        meetSpaceId: '',
+        duration: '',
+        cvUrl: '',
+        passportUrl: '',
+        photoUrl: '',
+        applicationSource: 'web_form',
+        lastUpdated: '',
+        lastScoredAt: '',
+      },
     ];
 
     vi.mocked(candidateService.exportCandidates).mockResolvedValue(mockCandidates);
 
     const request = {
-      url: 'http://localhost:3000/api/export-candidates?format=csv',
-    } as NextRequest;
+      url: 'http://localhost:3000/api/export-candidates',
+      json: async () => ({ format: 'csv' }),
+    } as unknown as NextRequest;
 
-    const response = await GET(request);
+    const response = await POST(request);
     const text = await response.text();
 
     expect(response.headers.get('Content-Type')).toContain('text/csv');
@@ -33,15 +87,53 @@ describe('GET /api/export-candidates', () => {
   });
 
   it('should export candidates as JSON by default', async () => {
-    const mockCandidates = [{ id: '1', fullName: 'John Doe', email: 'john@example.com' }];
+    const mockCandidates = [
+      {
+        id: '1',
+        fullName: 'John Doe',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        gender: 'male',
+        phoneNumber: '1234567890',
+        countryCode: '+1',
+        dateOfBirth: '1990-01-01',
+        age: 33,
+        city: 'Test City',
+        country: 'Test Country',
+        nationality: 'Test',
+        doubleNationality: '',
+        jobTitle: 'test-job',
+        jobTitleText: 'Test Job',
+        jobCategory: 'Technology',
+        specialty: 'Test Specialty',
+        websites: [],
+        status: 'submitted',
+        score: null,
+        scoreAnalysis: '',
+        submittedAt: '2024-01-01 00:00:00',
+        interviewDate: '',
+        meetLink: '',
+        calendarEventId: '',
+        meetSpaceId: '',
+        duration: '',
+        cvUrl: '',
+        passportUrl: '',
+        photoUrl: '',
+        applicationSource: 'web_form',
+        lastUpdated: '',
+        lastScoredAt: '',
+      },
+    ];
 
     vi.mocked(candidateService.exportCandidates).mockResolvedValue(mockCandidates);
 
     const request = {
       url: 'http://localhost:3000/api/export-candidates',
-    } as NextRequest;
+      json: async () => ({}),
+    } as unknown as NextRequest;
 
-    const response = await GET(request);
+    const response = await POST(request);
     const data = await response.json();
 
     expect(data.candidates).toBeDefined();
@@ -50,16 +142,54 @@ describe('GET /api/export-candidates', () => {
   });
 
   it('should filter candidates by status', async () => {
-    const mockCandidates = [{ id: '1', fullName: 'John Doe', status: 'approved' }];
+    const mockCandidates = [
+      {
+        id: '1',
+        fullName: 'John Doe',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        gender: 'male',
+        phoneNumber: '1234567890',
+        countryCode: '+1',
+        dateOfBirth: '1990-01-01',
+        age: 33,
+        city: 'Test City',
+        country: 'Test Country',
+        nationality: 'Test',
+        doubleNationality: '',
+        jobTitle: 'test-job',
+        jobTitleText: 'Test Job',
+        jobCategory: 'Technology',
+        specialty: 'Test Specialty',
+        websites: [],
+        status: 'approved',
+        score: null,
+        scoreAnalysis: '',
+        submittedAt: '2024-01-01 00:00:00',
+        interviewDate: '',
+        meetLink: '',
+        calendarEventId: '',
+        meetSpaceId: '',
+        duration: '',
+        cvUrl: '',
+        passportUrl: '',
+        photoUrl: '',
+        applicationSource: 'web_form',
+        lastUpdated: '',
+        lastScoredAt: '',
+      },
+    ];
 
     vi.mocked(candidateService.exportCandidates).mockResolvedValue(mockCandidates);
 
     const request = {
-      url: 'http://localhost:3000/api/export-candidates?status=approved',
-    } as NextRequest;
+      url: 'http://localhost:3000/api/export-candidates',
+      json: async () => ({ status: 'approved' }),
+    } as unknown as NextRequest;
 
-    const response = await GET(request);
-    const data = await response.json();
+    const response = await POST(request);
+    await response.json();
 
     expect(candidateService.exportCandidates).toHaveBeenCalledWith(
       'approved',
@@ -80,9 +210,10 @@ describe('GET /api/export-candidates', () => {
 
     const request = {
       url: 'http://localhost:3000/api/export-candidates',
-    } as NextRequest;
+      json: async () => ({}),
+    } as unknown as NextRequest;
 
-    const response = await GET(request);
+    const response = await POST(request);
     const data = await response.json();
 
     expect(data.candidates).toEqual([]);
@@ -94,9 +225,10 @@ describe('GET /api/export-candidates', () => {
 
     const request = {
       url: 'http://localhost:3000/api/export-candidates',
-    } as NextRequest;
+      json: async () => ({}),
+    } as unknown as NextRequest;
 
-    const response = await GET(request);
+    const response = await POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(500);

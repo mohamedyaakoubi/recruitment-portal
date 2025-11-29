@@ -6,6 +6,21 @@ import * as candidateService from '@/services/candidate';
 // Mock candidate service
 vi.mock('@/services/candidate');
 
+// Mock security logger
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    STATUS_CHANGE_FAILED: 'status_change_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
+
 // Mock auth module
 vi.mock('@/lib/auth', () => ({
   requireAdminAuth: vi.fn(async () => null),
