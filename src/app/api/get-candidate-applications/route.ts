@@ -2,6 +2,11 @@ import { NextRequest } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import logger from '@/lib/logger';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { z } from 'zod';
+
+const getCandidateSchema = z.object({
+  email: z.string().email('Invalid email address').toLowerCase().trim().max(254),
+});
 
 interface CandidateApplication {
   id: string;
@@ -37,21 +42,23 @@ interface CandidateApplication {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    const validatedData = getCandidateSchema.safeParse(body);
 
-    if (!email) {
-      return ApiErrors.badRequest('Email is required');
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Invalid email address', validatedData.error.flatten());
     }
 
-    const searchEmail = email.toLowerCase().trim();
-    logger.info('Fetching applications for email', { email: searchEmail });
+    const { email } = validatedData.data;
+
+    logger.info('Fetching applications for email', { email });
 
     const db = getFirestoreAdmin();
     const candidatesRef = db.collection('candidates');
 
     // Get all applications for this email, ordered by submission date (newest first)
     const snapshot = await candidatesRef
-      .where('email', '==', searchEmail)
+      .where('email', '==', email)
       .orderBy('submittedAt', 'desc')
       .get();
 
@@ -98,7 +105,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    logger.info('Found applications', { count: applications.length, email: searchEmail });
+    logger.info('Found applications', { count: applications.length, email });
 
     return successResponse({
       applications,

@@ -1,14 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getOAuth2Client, storeTokens } from '@/lib/googleOAuth';
+import { getOAuth2Client, storeTokens, validateOAuthState } from '@/lib/googleOAuth';
 import logger from '@/lib/logger';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || '/';
+  const context = extractSecurityContext(request);
+
+  // Validate state parameter (CSRF protection)
+  if (!state || !validateOAuthState(state)) {
+    logger.error('OAuth callback: Invalid or missing state parameter', { state });
+    logSecurityEvent({
+      type: SecurityEventType.CSRF_VALIDATION_FAILED,
+      ...context,
+      details: { reason: 'Invalid OAuth state parameter', flow: 'google_oauth' },
+    });
+    return NextResponse.redirect(`${appUrl}?error=oauth_csrf_failed`);
+  }
 
   if (!code) {
     logger.error('Google auth callback error: No code received');
+    logSecurityEvent({
+      type: SecurityEventType.AUTH_FAILURE,
+      ...context,
+      details: { reason: 'No OAuth code received' },
+    });
     return NextResponse.redirect(`${appUrl}?error=google_auth_failed`);
   }
 

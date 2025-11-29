@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
+import { getOrCreateRequestId, addRequestIdToHeaders } from '@/lib/requestId';
 
 // CORS allowed origins
 const ALLOWED_ORIGINS = [
@@ -80,10 +81,14 @@ export async function middleware(request: NextRequest) {
   const origin = request.headers.get('origin');
   const context = extractSecurityContext(request);
 
+  // Generate or extract request ID for correlation
+  const requestId = getOrCreateRequestId(request.headers);
+
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
     const response = new NextResponse(null, { status: 204 });
     applyCorsHeaders(response, origin);
+    addRequestIdToHeaders(response.headers, requestId);
     return response;
   }
 
@@ -94,6 +99,7 @@ export async function middleware(request: NextRequest) {
       const response = NextResponse.next();
       applySecurityHeaders(response);
       applyCorsHeaders(response, origin);
+      addRequestIdToHeaders(response.headers, requestId);
       return response;
     }
 
@@ -126,6 +132,7 @@ export async function middleware(request: NextRequest) {
 
       applySecurityHeaders(response);
       applyCorsHeaders(response, origin);
+      addRequestIdToHeaders(response.headers, requestId);
       return response;
     }
 
@@ -140,6 +147,7 @@ export async function middleware(request: NextRequest) {
     // Apply security headers
     applySecurityHeaders(response);
     applyCorsHeaders(response, origin);
+    addRequestIdToHeaders(response.headers, requestId);
 
     return response;
   }
@@ -150,6 +158,7 @@ export async function middleware(request: NextRequest) {
   // Apply security headers
   applySecurityHeaders(response);
   applyCorsHeaders(response, origin);
+  addRequestIdToHeaders(response.headers, requestId);
 
   return response;
 }

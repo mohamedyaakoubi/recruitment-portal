@@ -13,6 +13,8 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 import logger from '@/lib/logger';
+import { validateFile } from '@/lib/fileValidation';
+import { detectBot } from '@/lib/honeypot';
 import type { Job } from '@/types';
 
 export const useCandidateForm = () => {
@@ -529,6 +531,27 @@ export const useCandidateForm = () => {
     setError(null);
     setSuccess(null);
 
+    // Bot detection using honeypot and timing validation
+    const formData = new FormData(e.target as HTMLFormElement);
+    const honeypotValue = formData.get('website') as string | null;
+    const timestampValue = formData.get('form_timestamp') as string | null;
+
+    const botDetection = detectBot({
+      honeypot: honeypotValue || undefined,
+      timestamp: timestampValue ? Number(timestampValue) : undefined,
+    });
+
+    if (botDetection.isBot) {
+      logger.warn('Bot detected in form submission', {
+        reason: botDetection.reason,
+        honeypot: !!honeypotValue,
+        timestamp: timestampValue,
+      });
+      // Silently reject bot submissions without showing error
+      setIsLoading(false);
+      return;
+    }
+
     // 🔥 NEW: Name validation before other checks
     const validateName = (name: string, fieldName: string): string => {
       if (!name.trim()) {
@@ -660,6 +683,29 @@ export const useCandidateForm = () => {
     if (!cvFile || !passportFile) {
       setError('CV/Resume and Passport/ID files are required.');
       return;
+    }
+
+    // Validate CV file (PDF/DOC/DOCX)
+    const cvValidation = await validateFile(cvFile, 'document');
+    if (!cvValidation.isValid) {
+      setError(`CV/Resume validation failed: ${cvValidation.error}`);
+      return;
+    }
+
+    // Validate passport file (PDF/JPG/PNG)
+    const passportValidation = await validateFile(passportFile, 'passport');
+    if (!passportValidation.isValid) {
+      setError(`Passport/ID validation failed: ${passportValidation.error}`);
+      return;
+    }
+
+    // Validate photo file if provided (JPG/PNG/WEBP)
+    if (photoFile) {
+      const photoValidation = await validateFile(photoFile, 'image');
+      if (!photoValidation.isValid) {
+        setError(`Photo validation failed: ${photoValidation.error}`);
+        return;
+      }
     }
 
     setIsLoading(true);

@@ -59,6 +59,12 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   '/api/admin/*': { requests: 100, window: '1 m' },
   '/api/candidates/*': { requests: 50, window: '1 m' },
   '/api/upload/*': { requests: 10, window: '1 m' },
+  // Enhanced rate limits for public endpoints (Priority 1.1)
+  '/api/check-candidate': { requests: 10, window: '1 m' },
+  '/api/check-duplicate': { requests: 10, window: '1 m' },
+  '/api/get-candidate-applications': { requests: 20, window: '1 m' },
+  '/api/validate-phone': { requests: 15, window: '1 m' },
+  '/api/verify-email': { requests: 10, window: '1 m' },
 };
 
 /**

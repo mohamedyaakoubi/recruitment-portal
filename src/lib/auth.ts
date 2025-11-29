@@ -48,9 +48,13 @@ export async function requireAdminAuth(request: NextRequest) {
       const decodedToken = await auth.verifyIdToken(token, true); // checkRevoked = true
 
       // Check if token is for an admin user
-      const adminEmails = process.env.ADMIN_EMAILS?.split(',').map((e) => e.trim()) || [
-        'airopanget@gmail.com',
-      ];
+      const adminEmailsEnv = process.env.ADMIN_EMAILS;
+      if (!adminEmailsEnv) {
+        logger.error('ADMIN_EMAILS environment variable not configured');
+        return ApiErrors.internal('Admin authentication not configured');
+      }
+
+      const adminEmails = adminEmailsEnv.split(',').map((e) => e.trim());
 
       if (!decodedToken.email || !adminEmails.includes(decodedToken.email)) {
         logSecurityEvent({

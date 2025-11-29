@@ -2,6 +2,11 @@ import { NextRequest } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import logger from '@/lib/logger';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { z } from 'zod';
+
+const checkCandidateSchema = z.object({
+  email: z.string().email('Invalid email address').toLowerCase().trim().max(254),
+});
 
 interface CandidateData {
   id: string;
@@ -12,20 +17,22 @@ interface CandidateData {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    const validatedData = checkCandidateSchema.safeParse(body);
 
-    if (!email) {
-      return ApiErrors.badRequest('Email is required');
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Invalid email address', validatedData.error.flatten());
     }
 
-    const searchEmail = email.toLowerCase().trim();
-    logger.info('Checking database for email', { email: searchEmail });
+    const { email } = validatedData.data;
+
+    logger.info('Checking database for email', { email });
 
     const db = getFirestoreAdmin();
 
     // 🔥 Optimized: Only query for this specific email (faster and cheaper)
     const candidatesRef = db.collection('candidates');
-    const snapshot = await candidatesRef.where('email', '==', searchEmail).get();
+    const snapshot = await candidatesRef.where('email', '==', email).get();
 
     const exists = !snapshot.empty;
     const applications: CandidateData[] = [];

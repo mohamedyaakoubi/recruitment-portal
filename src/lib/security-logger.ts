@@ -4,6 +4,7 @@
  */
 
 import logger from './logger';
+import { sendSecurityAlert, AlertSeverity } from './securityAlerts';
 
 export enum SecurityEventType {
   AUTH_SUCCESS = 'auth_success',
@@ -60,6 +61,23 @@ export function logSecurityEvent(data: SecurityEventData): void {
     case SecurityEventType.UNAUTHORIZED_ACCESS:
     case SecurityEventType.SUSPICIOUS_ACTIVITY:
       logger.warn('Security event', logData);
+
+      // Send security alerts for critical/high severity events
+      void sendSecurityAlert({
+        eventType: data.type,
+        severity:
+          data.type === SecurityEventType.UNAUTHORIZED_ACCESS ||
+          data.type === SecurityEventType.CSRF_VALIDATION_FAILED
+            ? AlertSeverity.CRITICAL
+            : AlertSeverity.HIGH,
+        description: `Security event detected: ${data.type}`,
+        userId: data.userId,
+        ipAddress: data.ip,
+        userAgent: data.userAgent,
+        requestPath: data.path,
+        requestMethod: data.method,
+        additionalContext: data.details,
+      });
       break;
 
     case SecurityEventType.AUTH_SUCCESS:

@@ -2,24 +2,35 @@ import { NextRequest } from 'next/server';
 import { sendApplicationConfirmationEmail } from '@/services/email';
 import logger from '@/lib/logger';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
-import { requireAdminAuth } from '@/lib/auth';
-import { withCsrfProtection } from '@/lib/csrf-middleware';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
+import { z } from 'zod';
 
-export const POST = withCsrfProtection(async (request: NextRequest) => {
-  // Require admin authentication
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+// Validation schema for confirmation email
+const confirmationEmailSchema = z.object({
+  candidateEmail: z.string().email().max(254),
+  candidateName: z.string().min(1).max(200),
+  jobTitle: z.string().min(1).max(200),
+  jobCategory: z.string().max(200).optional(),
+  specialty: z.string().max(200).optional(),
+  applicationId: z.string().min(1).max(200),
+});
+
+/**
+ * Public endpoint for sending application confirmation emails
+ * Note: This is called from client-side after successful form submission
+ * Rate limiting is enforced by middleware
+ */
+export async function POST(request: NextRequest) {
   try {
-    const { candidateEmail, candidateName, jobTitle, jobCategory, specialty, applicationId } =
-      await request.json();
+    const body = await request.json();
+    const validatedData = confirmationEmailSchema.safeParse(body);
 
-    // Validate required fields
-    if (!candidateEmail || !candidateName || !jobTitle || !applicationId) {
-      return ApiErrors.badRequest(
-        'Missing required fields: candidateEmail, candidateName, jobTitle, and applicationId are required'
-      );
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
+
+    const { candidateEmail, candidateName, jobTitle, jobCategory, specialty, applicationId } =
+      validatedData.data;
 
     // Generate submission date
     const submissionDate = new Date();
@@ -35,7 +46,7 @@ export const POST = withCsrfProtection(async (request: NextRequest) => {
       submissionDate,
     });
 
-    // Log admin operation
+    // Log email sent (without admin context since this is public)
     const context = extractSecurityContext(request);
     logSecurityEvent({
       type: SecurityEventType.ADMIN_EMAIL_SENT,
@@ -48,4 +59,4 @@ export const POST = withCsrfProtection(async (request: NextRequest) => {
     logger.error('Error in send-confirmation-email API', error);
     return ApiErrors.internal('Failed to send confirmation email', error);
   }
-});
+}

@@ -49,12 +49,16 @@ export function errorResponse(
     logger.error(error, logError instanceof Error ? logError : new Error(String(logError)));
   }
 
+  // In production, sanitize error details to prevent information leakage
+  const isProduction = process.env.NODE_ENV === 'production';
+  const sanitizedDetails = isProduction && status === 500 ? undefined : details;
+
   return NextResponse.json(
     {
       success: false as const,
-      error,
+      error: isProduction && status === 500 ? 'Internal server error' : error,
       ...(code && { code }),
-      ...(details !== undefined && { details }),
+      ...(sanitizedDetails !== undefined && { details: sanitizedDetails }),
     },
     { status }
   );

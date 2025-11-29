@@ -150,6 +150,26 @@ const CandidateFormUI: React.FC<CandidateFormUIProps> = ({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8" aria-label="Job application form">
+            {/* Honeypot field - hidden from users, bots will fill it */}
+            <input
+              type="text"
+              name="website"
+              id="website"
+              tabIndex={-1}
+              autoComplete="off"
+              style={{
+                position: 'absolute',
+                left: '-9999px',
+                width: '1px',
+                height: '1px',
+                opacity: 0,
+              }}
+              aria-hidden="true"
+            />
+
+            {/* Hidden timestamp field for timing validation */}
+            <input type="hidden" name="form_timestamp" id="form_timestamp" value={Date.now()} />
+
             <PersonalInfoSection
               firstName={firstName}
               setFirstName={setFirstName}
