@@ -1,4 +1,5 @@
 import logger from '@/lib/logger';
+import { fetchWithTimeout, TIMEOUT_CONFIG } from '@/lib/apiTimeout';
 
 interface EmailVerificationResponse {
   isValid: boolean;
@@ -17,36 +18,29 @@ async function verifyEmailWithAbstractAPI(email: string): Promise<EmailVerificat
 
     const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${encodeURIComponent(email)}`;
 
-    // Add timeout using AbortController
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-    try {
-      const response = await fetch(url, {
+    const response = await fetchWithTimeout(
+      url,
+      {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        signal: controller.signal,
-      });
+      },
+      TIMEOUT_CONFIG.ABSTRACT_API
+    );
 
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`Abstract API error: ${response.status} - ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      return {
-        isValid: data.deliverability === 'DELIVERABLE' && !data.is_disposable_email?.value,
-        deliverable: data.deliverability === 'DELIVERABLE',
-        disposable: data.is_disposable_email?.value || false,
-        role_account: data.is_role_email?.value || false,
-      };
-    } finally {
-      clearTimeout(timeoutId);
+    if (!response.ok) {
+      throw new Error(`Abstract API error: ${response.status} - ${response.statusText}`);
     }
+
+    const data = await response.json();
+
+    return {
+      isValid: data.deliverability === 'DELIVERABLE' && !data.is_disposable_email?.value,
+      deliverable: data.deliverability === 'DELIVERABLE',
+      disposable: data.is_disposable_email?.value || false,
+      role_account: data.is_role_email?.value || false,
+    };
   } catch (error) {
     logger.error('Abstract API verification failed', error);
     throw error;
@@ -60,39 +54,29 @@ async function verifyEmailWithHunter(email: string): Promise<EmailVerificationRe
       throw new Error('Hunter API key not configured');
     }
 
-    // Add timeout using AbortController
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const response = await fetchWithTimeout(
+      `https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${apiKey}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+      TIMEOUT_CONFIG.ABSTRACT_API
+    );
 
-    try {
-      const response = await fetch(
-        `https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${apiKey}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          signal: controller.signal,
-        }
-      );
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`Hunter API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      return {
-        isValid: data.data.result === 'deliverable',
-        deliverable: data.data.result === 'deliverable',
-        disposable: data.data.disposable,
-        role_account: data.data.role,
-      };
-    } finally {
-      clearTimeout(timeoutId);
+    if (!response.ok) {
+      throw new Error(`Hunter API error: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    return {
+      isValid: data.data.result === 'deliverable',
+      deliverable: data.data.result === 'deliverable',
+      disposable: data.data.disposable,
+      role_account: data.data.role,
+    };
   } catch (error) {
     logger.error('Hunter verification failed', error);
     throw error;

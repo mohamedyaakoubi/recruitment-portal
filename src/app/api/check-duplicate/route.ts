@@ -3,6 +3,7 @@ import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import logger from '@/lib/logger';
 import { checkDuplicateSchema } from '@/lib/validations';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +11,13 @@ export async function POST(request: NextRequest) {
     const validatedData = checkDuplicateSchema.safeParse(body);
 
     if (!validatedData.success) {
+      // Audit log validation failure
+      const context = extractSecurityContext(request);
+      logSecurityEvent({
+        type: SecurityEventType.INPUT_VALIDATION_FAILED,
+        ...context,
+        details: { endpoint: '/api/check-duplicate', errors: validatedData.error.flatten() },
+      });
       return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
 

@@ -5,26 +5,31 @@ import { format } from 'date-fns';
 import logger from '@/lib/logger';
 import { ApiErrors } from '@/lib/apiResponse';
 import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
-export async function GET(request: NextRequest) {
+// Changed from GET to POST to support CSRF protection
+export const POST = withCsrfProtection(async (request: NextRequest) => {
   // Require admin authentication for sensitive data export
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
   try {
-    const { searchParams } = new URL(request.url);
-    const exportFormat = searchParams.get('format') || 'json';
-    const filterStatus = searchParams.get('status') || 'all';
-    const filterName = searchParams.get('name') || '';
-    const filterCity = searchParams.get('city') || '';
-    const filterCountry = searchParams.get('country') || '';
-    const filterNationality = searchParams.get('nationality') || '';
-    const filterJobTitle = searchParams.get('jobTitle') || '';
-    const filterCategory = searchParams.get('category') || '';
-    const filterSpecialty = searchParams.get('specialty') || '';
-    const filterAgeMin = searchParams.get('ageMin') || '';
-    const filterAgeMax = searchParams.get('ageMax') || '';
+    // Parse request body instead of search params
+    const body = await request.json();
+    const {
+      format: exportFormat = 'json',
+      status: filterStatus = 'all',
+      name: filterName = '',
+      city: filterCity = '',
+      country: filterCountry = '',
+      nationality: filterNationality = '',
+      jobTitle: filterJobTitle = '',
+      category: filterCategory = '',
+      specialty: filterSpecialty = '',
+      ageMin: filterAgeMin = '',
+      ageMax: filterAgeMax = '',
+    } = body;
 
     logger.info('Export request with filters', {
       format: exportFormat,
@@ -129,4 +134,4 @@ export async function GET(request: NextRequest) {
     logger.error('Export candidates error', error);
     return ApiErrors.internal('Failed to export candidates', error);
   }
-}
+});

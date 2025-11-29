@@ -742,9 +742,16 @@ export const useCandidateForm = () => {
         return;
       }
 
-      // File uploads
-      const cvFileName = `cv_${Date.now()}_${cvFile.name}`;
-      const passportFileName = `passport_${Date.now()}_${passportFile.name}`;
+      // File uploads - sanitize filenames to prevent path traversal
+      const sanitizeFileName = (name: string): string => {
+        return name
+          .replace(/[^a-zA-Z0-9.-]/g, '_')
+          .replace(/\.{2,}/g, '.')
+          .substring(0, 100);
+      };
+
+      const cvFileName = `cv_${Date.now()}_${sanitizeFileName(cvFile.name)}`;
+      const passportFileName = `passport_${Date.now()}_${sanitizeFileName(passportFile.name)}`;
 
       const cvStorageRef = ref(storage, `candidate_files/${cvFileName}`);
       const passportStorageRef = ref(storage, `candidate_files/${passportFileName}`);
@@ -761,7 +768,7 @@ export const useCandidateForm = () => {
 
       let photoUrl = null;
       if (photoFile) {
-        const photoFileName = `photo_${Date.now()}_${photoFile.name}`;
+        const photoFileName = `photo_${Date.now()}_${sanitizeFileName(photoFile.name)}`;
         const photoStorageRef = ref(storage, `candidate_files/${photoFileName}`);
         const photoUploadTask = await uploadBytes(photoStorageRef, photoFile);
         photoUrl = await getDownloadURL(photoUploadTask.ref);

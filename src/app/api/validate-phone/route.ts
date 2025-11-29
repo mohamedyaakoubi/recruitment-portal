@@ -8,15 +8,33 @@ import {
 } from '@/lib/phoneValidationService';
 import logger from '@/lib/logger';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
+import { z } from 'zod';
+
+// Validation schema for phone validation
+const phoneValidationSchema = z.object({
+  countryCode: z.string().min(1, 'Country code is required').max(10),
+  phoneNumber: z.string().min(1, 'Phone number is required').max(20),
+});
 
 // 🔥 MAIN API HANDLER
 export async function POST(request: NextRequest) {
   try {
-    const { countryCode, phoneNumber } = await request.json();
+    const body = await request.json();
+    const validatedData = phoneValidationSchema.safeParse(body);
 
-    if (!countryCode || !phoneNumber) {
-      return ApiErrors.badRequest('Country code and phone number are required');
+    if (!validatedData.success) {
+      // Audit log validation failure
+      const context = extractSecurityContext(request);
+      logSecurityEvent({
+        type: SecurityEventType.INPUT_VALIDATION_FAILED,
+        ...context,
+        details: { endpoint: '/api/validate-phone', errors: validatedData.error.flatten() },
+      });
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
+
+    const { countryCode, phoneNumber } = validatedData.data;
 
     const clientIP =
       request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';

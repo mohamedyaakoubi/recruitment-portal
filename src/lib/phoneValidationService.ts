@@ -1,5 +1,6 @@
 import { phonePatterns, getCountryName } from './phoneValidationData';
 import logger from '@/lib/logger';
+import { fetchWithTimeout, TIMEOUT_CONFIG } from './apiTimeout';
 
 interface PhoneValidationResponse {
   isValid: boolean;
@@ -93,34 +94,6 @@ export function validatePhoneWithRegex(fullPhone: string): PhoneValidationRespon
   };
 }
 
-// HTTP utility function
-async function httpGetAsync(url: string): Promise<string> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'InternationalSkills-PhoneValidator/1.0',
-      },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return await response.text();
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
-  }
-}
-
 // 🔥 STEP 3: Abstract API validation (only if regex passes)
 export async function validatePhoneWithAbstractAPI(
   fullPhone: string
@@ -136,7 +109,8 @@ export async function validatePhoneWithAbstractAPI(
 
     logger.info('Validating phone via Abstract API', { phone: phoneForAPI });
 
-    const responseText = await httpGetAsync(url);
+    const response = await fetchWithTimeout(url, {}, TIMEOUT_CONFIG.ABSTRACT_API);
+    const responseText = await response.text();
 
     let data;
     try {

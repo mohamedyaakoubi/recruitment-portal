@@ -26,6 +26,16 @@ export async function POST(request: NextRequest) {
     const validatedData = confirmationEmailSchema.safeParse(body);
 
     if (!validatedData.success) {
+      // Audit log validation failure
+      const context = extractSecurityContext(request);
+      logSecurityEvent({
+        type: SecurityEventType.INPUT_VALIDATION_FAILED,
+        ...context,
+        details: {
+          endpoint: '/api/send-confirmation-email',
+          errors: validatedData.error.flatten(),
+        },
+      });
       return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
 

@@ -1,9 +1,15 @@
+import { NextRequest } from 'next/server';
 import { getAuthenticatedClient } from '@/lib/googleOAuth';
+import { requireAdminAuth } from '@/lib/auth';
 import { google } from 'googleapis';
 import logger from '@/lib/logger';
 import { successResponse } from '@/lib/apiResponse';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const auth = await getAuthenticatedClient();
 
