@@ -94,4 +94,58 @@ describe('useAuth Hook', () => {
     expect(signOut).toHaveBeenCalledWith(auth);
     expect(result.current.user).toBeNull();
   });
+
+  it('should rate limit login attempts after 5 failures', async () => {
+    // Mock failed login attempts
+    (signInWithEmailAndPassword as any).mockRejectedValue(
+      new Error('Firebase: Error (auth/invalid-credential).')
+    );
+
+    (onAuthStateChanged as any).mockImplementation((auth: any, callback: any) => {
+      callback(null);
+      return () => {};
+    });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    // Make 5 failed login attempts
+    for (let i = 0; i < 5; i++) {
+      await act(async () => {
+        await result.current.signIn('test@example.com', 'wrongpassword');
+      });
+    }
+
+    // The 6th attempt should be blocked by client-side rate limit
+    await act(async () => {
+      await result.current.signIn('test@example.com', 'wrongpassword');
+    });
+
+    // Check that it shows rate limit error (not Firebase error)
+    expect(result.current.error).toMatch(/Too many login attempts/);
+    // Firebase should NOT have been called for the 6th attempt
+    expect(signInWithEmailAndPassword).toHaveBeenCalledTimes(5);
+  });
+
+  it('should show user-friendly error for invalid credentials', async () => {
+    (signInWithEmailAndPassword as any).mockRejectedValue(
+      new Error('Firebase: Error (auth/invalid-credential).')
+    );
+
+    (onAuthStateChanged as any).mockImplementation((auth: any, callback: any) => {
+      callback(null);
+      return () => {};
+    });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await act(async () => {
+      await result.current.signIn('test@example.com', 'wrongpassword');
+    });
+
+    expect(result.current.error).toBe('Invalid email or password.');
+  });
 });

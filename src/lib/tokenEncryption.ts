@@ -91,7 +91,15 @@ export function decryptToken(encrypted: string): string {
 
     return decrypted;
   } catch (error) {
-    logger.error('Token decryption failed', error);
+    // Use warn instead of error for expected scenarios like key mismatch
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes('Unsupported state or unable to authenticate data')) {
+      logger.warn('Token decryption failed - likely encryption key mismatch between environments', {
+        hint: 'User needs to reconnect Google Calendar. Ensure TOKEN_ENCRYPTION_KEY is consistent.',
+      });
+    } else {
+      logger.warn('Token decryption failed', { error: errorMessage });
+    }
     throw new Error('Failed to decrypt token');
   }
 }

@@ -136,18 +136,32 @@ async function getStoredTokens(): Promise<Record<string, unknown> | null> {
     const tokenDoc = await tokenRef.get();
 
     if (!tokenDoc.exists) {
-      logger.warn('Google Auth tokens not found in Firestore');
+      logger.info('Google Auth: No tokens found in Firestore');
       return null;
     }
 
     const data = tokenDoc.data();
-    if (!data) return null;
+    if (!data) {
+      logger.info('Google Auth: Token document exists but has no data');
+      return null;
+    }
 
     // Check if tokens are encrypted
     if (data.encrypted && typeof data.encrypted === 'string') {
-      // Decrypt tokens
-      const decrypted = decryptTokenObject(data.encrypted);
-      return decrypted as Record<string, unknown>;
+      try {
+        // Decrypt tokens
+        const decrypted = decryptTokenObject(data.encrypted);
+        logger.info('Google Auth: Successfully retrieved and decrypted tokens', {
+          hasAccessToken: !!(decrypted as Record<string, unknown>)?.access_token,
+          hasRefreshToken: !!(decrypted as Record<string, unknown>)?.refresh_token,
+          updatedAt: data.updatedAt,
+        });
+        return decrypted as Record<string, unknown>;
+      } catch {
+        // Decryption failure is already logged in tokenEncryption.ts
+        // This typically happens when TOKEN_ENCRYPTION_KEY doesn't match
+        return null;
+      }
     }
 
     // Legacy: unencrypted tokens (migrate them)
@@ -163,7 +177,7 @@ async function getStoredTokens(): Promise<Record<string, unknown> | null> {
 
     return data as Record<string, unknown>;
   } catch (error) {
-    logger.error('Failed to retrieve tokens', error);
+    logger.error('Failed to retrieve tokens from Firestore', error);
     return null;
   }
 }
