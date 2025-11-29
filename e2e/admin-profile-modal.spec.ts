@@ -18,8 +18,8 @@ test.describe('Admin Dashboard - Profile Modal', () => {
     // Login as admin
     await loginAsAdmin(page);
 
-    // Navigate to dashboard
-    await adminPage.goto();
+    // Navigate to dashboard (handled by loginAsAdmin)
+    // await adminPage.goto();
 
     // Wait for data to load
     await page.waitForTimeout(3000);

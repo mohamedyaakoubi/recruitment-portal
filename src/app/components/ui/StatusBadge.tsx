@@ -1,8 +1,9 @@
 // src/app/components/ui/StatusBadge.tsx
+/* eslint-disable react/prop-types */
 import React from 'react';
 import { StatusBadgeProps } from '@/types';
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = React.memo(({ status }) => {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'submitted':
@@ -40,6 +41,8 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       {getStatusText(status)}
     </span>
   );
-};
+});
+
+StatusBadge.displayName = 'StatusBadge';
 
 export default StatusBadge;

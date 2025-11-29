@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CANDIDATE_STATUSES, INTERVIEW_DEFAULTS } from '@/lib/constants';
 
 // Name validation schema
 const nameSchema = z
@@ -67,11 +68,15 @@ export const updateCandidateSchema = candidateFormSchema.partial();
 // Status update schema
 export const statusUpdateSchema = z.object({
   candidateId: z.string().min(1, 'Candidate ID is required'),
-  newStatus: z.enum(['submitted', 'rejected', 'interview_scheduled', 'approved']),
+  newStatus: z.enum(CANDIDATE_STATUSES),
   interviewTimestampISO: z.string().datetime().optional(),
   calendarEventId: z.string().optional(),
   meetLink: z.string().url().optional(),
-  duration: z.number().min(15).max(180).optional(),
+  duration: z
+    .number()
+    .min(INTERVIEW_DEFAULTS.MIN_DURATION)
+    .max(INTERVIEW_DEFAULTS.MAX_DURATION)
+    .optional(),
 });
 
 // Score candidate schema
@@ -89,7 +94,11 @@ export const scheduleInterviewSchema = z.object({
   candidateName: z.string().min(1),
   interviewDate: z.string().min(1),
   interviewTime: z.string().min(1),
-  duration: z.number().min(15).max(180).default(30),
+  duration: z
+    .number()
+    .min(INTERVIEW_DEFAULTS.MIN_DURATION)
+    .max(INTERVIEW_DEFAULTS.MAX_DURATION)
+    .default(INTERVIEW_DEFAULTS.DEFAULT_DURATION),
   jobTitle: z.string().optional(),
   adminEmail: z.string().email(),
   notes: z.string().optional(),
@@ -100,3 +109,19 @@ export type UpdateCandidateData = z.infer<typeof updateCandidateSchema>;
 export type StatusUpdateData = z.infer<typeof statusUpdateSchema>;
 export type ScoreCandidateData = z.infer<typeof scoreCandidateSchema>;
 export type ScheduleInterviewData = z.infer<typeof scheduleInterviewSchema>;
+
+// Check duplicate schema
+export const checkDuplicateSchema = z.object({
+  email: z.string().email().toLowerCase().trim(),
+  jobId: z.string().min(1),
+  jobCategory: z.string().min(1),
+});
+
+// Cancel interview schema
+export const cancelInterviewSchema = z.object({
+  candidateId: z.string().min(1),
+  reason: z.string().optional(),
+});
+
+export type CheckDuplicateData = z.infer<typeof checkDuplicateSchema>;
+export type CancelInterviewData = z.infer<typeof cancelInterviewSchema>;

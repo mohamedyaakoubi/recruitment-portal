@@ -87,16 +87,25 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
   if (!isOpen || !candidate) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="interview-modal-title"
+    >
       <div className="mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-200">
+          <h3
+            id="interview-modal-title"
+            className="text-lg font-semibold text-gray-900 dark:text-gray-200"
+          >
             📅 Schedule Google Meet Interview
           </h3>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 focus:outline-none dark:hover:text-gray-300"
             disabled={isLoading}
+            aria-label="Close modal"
           >
             ✕
           </button>
@@ -231,7 +240,9 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
           <div className="rounded-lg border-l-4 border-green-400 bg-green-50 p-4 dark:border-green-500 dark:bg-green-900/20">
             <div className="flex">
               <div className="flex-shrink-0">
-                <span className="text-lg text-green-400">✅</span>
+                <span className="text-lg text-green-400" aria-hidden="true">
+                  ✅
+                </span>
               </div>
               <div className="ml-3">
                 <p className="text-sm text-green-800 dark:text-green-300">
@@ -253,7 +264,9 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
             <div className="rounded-lg border-l-4 border-yellow-400 bg-yellow-50 p-4 dark:border-yellow-500 dark:bg-yellow-900/20">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <span className="text-lg text-yellow-400">⚠️</span>
+                  <span className="text-lg text-yellow-400" aria-hidden="true">
+                    ⚠️
+                  </span>
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-yellow-800 dark:text-yellow-300">
@@ -287,6 +300,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
+                    aria-hidden="true"
                   >
                     <circle
                       className="opacity-25"

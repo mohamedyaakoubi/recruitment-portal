@@ -3,10 +3,12 @@ import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import admin from 'firebase-admin';
 import { calculateAge } from '@/lib/dateUtils';
 import logger from '@/lib/logger';
+import { updateCandidateSchema } from '@/lib/validations';
 
 export async function PUT(request: NextRequest) {
   try {
-    const { candidateId, updatedData } = await request.json();
+    const body = await request.json();
+    const { candidateId, updatedData } = body;
 
     if (!candidateId) {
       return NextResponse.json({ error: 'Candidate ID is required' }, { status: 400 });
@@ -16,7 +18,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Updated data is required' }, { status: 400 });
     }
 
-    logger.info('Updating candidate', { candidateId, fields: Object.keys(updatedData) });
+    // Validate updatedData against the schema
+    const validatedData = updateCandidateSchema.safeParse(updatedData);
+
+    if (!validatedData.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validatedData.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const validUpdates = validatedData.data;
+
+    logger.info('Updating candidate', { candidateId, fields: Object.keys(validUpdates) });
 
     const db = getFirestoreAdmin();
     const candidateRef = db.collection('candidates').doc(candidateId);
@@ -29,13 +43,13 @@ export async function PUT(request: NextRequest) {
 
     // Prepare update data with timestamp
     const updatePayload: Record<string, unknown> = {
-      ...updatedData,
+      ...validUpdates,
       lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
     };
 
     // Calculate age if dateOfBirth is being updated
-    if (updatedData.dateOfBirth) {
-      const age = calculateAge(updatedData.dateOfBirth);
+    if (validUpdates.dateOfBirth) {
+      const age = calculateAge(validUpdates.dateOfBirth);
       if (age !== null) {
         updatePayload.age = age;
       }

@@ -20,7 +20,7 @@ describe('POST /api/update-status', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Missing candidateId or newStatus');
+    expect(data.error).toBe('Validation failed');
   });
 
   it('should return 400 when newStatus is missing', async () => {
@@ -32,7 +32,7 @@ describe('POST /api/update-status', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Missing candidateId or newStatus');
+    expect(data.error).toBe('Validation failed');
   });
 
   it('should update status successfully', async () => {

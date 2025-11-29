@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import logger from '@/lib/logger';
+import { checkDuplicateSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, jobId, jobCategory } = await request.json();
+    const body = await request.json();
+    const validatedData = checkDuplicateSchema.safeParse(body);
 
-    if (!email || !jobId || !jobCategory) {
+    if (!validatedData.success) {
       return NextResponse.json(
-        { error: 'Email, jobId, and jobCategory are required' },
+        { error: 'Validation failed', details: validatedData.error.flatten() },
         { status: 400 }
       );
     }
+
+    const { email, jobId, jobCategory } = validatedData.data;
 
     const db = getFirestoreAdmin();
     const candidatesRef = db.collection('candidates');
@@ -21,7 +25,7 @@ export async function POST(request: NextRequest) {
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     const duplicateQuery = candidatesRef
-      .where('email', '==', email.toLowerCase().trim())
+      .where('email', '==', email)
       .where('jobTitle', '==', jobId)
       .where('submittedAt', '>=', sixMonthsAgo);
 
@@ -51,7 +55,7 @@ export async function POST(request: NextRequest) {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const categoryQuery = candidatesRef
-      .where('email', '==', email.toLowerCase().trim())
+      .where('email', '==', email)
       .where('jobCategory', '==', jobCategory)
       .where('submittedAt', '>=', thirtyDaysAgo);
 

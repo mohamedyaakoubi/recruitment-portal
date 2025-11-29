@@ -2,22 +2,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scheduleInterview } from '@/services/interview';
 import logger from '@/lib/logger';
+import { scheduleInterviewSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
-    const {
-      candidateId,
-      candidateEmail,
-      candidateName,
-      interviewDate,
-      interviewTime,
-      duration = 30,
-      jobTitle,
-      adminEmail,
-      notes,
-    } = await request.json();
+    const body = await request.json();
+    const validatedData = scheduleInterviewSchema.safeParse(body);
 
-    const data = await scheduleInterview(
+    if (!validatedData.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validatedData.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const {
       candidateId,
       candidateEmail,
       candidateName,
@@ -27,6 +26,18 @@ export async function POST(request: NextRequest) {
       jobTitle,
       adminEmail,
       notes,
+    } = validatedData.data;
+
+    const data = await scheduleInterview(
+      candidateId,
+      candidateEmail,
+      candidateName,
+      interviewDate,
+      interviewTime,
+      duration,
+      jobTitle || '',
+      adminEmail,
+      notes || '',
       request.nextUrl.origin
     );
 

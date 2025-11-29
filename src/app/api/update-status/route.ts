@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { updateCandidateStatus } from '@/services/candidate';
 import logger from '@/lib/logger';
+import { statusUpdateSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
-    const { candidateId, newStatus, interviewTimestampISO, calendarEventId, meetLink, duration } =
-      await request.json();
+    const body = await request.json();
+    const validatedData = statusUpdateSchema.safeParse(body);
 
-    if (!candidateId || !newStatus) {
-      return NextResponse.json({ error: 'Missing candidateId or newStatus' }, { status: 400 });
+    if (!validatedData.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validatedData.error.flatten() },
+        { status: 400 }
+      );
     }
+
+    const { candidateId, newStatus, interviewTimestampISO, calendarEventId, meetLink, duration } =
+      validatedData.data;
 
     // 🔥 UPDATED: Get email status from service
     const result = await updateCandidateStatus(

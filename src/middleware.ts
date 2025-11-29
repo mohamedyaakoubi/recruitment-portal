@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { RATE_LIMITS } from '@/lib/constants';
 
 // Simple in-memory rate limiting (use Redis in production for multi-instance)
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
-
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 60; // 60 requests per minute
 
 function getRateLimitKey(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
@@ -17,12 +15,12 @@ function isRateLimited(key: string): boolean {
   const now = Date.now();
   const record = rateLimitMap.get(key);
 
-  if (!record || now - record.lastReset > RATE_LIMIT_WINDOW) {
+  if (!record || now - record.lastReset > RATE_LIMITS.WINDOW_MS) {
     rateLimitMap.set(key, { count: 1, lastReset: now });
     return false;
   }
 
-  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+  if (record.count >= RATE_LIMITS.MAX_REQUESTS) {
     return true;
   }
 

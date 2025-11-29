@@ -38,7 +38,12 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
   if (!isOpen || !candidate) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-modal-title"
+    >
       <div className="flex max-h-[95vh] w-full max-w-4xl flex-col rounded-xl bg-white shadow-2xl dark:bg-gray-800">
         <EditModalHeader onClose={onClose} isLoading={isLoading} />
         <div className="flex-grow overflow-y-auto p-6">

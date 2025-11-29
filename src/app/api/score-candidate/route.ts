@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scoreCandidate } from '@/services/scoring';
 import logger from '@/lib/logger';
+import { scoreCandidateSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
     logger.info('Starting Gemini 2.5 Pro scoring request');
 
-    const { candidateId, jobId, jobTitle, jobDescription } = await request.json();
+    const body = await request.json();
+    const validatedData = scoreCandidateSchema.safeParse(body);
 
-    if (!candidateId || !jobTitle || !jobDescription) {
+    if (!validatedData.success) {
       return NextResponse.json(
-        {
-          error: 'Missing required fields: candidateId, jobTitle, or jobDescription',
-        },
+        { error: 'Validation failed', details: validatedData.error.flatten() },
         { status: 400 }
       );
     }
 
+    const { candidateId, jobId, jobTitle, jobDescription } = validatedData.data;
+
     logger.info('Scoring candidate', { candidateId, jobTitle });
 
-    const scoringResult = await scoreCandidate(candidateId, jobId, jobTitle, jobDescription);
+    const scoringResult = await scoreCandidate(candidateId, jobId || '', jobTitle, jobDescription);
 
     logger.info('Scoring completed', { candidateId, score: scoringResult.score });
 

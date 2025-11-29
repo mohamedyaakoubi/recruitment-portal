@@ -3,6 +3,7 @@ import { Timestamp } from 'firebase/firestore';
 import { JobCategory } from '@/lib/job-categories';
 import { User } from 'firebase/auth';
 import { Event as CalendarEvent } from 'react-big-calendar';
+import { CandidateStatus, AIRecommendation } from '@/lib/constants';
 
 export interface Candidate {
   id: string;
@@ -28,13 +29,13 @@ export interface Candidate {
   passportUrl: string;
   photoUrl?: string;
   submittedAt: Timestamp;
-  status: 'submitted' | 'rejected' | 'interview_scheduled' | 'approved' | string;
+  status: CandidateStatus | string;
   score: number | null;
   scoreAnalysis?: string;
   // 🔥 NEW: Enhanced scoring fields for Gemini 2.5 Pro
   keyStrengths?: string[];
   areasForImprovement?: string[];
-  aiRecommendation?: 'highly_recommended' | 'recommended' | 'conditional' | 'not_recommended';
+  aiRecommendation?: AIRecommendation;
   scoringVersion?: string; // Track which AI version was used
   lastScoredAt?: Timestamp;
   interviewDate?: Timestamp;

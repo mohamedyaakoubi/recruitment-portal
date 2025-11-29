@@ -1,69 +1,53 @@
-// Application constants
-export const APP_NAME = 'International Skills Labor Company';
-export const APP_EMAIL = 'wassim@internationalskills.fi';
-export const APP_PHONE = '+358 452644966';
+// Candidate statuses
+export const CANDIDATE_STATUSES = [
+  'submitted',
+  'rejected',
+  'interview_scheduled',
+  'approved',
+] as const;
+export type CandidateStatus = (typeof CANDIDATE_STATUSES)[number];
 
-// Status values
-export const CANDIDATE_STATUSES = {
-  SUBMITTED: 'submitted',
-  REJECTED: 'rejected',
-  INTERVIEW_SCHEDULED: 'interview_scheduled',
-  APPROVED: 'approved',
-} as const;
-
-export type CandidateStatus = (typeof CANDIDATE_STATUSES)[keyof typeof CANDIDATE_STATUSES];
-
-// Status display labels
-export const STATUS_LABELS: Record<CandidateStatus, string> = {
-  [CANDIDATE_STATUSES.SUBMITTED]: 'Submitted',
-  [CANDIDATE_STATUSES.REJECTED]: 'Rejected',
-  [CANDIDATE_STATUSES.INTERVIEW_SCHEDULED]: 'Interview Scheduled',
-  [CANDIDATE_STATUSES.APPROVED]: 'Approved',
-};
-
-// Status colors for UI
-export const STATUS_COLORS: Record<CandidateStatus, { bg: string; text: string }> = {
-  [CANDIDATE_STATUSES.SUBMITTED]: { bg: 'bg-blue-100', text: 'text-blue-800' },
-  [CANDIDATE_STATUSES.REJECTED]: { bg: 'bg-red-100', text: 'text-red-800' },
-  [CANDIDATE_STATUSES.INTERVIEW_SCHEDULED]: { bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  [CANDIDATE_STATUSES.APPROVED]: { bg: 'bg-green-100', text: 'text-green-800' },
-};
-
-// File upload limits
-export const FILE_LIMITS = {
-  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  ALLOWED_CV_TYPES: [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  ],
-  ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp'],
-  ALLOWED_PASSPORT_TYPES: ['application/pdf', 'image/jpeg', 'image/png'],
-};
-
-// Interview settings
-export const INTERVIEW_DEFAULTS = {
-  DURATION_OPTIONS: [15, 30, 45, 60, 90, 120],
-  DEFAULT_DURATION: 30,
-  MIN_DURATION: 15,
-  MAX_DURATION: 180,
-};
-
-// Pagination
-export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 25,
-  MAX_PAGE_SIZE: 100,
-};
-
-// Age limits
-export const AGE_LIMITS = {
-  MIN_AGE: 18,
-  MAX_AGE: 100,
-};
+// AI recommendation values
+export const AI_RECOMMENDATIONS = [
+  'highly_recommended',
+  'recommended',
+  'conditional',
+  'not_recommended',
+] as const;
+export type AIRecommendation = (typeof AI_RECOMMENDATIONS)[number];
 
 // Rate limiting
 export const RATE_LIMITS = {
-  API_REQUESTS_PER_MINUTE: 60,
-  EMAIL_VERIFICATION_PER_HOUR: 10,
-  FORM_SUBMISSIONS_PER_HOUR: 5,
-};
+  WINDOW_MS: 60 * 1000, // 1 minute
+  MAX_REQUESTS: 60,
+} as const;
+
+// File upload limits
+export const FILE_LIMITS = {
+  MAX_CV_SIZE_MB: 5,
+  MAX_PHOTO_SIZE_MB: 2,
+  MAX_PASSPORT_SIZE_MB: 5,
+  ALLOWED_CV_TYPES: ['.pdf', '.doc', '.docx'] as const,
+  ALLOWED_IMAGE_TYPES: ['.jpg', '.jpeg', '.png'] as const,
+  ALLOWED_PASSPORT_TYPES: ['.pdf', '.jpg', '.jpeg', '.png'] as const,
+} as const;
+
+// Interview defaults
+export const INTERVIEW_DEFAULTS = {
+  MIN_DURATION: 15,
+  MAX_DURATION: 180,
+  DEFAULT_DURATION: 30,
+} as const;
+
+// Application limits
+export const APPLICATION_LIMITS = {
+  MAX_PER_CATEGORY_PER_MONTH: 3,
+  COOLDOWN_MONTHS_SAME_JOB: 6,
+} as const;
+
+// Scoring
+export const SCORING = {
+  MIN_SCORE: 0,
+  MAX_SCORE: 100,
+  VERSION: 'gemini-2.5-pro-enhanced',
+} as const;

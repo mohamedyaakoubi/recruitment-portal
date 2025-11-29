@@ -12,10 +12,15 @@ describe('POST /api/schedule-interview-meet', () => {
 
   it('should schedule interview successfully', async () => {
     const mockResult = {
-      success: true,
+      interviewDateTime: '2024-02-01T10:00:00Z',
+      endDateTime: '2024-02-01T11:00:00Z',
+      duration: 60,
       meetLink: 'https://meet.google.com/abc-defg-hij',
       calendarEventId: 'event123',
-      interviewDate: '2024-02-01T10:00:00Z',
+      emailsSent: {
+        candidate: 'john@example.com',
+        interviewer: 'admin@example.com',
+      },
     };
 
     vi.mocked(interviewService.scheduleInterview).mockResolvedValue(mockResult);
@@ -54,6 +59,7 @@ describe('POST /api/schedule-interview-meet', () => {
         candidateEmail: 'john@example.com',
         interviewDate: '2024-02-01',
         interviewTime: '10:00',
+        adminEmail: 'admin@example.com',
       }),
       nextUrl: { origin: 'http://localhost:3000' },
     } as unknown as NextRequest;

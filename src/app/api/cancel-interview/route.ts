@@ -2,12 +2,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cancelInterview } from '@/services/interview';
 import logger from '@/lib/logger';
+import { cancelInterviewSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
-    const { candidateId, reason = 'Cancelled by admin' } = await request.json();
+    const body = await request.json();
+    const validatedData = cancelInterviewSchema.safeParse(body);
 
-    await cancelInterview(candidateId, reason);
+    if (!validatedData.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: validatedData.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    const { candidateId, reason } = validatedData.data;
+
+    await cancelInterview(candidateId, reason || 'Cancelled by admin');
 
     return NextResponse.json({
       success: true,

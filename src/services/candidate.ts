@@ -4,6 +4,7 @@ import { FieldValue, Query, DocumentData } from 'firebase-admin/firestore';
 import { sendNotificationEmail, sendRejectionEmail } from './email';
 import { format } from 'date-fns';
 import logger from '@/lib/logger';
+import { CANDIDATE_STATUSES } from '@/lib/constants';
 
 // 🔥 NEW: Helper function to calculate age
 export const calculateAge = (dateOfBirth: string): number | null => {
@@ -39,8 +40,9 @@ export const updateCandidateStatus = async (
   duration?: number
 ): Promise<{ status: string; emailSent?: boolean }> => {
   const db = getFirestoreAdmin();
-  const validStatuses = ['submitted', 'rejected', 'interview_scheduled', 'approved'];
-  if (!validStatuses.includes(newStatus)) {
+
+  // Use constant for validation
+  if (!CANDIDATE_STATUSES.includes(newStatus as (typeof CANDIDATE_STATUSES)[number])) {
     throw new Error('Invalid status provided');
   }
 

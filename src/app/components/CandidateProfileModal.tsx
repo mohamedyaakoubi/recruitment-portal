@@ -26,7 +26,12 @@ const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-modal-title"
+      >
         <div className="flex max-h-[95vh] w-full max-w-5xl flex-col rounded-xl bg-gray-50 shadow-2xl dark:bg-gray-900">
           <ProfileHeader
             candidate={candidate}

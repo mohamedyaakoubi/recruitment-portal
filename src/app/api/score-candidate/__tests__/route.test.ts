@@ -19,7 +19,7 @@ describe('POST /api/score-candidate', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('required');
+    expect(data.error).toBe('Validation failed');
   });
 
   it('should score candidate successfully', async () => {

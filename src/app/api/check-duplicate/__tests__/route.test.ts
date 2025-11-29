@@ -11,6 +11,8 @@ const mockDoc = vi.fn(() => ({
 }));
 const mockCollection = vi.fn(() => ({
   doc: mockDoc,
+  where: vi.fn().mockReturnThis(),
+  get: vi.fn(),
 }));
 
 vi.mock('@/lib/firebase-admin', () => ({
@@ -33,7 +35,7 @@ describe('POST /api/check-duplicate', () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe('Email, jobId, and jobCategory are required');
+    expect(data.error).toBe('Validation failed');
   });
 
   it('should detect duplicate application to same job', async () => {
@@ -51,6 +53,7 @@ describe('POST /api/check-duplicate', () => {
     };
 
     mockCollection.mockReturnValue({
+      doc: mockDoc,
       where: vi.fn().mockReturnThis(),
       get: vi.fn().mockResolvedValue(mockSnapshot),
     });
@@ -81,6 +84,7 @@ describe('POST /api/check-duplicate', () => {
       .mockResolvedValueOnce(mockCategorySnapshot);
 
     mockCollection.mockReturnValue({
+      doc: mockDoc,
       where: mockWhere,
       get: mockGetFn,
     });
@@ -132,6 +136,7 @@ describe('POST /api/check-duplicate', () => {
 
   it('should handle database errors', async () => {
     mockCollection.mockReturnValue({
+      doc: mockDoc,
       where: vi.fn().mockReturnThis(),
       get: vi.fn().mockRejectedValue(new Error('Database error')),
     });
