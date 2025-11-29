@@ -1,0 +1,78 @@
+/**
+ * CSRF Protection Middleware for API Routes
+ * Validates CSRF tokens for state-changing operations (POST, PUT, PATCH, DELETE)
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { validateCsrfToken } from './csrf';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from './security-logger';
+import { ApiErrors } from './apiResponse';
+
+/**
+ * Validate CSRF token for state-changing requests
+ */
+export async function validateCsrf(request: NextRequest): Promise<NextResponse | null> {
+  // Only validate CSRF for state-changing methods
+  const methodsRequiringCsrf = ['POST', 'PUT', 'PATCH', 'DELETE'];
+  if (!methodsRequiringCsrf.includes(request.method)) {
+    return null; // No validation needed
+  }
+
+  // Get session ID from cookie
+  const sessionId = request.cookies.get('session_id')?.value;
+  if (!sessionId) {
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.CSRF_VALIDATION_FAILED,
+      ...context,
+      details: { reason: 'No session ID' },
+    });
+    return ApiErrors.forbidden('Invalid session');
+  }
+
+  // Get CSRF token from header or body
+  const csrfToken =
+    request.headers.get('x-csrf-token') || request.headers.get('X-CSRF-Token') || '';
+
+  if (!csrfToken) {
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.CSRF_VALIDATION_FAILED,
+      ...context,
+      details: { reason: 'No CSRF token provided' },
+    });
+    return ApiErrors.forbidden('CSRF token required');
+  }
+
+  // Validate the token
+  const isValid = validateCsrfToken(sessionId, csrfToken);
+  if (!isValid) {
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.CSRF_VALIDATION_FAILED,
+      ...context,
+      details: { reason: 'Invalid or expired token' },
+    });
+    return ApiErrors.forbidden('Invalid or expired CSRF token');
+  }
+
+  return null; // Validation successful
+}
+
+/**
+ * Higher-order function to wrap API route handlers with CSRF protection
+ */
+export function withCsrfProtection<T>(
+  handler: (request: NextRequest, ...args: T[]) => Promise<NextResponse>
+) {
+  return async (request: NextRequest, ...args: T[]): Promise<NextResponse> => {
+    // Validate CSRF
+    const csrfError = await validateCsrf(request);
+    if (csrfError) {
+      return csrfError;
+    }
+
+    // If validation passes, call the original handler
+    return handler(request, ...args);
+  };
+}

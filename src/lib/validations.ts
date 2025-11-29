@@ -1,7 +1,23 @@
 import { z } from 'zod';
 import { CANDIDATE_STATUSES, INTERVIEW_DEFAULTS } from '@/lib/constants';
 
-// Name validation schema
+// Safe URL validation (prevents javascript: and data: protocols)
+const safeUrlSchema = z
+  .string()
+  .url('Invalid URL')
+  .refine(
+    (url) => {
+      const lower = url.toLowerCase().trim();
+      return (
+        !lower.startsWith('javascript:') &&
+        !lower.startsWith('data:') &&
+        !lower.startsWith('vbscript:')
+      );
+    },
+    { message: 'URL contains unsafe protocol' }
+  );
+
+// Name validation schema (enhanced with max length and pattern validation)
 const nameSchema = z
   .string()
   .min(2, 'Must be at least 2 characters')
@@ -18,14 +34,19 @@ const nameSchema = z
     'Cannot start or end with spaces, hyphens, or apostrophes'
   );
 
-// Email schema
-const emailSchema = z.string().email('Invalid email address').toLowerCase().trim();
+// Email schema (enhanced with length limits)
+const emailSchema = z
+  .string()
+  .email('Invalid email address')
+  .toLowerCase()
+  .trim()
+  .max(254, 'Email address too long'); // RFC 5321
 
-// Phone number schema
+// Phone number schema (enhanced with international format support)
 const phoneSchema = z
   .string()
   .min(6, 'Phone number must be at least 6 digits')
-  .max(15, 'Phone number cannot exceed 15 digits')
+  .max(15, 'Phone number cannot exceed 15 digits') // E.164 format
   .regex(/^\d+$/, 'Phone number can only contain digits');
 
 // Date of birth schema (must be 18+)
@@ -52,14 +73,14 @@ export const candidateFormSchema = z.object({
   countryCode: z.string().min(1, 'Country code is required'),
   phoneNumber: phoneSchema,
   dateOfBirth: dateOfBirthSchema,
-  city: z.string().min(1, 'City is required').max(100),
-  country: z.string().min(1, 'Country is required').max(100),
-  nationality: z.string().min(1, 'Nationality is required').max(100),
-  doubleNationality: z.string().max(100).optional(),
-  jobCategory: z.string().min(1, 'Job category is required'),
-  jobTitle: z.string().min(1, 'Job position is required'),
-  specialty: z.string().min(1, 'Specialty is required'),
-  websites: z.array(z.string().url().optional()).optional(),
+  city: z.string().min(1, 'City is required').max(100, 'City name too long'),
+  country: z.string().min(1, 'Country is required').max(100, 'Country name too long'),
+  nationality: z.string().min(1, 'Nationality is required').max(100, 'Nationality too long'),
+  doubleNationality: z.string().max(100, 'Nationality too long').optional(),
+  jobCategory: z.string().min(1, 'Job category is required').max(200, 'Category too long'),
+  jobTitle: z.string().min(1, 'Job position is required').max(200, 'Job title too long'),
+  specialty: z.string().min(1, 'Specialty is required').max(200, 'Specialty too long'),
+  websites: z.array(safeUrlSchema.or(z.literal(''))).optional(),
 });
 
 // Update candidate schema (partial)
@@ -67,11 +88,11 @@ export const updateCandidateSchema = candidateFormSchema.partial();
 
 // Status update schema
 export const statusUpdateSchema = z.object({
-  candidateId: z.string().min(1, 'Candidate ID is required'),
+  candidateId: z.string().min(1, 'Candidate ID is required').max(200),
   newStatus: z.enum(CANDIDATE_STATUSES),
   interviewTimestampISO: z.string().datetime().optional(),
-  calendarEventId: z.string().optional(),
-  meetLink: z.string().url().optional(),
+  calendarEventId: z.string().max(500).optional(),
+  meetLink: safeUrlSchema.optional(),
   duration: z
     .number()
     .min(INTERVIEW_DEFAULTS.MIN_DURATION)
@@ -81,27 +102,27 @@ export const statusUpdateSchema = z.object({
 
 // Score candidate schema
 export const scoreCandidateSchema = z.object({
-  candidateId: z.string().min(1),
-  jobId: z.string().optional(),
-  jobTitle: z.string().min(1, 'Job title is required'),
-  jobDescription: z.string().min(10, 'Job description is required'),
+  candidateId: z.string().min(1).max(200),
+  jobId: z.string().max(200).optional(),
+  jobTitle: z.string().min(1, 'Job title is required').max(200),
+  jobDescription: z.string().min(10, 'Job description is required').max(10000),
 });
 
 // Schedule interview schema
 export const scheduleInterviewSchema = z.object({
-  candidateId: z.string().min(1),
-  candidateEmail: z.string().email(),
-  candidateName: z.string().min(1),
-  interviewDate: z.string().min(1),
-  interviewTime: z.string().min(1),
+  candidateId: z.string().min(1).max(200),
+  candidateEmail: z.string().email().max(254),
+  candidateName: z.string().min(1).max(200),
+  interviewDate: z.string().min(1).max(50),
+  interviewTime: z.string().min(1).max(50),
   duration: z
     .number()
     .min(INTERVIEW_DEFAULTS.MIN_DURATION)
     .max(INTERVIEW_DEFAULTS.MAX_DURATION)
     .default(INTERVIEW_DEFAULTS.DEFAULT_DURATION),
-  jobTitle: z.string().optional(),
-  adminEmail: z.string().email(),
-  notes: z.string().optional(),
+  jobTitle: z.string().max(200).optional(),
+  adminEmail: z.string().email().max(254),
+  notes: z.string().max(5000).optional(),
 });
 
 export type CandidateFormData = z.infer<typeof candidateFormSchema>;
@@ -112,20 +133,20 @@ export type ScheduleInterviewData = z.infer<typeof scheduleInterviewSchema>;
 
 // Check duplicate schema
 export const checkDuplicateSchema = z.object({
-  email: z.string().email().toLowerCase().trim(),
-  jobId: z.string().min(1),
-  jobCategory: z.string().min(1),
+  email: z.string().email().toLowerCase().trim().max(254),
+  jobId: z.string().min(1).max(200),
+  jobCategory: z.string().min(1).max(200),
 });
 
 // Cancel interview schema
 export const cancelInterviewSchema = z.object({
-  candidateId: z.string().min(1),
-  reason: z.string().optional(),
+  candidateId: z.string().min(1).max(200),
+  reason: z.string().max(1000).optional(),
 });
 
-// Job schema
+// Job schema (enhanced with max lengths)
 export const jobSchema = z.object({
-  title: z.string().min(1, 'Job title is required').max(200),
+  title: z.string().min(1, 'Job title is required').max(200, 'Title too long'),
   category: z.enum([
     'Agricole',
     'Bâtiment et travail publique',
@@ -137,20 +158,23 @@ export const jobSchema = z.object({
     'Sociale',
     'Tourisme',
   ]),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  requirements: z.string().optional(),
-  location: z.string().optional(),
-  employmentType: z.string().optional(),
-  salary: z.string().optional(),
+  description: z
+    .string()
+    .min(10, 'Description must be at least 10 characters')
+    .max(10000, 'Description too long'),
+  requirements: z.string().max(10000, 'Requirements too long').optional(),
+  location: z.string().max(200, 'Location too long').optional(),
+  employmentType: z.string().max(100, 'Employment type too long').optional(),
+  salary: z.string().max(100, 'Salary too long').optional(),
   isActive: z.boolean().default(true),
-  specialties: z.array(z.string()).default([]),
+  specialties: z.array(z.string().max(200)).max(50, 'Too many specialties').default([]),
   createdAt: z.any().optional(),
   updatedAt: z.any().optional(),
 });
 
-// Job update schema (includes jobId)
+// Job update schema (includes jobId with validation)
 export const jobUpdateSchema = jobSchema.extend({
-  jobId: z.string().min(1, 'Job ID is required'),
+  jobId: z.string().min(1, 'Job ID is required').max(200),
 });
 
 export type CheckDuplicateData = z.infer<typeof checkDuplicateSchema>;

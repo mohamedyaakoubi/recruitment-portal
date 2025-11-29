@@ -9,4 +9,6 @@ applyTo: '**'
 
 - We only generate production ready code no skips or temporary fixes.
 
-- Wheenevr you write code always write tests for it or update existing tests to cover new functionality after executing them to see if they fai
+- Wheenevr you write code always write tests for it or update existing tests to cover new functionality after executing them to see if they fail and fix them.
+
+- If you are going to commit code try to be brief and avoid emojis, be enterprise like.
