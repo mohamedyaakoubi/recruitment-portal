@@ -19,8 +19,8 @@ test.describe('Admin Dashboard - Candidate Table', () => {
     // Login as admin
     await loginAsAdmin(page);
 
-    // Navigate to dashboard
-    await adminPage.goto();
+    // Navigate to dashboard (handled by loginAsAdmin)
+    // await adminPage.goto();
 
     // Wait for localStorage to be set
     await page.waitForFunction(
