@@ -52,6 +52,7 @@ export default [
       // Custom rules - STRICT MODE
       "react/react-in-jsx-scope": "off",
       "react/no-unescaped-entities": "off",
+      "react/prop-types": "off", // Disabled: TypeScript provides type checking
       "no-console": ["error", { allow: ["warn", "error"] }],
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "@typescript-eslint/no-explicit-any": "error",

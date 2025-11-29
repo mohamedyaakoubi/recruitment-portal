@@ -356,7 +356,10 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                   </label>
                   <div className="space-y-2">
                     {formData.specialties.map((specialty, index) => (
-                      <div key={index} className="flex items-center space-x-2">
+                      <div
+                        key={`specialty-${index}-${specialty.slice(0, 15)}`}
+                        className="flex items-center space-x-2"
+                      >
                         <input
                           type="text"
                           value={specialty}
@@ -606,9 +609,9 @@ const JobListItem: React.FC<JobListItemProps> = ({
         {job.specialties && job.specialties.length > 0 && (
           <div className="mb-3">
             <div className="flex flex-wrap gap-2">
-              {job.specialties.map((specialty, index) => (
+              {job.specialties.map((specialty) => (
                 <span
-                  key={index}
+                  key={specialty}
                   className="rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                 >
                   {specialty}

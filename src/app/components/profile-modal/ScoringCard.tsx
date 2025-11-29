@@ -123,7 +123,7 @@ const ScoringCard: React.FC<ScoringCardProps> = ({ candidate }) => {
             <ul className="space-y-1">
               {candidate.keyStrengths.map((strength, index) => (
                 <li
-                  key={index}
+                  key={`strength-${index}-${strength.slice(0, 20)}`}
                   className="flex items-start text-sm text-gray-700 dark:text-gray-300"
                 >
                   <span className="mr-2 mt-1 text-green-500">•</span>
@@ -143,7 +143,7 @@ const ScoringCard: React.FC<ScoringCardProps> = ({ candidate }) => {
             <ul className="space-y-1">
               {candidate.areasForImprovement.map((area, index) => (
                 <li
-                  key={index}
+                  key={`improvement-${index}-${area.slice(0, 20)}`}
                   className="flex items-start text-sm text-gray-700 dark:text-gray-300"
                 >
                   <span className="mr-2 mt-1 text-yellow-500">•</span>

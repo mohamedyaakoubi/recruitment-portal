@@ -365,40 +365,55 @@ export const useCandidateForm = (emailParam?: string) => {
     }
   };
 
-  const addAdditionalInfo = (type: 'link' | 'file' | 'text') => {
-    setAdditionalInfo([...additionalInfo, { type, content: '' }]);
-  };
+  const addAdditionalInfo = useCallback(
+    (type: 'link' | 'file' | 'text') => {
+      setAdditionalInfo([...additionalInfo, { type, content: '' }]);
+    },
+    [additionalInfo]
+  );
 
-  const removeAdditionalInfo = (index: number) => {
-    if (additionalInfo.length > 1) {
-      setAdditionalInfo(additionalInfo.filter((_, i) => i !== index));
-    }
-  };
+  const removeAdditionalInfo = useCallback(
+    (index: number) => {
+      if (additionalInfo.length > 1) {
+        setAdditionalInfo(additionalInfo.filter((_, i) => i !== index));
+      }
+    },
+    [additionalInfo]
+  );
 
-  const updateAdditionalInfo = (index: number, content: string, file?: File) => {
-    const newInfo = [...additionalInfo];
-    const currentItem = newInfo[index];
-    if (currentItem) {
-      newInfo[index] = { ...currentItem, content, file };
-      setAdditionalInfo(newInfo);
-    }
-  };
+  const updateAdditionalInfo = useCallback(
+    (index: number, content: string, file?: File) => {
+      const newInfo = [...additionalInfo];
+      const currentItem = newInfo[index];
+      if (currentItem) {
+        newInfo[index] = { ...currentItem, content, file };
+        setAdditionalInfo(newInfo);
+      }
+    },
+    [additionalInfo]
+  );
 
-  const addWebsite = () => {
+  const addWebsite = useCallback(() => {
     setWebsites([...websites, '']);
-  };
+  }, [websites]);
 
-  const removeWebsite = (index: number) => {
-    if (websites.length > 1) {
-      setWebsites(websites.filter((_, i) => i !== index));
-    }
-  };
+  const removeWebsite = useCallback(
+    (index: number) => {
+      if (websites.length > 1) {
+        setWebsites(websites.filter((_, i) => i !== index));
+      }
+    },
+    [websites]
+  );
 
-  const updateWebsite = (index: number, value: string) => {
-    const newWebsites = [...websites];
-    newWebsites[index] = value;
-    setWebsites(newWebsites);
-  };
+  const updateWebsite = useCallback(
+    (index: number, value: string) => {
+      const newWebsites = [...websites];
+      newWebsites[index] = value;
+      setWebsites(newWebsites);
+    },
+    [websites]
+  );
 
   useEffect(() => {
     if (selectedCategory) {
@@ -441,18 +456,21 @@ export const useCandidateForm = (emailParam?: string) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedJob]); // specialty is derived from selectedJob
 
-  const handleCategorySelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleCategorySelection = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCategory(e.target.value);
-  };
+  }, []);
 
-  const handleJobSelection = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedJobId = e.target.value;
-    setJobTitle(selectedJobId);
-    const job = filteredJobs.find((j) => j.id === selectedJobId);
-    setSelectedJob(job || null);
-  };
+  const handleJobSelection = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const selectedJobId = e.target.value;
+      setJobTitle(selectedJobId);
+      const job = filteredJobs.find((j) => j.id === selectedJobId);
+      setSelectedJob(job || null);
+    },
+    [filteredJobs]
+  );
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, files } = e.target;
     if (files && files.length > 0) {
       const file = files[0];
@@ -466,7 +484,7 @@ export const useCandidateForm = (emailParam?: string) => {
         }
       }
     }
-  };
+  }, []);
 
   const checkDuplicateApplication = async (email: string, jobId: string, jobCategory: string) => {
     try {

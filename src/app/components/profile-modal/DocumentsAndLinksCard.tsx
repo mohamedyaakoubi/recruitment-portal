@@ -42,9 +42,9 @@ const DocumentsAndLinksCard: React.FC<DocumentsAndLinksCardProps> = ({ candidate
       </div>
       {candidate.websites && candidate.websites.length > 0 && (
         <div className="space-y-2 pt-3">
-          {candidate.websites.map((site, index) => (
+          {candidate.websites.map((site) => (
             <a
-              key={index}
+              key={site}
               href={site.startsWith('http') ? site : `https://${site}`}
               target="_blank"
               rel="noopener noreferrer"

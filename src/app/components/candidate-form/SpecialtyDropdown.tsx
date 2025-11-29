@@ -75,9 +75,9 @@ const SpecialtyDropdown: React.FC<SpecialtyDropdownProps> = ({
       />
       {showSpecialtyList && filteredSpecialties.length > 0 && selectedJob && (
         <div className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
-          {filteredSpecialties.map((spec, index) => (
+          {filteredSpecialties.map((spec) => (
             <button
-              key={index}
+              key={spec}
               type="button"
               onClick={() => {
                 setSpecialty(spec);
@@ -97,9 +97,9 @@ const SpecialtyDropdown: React.FC<SpecialtyDropdownProps> = ({
             Available Specialties:
           </p>
           <div className="mt-1 flex flex-wrap gap-1">
-            {availableSpecialties.map((spec, index) => (
+            {availableSpecialties.map((spec) => (
               <span
-                key={index}
+                key={spec}
                 className="rounded-full bg-green-200 px-2 py-1 text-xs text-green-800 dark:bg-green-900/50 dark:text-green-300"
               >
                 {spec}

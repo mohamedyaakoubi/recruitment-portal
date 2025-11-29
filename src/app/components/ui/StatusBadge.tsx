@@ -1,5 +1,4 @@
 // src/app/components/ui/StatusBadge.tsx
-/* eslint-disable react/prop-types */
 import React from 'react';
 import { StatusBadgeProps } from '@/types';
 

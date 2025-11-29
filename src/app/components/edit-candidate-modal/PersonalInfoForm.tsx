@@ -138,8 +138,8 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
               className="w-20 rounded-l-md border border-r-0 border-gray-300 bg-white px-2 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
               disabled={isLoading}
             >
-              {countryCodes.map((item, index) => (
-                <option key={index} value={item.code}>
+              {countryCodes.map((item) => (
+                <option key={item.code} value={item.code}>
                   {item.flag} {item.code}
                 </option>
               ))}

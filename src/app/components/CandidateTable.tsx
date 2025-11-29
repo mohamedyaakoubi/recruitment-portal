@@ -1,5 +1,4 @@
 'use client';
-/* eslint-disable react/prop-types */
 
 import React from 'react';
 import { useCandidateTable } from '@/hooks/useCandidateTable';

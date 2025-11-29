@@ -71,7 +71,7 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
                 >
                   {statusChartData.map((entry, index) => (
                     <Cell
-                      key={`cell-${index}`}
+                      key={`cell-${entry.name}`}
                       fill={STATUS_COLORS[index % STATUS_COLORS.length]}
                     />
                   ))}

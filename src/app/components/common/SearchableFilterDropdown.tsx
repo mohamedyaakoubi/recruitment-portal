@@ -68,9 +68,9 @@ const SearchableFilterDropdown: React.FC<SearchableFilterDropdownProps> = ({
       />
       {showList && filteredOptions.length > 0 && (
         <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
-          {filteredOptions.map((option, index) => (
+          {filteredOptions.map((option) => (
             <button
-              key={index}
+              key={option}
               type="button"
               onClick={() => {
                 onFilterChange(option);

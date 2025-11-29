@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/hooks/useAuth';
 import { ThemeProvider } from './providers';
 import Loader from './components/ui/Loader';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import { queryClient } from '@/lib/queryClient';
 
 interface ClientProvidersProps {
@@ -20,11 +21,18 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        {loading && <Loader />}
-        <AuthProvider>{children}</AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {loading && <Loader />}
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

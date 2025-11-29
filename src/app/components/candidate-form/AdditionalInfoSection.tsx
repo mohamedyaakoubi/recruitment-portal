@@ -17,7 +17,7 @@ const AdditionalInfoSection: React.FC<AdditionalInfoSectionProps> = ({
     <div className="space-y-4">
       {additionalInfo.map((info, index) => (
         <AdditionalInfoItem
-          key={index}
+          key={`additionalInfo-${index}-${info.type}-${info.content.slice(0, 10)}`}
           info={info}
           index={index}
           updateAdditionalInfo={updateAdditionalInfo}
