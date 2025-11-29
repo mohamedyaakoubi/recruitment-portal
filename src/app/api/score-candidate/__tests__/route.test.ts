@@ -5,6 +5,13 @@ import * as scoringService from '@/services/scoring';
 
 vi.mock('@/services/scoring');
 
+// Mock auth module
+vi.mock('@/lib/auth', () => ({
+  requireAdminAuth: vi.fn(async () => null),
+  isAdminAuthenticated: vi.fn(async () => true),
+  getUserFromRequest: vi.fn(() => ({ id: 'test-admin', ip: 'test-ip' })),
+}));
+
 describe('POST /api/score-candidate', () => {
   beforeEach(() => {
     vi.clearAllMocks();

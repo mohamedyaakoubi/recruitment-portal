@@ -10,6 +10,13 @@ vi.mock('@/services/jobs', () => ({
   deleteJob: vi.fn(),
 }));
 
+// Mock auth module
+vi.mock('@/lib/auth', () => ({
+  requireAdminAuth: vi.fn(async () => null),
+  isAdminAuthenticated: vi.fn(async () => true),
+  getUserFromRequest: vi.fn(() => ({ id: 'test-admin', ip: 'test-ip' })),
+}));
+
 import * as jobsService from '@/services/jobs';
 
 describe('GET /api/jobs', () => {

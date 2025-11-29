@@ -5,6 +5,13 @@ import * as emailService from '@/services/email';
 
 vi.mock('@/services/email');
 
+// Mock auth module
+vi.mock('@/lib/auth', () => ({
+  requireAdminAuth: vi.fn(async () => null),
+  isAdminAuthenticated: vi.fn(async () => true),
+  getUserFromRequest: vi.fn(() => ({ id: 'test-admin', ip: 'test-ip' })),
+}));
+
 describe('POST /api/send-confirmation-email', () => {
   beforeEach(() => {
     vi.clearAllMocks();

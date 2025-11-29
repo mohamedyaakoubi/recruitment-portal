@@ -149,7 +149,7 @@ const CandidateFormUI: React.FC<CandidateFormUIProps> = ({
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8" aria-label="Job application form">
             <PersonalInfoSection
               firstName={firstName}
               setFirstName={setFirstName}

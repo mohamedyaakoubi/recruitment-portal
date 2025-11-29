@@ -106,6 +106,14 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans dark:bg-gray-900">
+      {/* Skip to main content link for keyboard accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-blue-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        Skip to main content
+      </a>
+
       {/* Header */}
       <header className="sticky top-0 z-20 bg-white shadow-sm dark:bg-gray-800">
         <div className="bg-[#003A70] py-1.5 text-xs text-white">
@@ -177,7 +185,11 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12 sm:px-6">
+      <main
+        id="main-content"
+        className="flex min-h-screen flex-col items-center justify-center px-4 py-12 sm:px-6"
+        tabIndex={-1}
+      >
         <div className="w-full max-w-2xl space-y-8 text-center">
           {/* Hero Content */}
           <div className="space-y-6">
@@ -207,7 +219,11 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <form
+                onSubmit={handleEmailSubmit}
+                className="space-y-4"
+                aria-label="Email submission form"
+              >
                 <div>
                   <label
                     htmlFor="email"

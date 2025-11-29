@@ -5,6 +5,13 @@ import * as interviewService from '@/services/interview';
 
 vi.mock('@/services/interview');
 
+// Mock auth module
+vi.mock('@/lib/auth', () => ({
+  requireAdminAuth: vi.fn(async () => null),
+  isAdminAuthenticated: vi.fn(async () => true),
+  getUserFromRequest: vi.fn(() => ({ id: 'test-admin', ip: 'test-ip' })),
+}));
+
 describe('POST /api/schedule-interview-meet', () => {
   beforeEach(() => {
     vi.clearAllMocks();
