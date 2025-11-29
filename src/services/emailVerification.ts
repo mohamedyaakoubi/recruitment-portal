@@ -17,25 +17,36 @@ async function verifyEmailWithAbstractAPI(email: string): Promise<EmailVerificat
 
     const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${encodeURIComponent(email)}`;
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    // Add timeout using AbortController
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-    if (!response.ok) {
-      throw new Error(`Abstract API error: ${response.status} - ${response.statusText}`);
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Abstract API error: ${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      return {
+        isValid: data.deliverability === 'DELIVERABLE' && !data.is_disposable_email?.value,
+        deliverable: data.deliverability === 'DELIVERABLE',
+        disposable: data.is_disposable_email?.value || false,
+        role_account: data.is_role_email?.value || false,
+      };
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    const data = await response.json();
-
-    return {
-      isValid: data.deliverability === 'DELIVERABLE' && !data.is_disposable_email?.value,
-      deliverable: data.deliverability === 'DELIVERABLE',
-      disposable: data.is_disposable_email?.value || false,
-      role_account: data.is_role_email?.value || false,
-    };
   } catch (error) {
     logger.error('Abstract API verification failed', error);
     throw error;
@@ -49,28 +60,39 @@ async function verifyEmailWithHunter(email: string): Promise<EmailVerificationRe
       throw new Error('Hunter API key not configured');
     }
 
-    const response = await fetch(
-      `https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${apiKey}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    // Add timeout using AbortController
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    try {
+      const response = await fetch(
+        `https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${apiKey}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+        }
+      );
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Hunter API error: ${response.status}`);
       }
-    );
 
-    if (!response.ok) {
-      throw new Error(`Hunter API error: ${response.status}`);
+      const data = await response.json();
+
+      return {
+        isValid: data.data.result === 'deliverable',
+        deliverable: data.data.result === 'deliverable',
+        disposable: data.data.disposable,
+        role_account: data.data.role,
+      };
+    } finally {
+      clearTimeout(timeoutId);
     }
-
-    const data = await response.json();
-
-    return {
-      isValid: data.data.result === 'deliverable',
-      deliverable: data.data.result === 'deliverable',
-      disposable: data.data.disposable,
-      role_account: data.data.role,
-    };
   } catch (error) {
     logger.error('Hunter verification failed', error);
     throw error;
@@ -129,12 +151,21 @@ export const verifyEmail = async (email: string): Promise<EmailVerificationRespo
   } catch (error) {
     logger.error('Email verification service failed', error);
 
-    // In production, you might want to be more restrictive
-    // For now, we'll allow the email through if the service fails
-    verificationResult = {
-      isValid: true,
-      error: 'Verification service temporarily unavailable',
-    };
+    // In production, be more restrictive with failed verifications
+    // Only allow through if it's a basic format pass
+    if (process.env.NODE_ENV === 'production') {
+      logger.warn('Email verification failed in production, rejecting', { email });
+      verificationResult = {
+        isValid: false,
+        error: 'Email verification failed. Please try again or use a different email.',
+      };
+    } else {
+      // In development, allow through with warning
+      verificationResult = {
+        isValid: true,
+        error: 'Verification service temporarily unavailable (dev mode)',
+      };
+    }
   }
   return verificationResult;
 };

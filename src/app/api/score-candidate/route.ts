@@ -3,8 +3,12 @@ import { scoreCandidate } from '@/services/scoring';
 import logger from '@/lib/logger';
 import { scoreCandidateSchema } from '@/lib/validations';
 import { successResponse, ApiErrors, errorResponse } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
   try {
     logger.info('Starting Gemini 2.5 Pro scoring request');
 

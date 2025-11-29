@@ -173,4 +173,4 @@ const DashboardCharts: React.FC<DashboardChartsProps> = ({
   );
 };
 
-export default DashboardCharts;
+export default React.memo(DashboardCharts);

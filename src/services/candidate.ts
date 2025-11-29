@@ -202,59 +202,58 @@ export const exportCandidates = async (
     };
   });
 
-  // Apply all filters...
-  if (filterName) {
-    candidates = candidates.filter(
-      (candidate) =>
-        candidate.fullName.toLowerCase().includes(filterName.toLowerCase()) ||
-        candidate.firstName.toLowerCase().includes(filterName.toLowerCase()) ||
-        candidate.lastName.toLowerCase().includes(filterName.toLowerCase())
-    );
-  }
+  // Optimize: Combine all filters into a single pass instead of chaining multiple filter operations
+  candidates = candidates.filter((candidate) => {
+    // Filter by name
+    if (filterName) {
+      const nameLower = filterName.toLowerCase();
+      const matchesName =
+        candidate.fullName.toLowerCase().includes(nameLower) ||
+        candidate.firstName.toLowerCase().includes(nameLower) ||
+        candidate.lastName.toLowerCase().includes(nameLower);
+      if (!matchesName) return false;
+    }
 
-  if (filterNationality) {
-    candidates = candidates.filter(
-      (candidate) =>
-        candidate.nationality.toLowerCase().includes(filterNationality.toLowerCase()) ||
-        candidate.doubleNationality.toLowerCase().includes(filterNationality.toLowerCase())
-    );
-  }
+    // Filter by nationality
+    if (filterNationality) {
+      const nationalityLower = filterNationality.toLowerCase();
+      const matchesNationality =
+        candidate.nationality.toLowerCase().includes(nationalityLower) ||
+        candidate.doubleNationality.toLowerCase().includes(nationalityLower);
+      if (!matchesNationality) return false;
+    }
 
-  if (filterCity) {
-    candidates = candidates.filter((candidate) =>
-      candidate.city.toLowerCase().includes(filterCity.toLowerCase())
-    );
-  }
+    // Filter by city
+    if (filterCity) {
+      if (!candidate.city.toLowerCase().includes(filterCity.toLowerCase())) return false;
+    }
 
-  if (filterCountry) {
-    candidates = candidates.filter((candidate) =>
-      candidate.country.toLowerCase().includes(filterCountry.toLowerCase())
-    );
-  }
+    // Filter by country
+    if (filterCountry) {
+      if (!candidate.country.toLowerCase().includes(filterCountry.toLowerCase())) return false;
+    }
 
-  if (filterJobTitle) {
-    candidates = candidates.filter(
-      (candidate) =>
-        candidate.jobTitleText.toLowerCase().includes(filterJobTitle.toLowerCase()) ||
-        candidate.jobTitle.toLowerCase().includes(filterJobTitle.toLowerCase())
-    );
-  }
+    // Filter by job title
+    if (filterJobTitle) {
+      const jobTitleLower = filterJobTitle.toLowerCase();
+      const matchesJobTitle =
+        candidate.jobTitleText.toLowerCase().includes(jobTitleLower) ||
+        candidate.jobTitle.toLowerCase().includes(jobTitleLower);
+      if (!matchesJobTitle) return false;
+    }
 
-  if (filterCategory) {
-    candidates = candidates.filter((candidate) =>
-      candidate.jobCategory.toLowerCase().includes(filterCategory.toLowerCase())
-    );
-  }
+    // Filter by category
+    if (filterCategory) {
+      if (!candidate.jobCategory.toLowerCase().includes(filterCategory.toLowerCase())) return false;
+    }
 
-  if (filterSpecialty) {
-    candidates = candidates.filter((candidate) =>
-      candidate.specialty.toLowerCase().includes(filterSpecialty.toLowerCase())
-    );
-  }
+    // Filter by specialty
+    if (filterSpecialty) {
+      if (!candidate.specialty.toLowerCase().includes(filterSpecialty.toLowerCase())) return false;
+    }
 
-  // Age filtering
-  if (filterAgeMin || filterAgeMax) {
-    candidates = candidates.filter((candidate) => {
+    // Filter by age
+    if (filterAgeMin || filterAgeMax) {
       const candidateAge = candidate.age;
       if (!candidateAge && candidateAge !== 0) return false;
 
@@ -263,10 +262,10 @@ export const exportCandidates = async (
 
       if (filterAgeMin && age < parseInt(filterAgeMin)) return false;
       if (filterAgeMax && age > parseInt(filterAgeMax)) return false;
+    }
 
-      return true;
-    });
-  }
+    return true;
+  });
 
   return candidates;
 };

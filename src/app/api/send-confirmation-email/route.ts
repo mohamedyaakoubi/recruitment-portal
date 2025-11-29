@@ -2,8 +2,12 @@ import { NextRequest } from 'next/server';
 import { sendApplicationConfirmationEmail } from '@/services/email';
 import logger from '@/lib/logger';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
   try {
     const { candidateEmail, candidateName, jobTitle, jobCategory, specialty, applicationId } =
       await request.json();

@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { readFileSync } from 'fs';
 import path from 'path';
 import logger from '@/lib/logger';
+import { EMAIL_ADDRESSES } from '@/lib/constants/emails';
 
 const SMTP_HOST = process.env.SMTP_HOST;
 const SMTP_PORT = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
@@ -33,7 +34,7 @@ const transporter = smtpConfigured
       maxConnections: 3,
       maxMessages: 50,
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: process.env.NODE_ENV === 'production',
         minVersion: 'TLSv1.2',
       },
       debug: process.env.NODE_ENV === 'development',
@@ -66,8 +67,7 @@ export const sendNotificationEmail = async (
   to: string,
   status: string,
   candidateName: string,
-  interviewDate?: Date,
-  _meetLink?: string
+  interviewDate?: Date
 ) => {
   if (!transporter) {
     logger.info('SMTP not configured, skipping email notification');
@@ -77,9 +77,9 @@ export const sendNotificationEmail = async (
   let subject = '';
   let htmlBody = '';
   let textBody = '';
-  const companyName = 'International Skills Labor Company';
-  let fromAddress = SMTP_FROM || 'noreply@internationalskills.fi';
-  let replyToAddress = 'Apply@internationalskills.fi';
+  const companyName = EMAIL_ADDRESSES.COMPANY_NAME;
+  let fromAddress: string = EMAIL_ADDRESSES.NOREPLY;
+  let replyToAddress: string = EMAIL_ADDRESSES.APPLY;
 
   if (status === 'rejected') {
     subject = `Application Status Update - ${companyName}`;
@@ -91,8 +91,8 @@ export const sendNotificationEmail = async (
       .replace(/\${candidateName}/g, candidateName);
   } else if (status === 'interview_scheduled' && interviewDate) {
     subject = `Interview Invitation from ${companyName}`;
-    fromAddress = 'recruit@internationalskills.fi';
-    replyToAddress = 'recruit@internationalskills.fi';
+    fromAddress = EMAIL_ADDRESSES.RECRUIT;
+    replyToAddress = EMAIL_ADDRESSES.RECRUIT;
     const formattedDate = interviewDate.toLocaleDateString(undefined, {
       weekday: 'long',
       year: 'numeric',
@@ -121,7 +121,7 @@ export const sendNotificationEmail = async (
 
   const mailOptions = {
     from: {
-      name: 'International Skills Labor Company',
+      name: EMAIL_ADDRESSES.COMPANY_NAME,
       address: fromAddress,
     },
     to: to,
@@ -214,14 +214,14 @@ export const sendApplicationConfirmationEmail = async ({
 
   const mailOptions = {
     from: {
-      name: 'International Skills Labor Company',
-      address: SMTP_FROM || 'noreply@internationalskills.fi',
+      name: EMAIL_ADDRESSES.COMPANY_NAME,
+      address: EMAIL_ADDRESSES.NOREPLY,
     },
     to: candidateEmail,
     subject: `✅ Application Confirmed - ${jobTitle} Position | Application #${applicationId}`,
     text: textTemplate,
     html: htmlTemplate,
-    replyTo: 'Apply@internationalskills.fi',
+    replyTo: EMAIL_ADDRESSES.APPLY,
   };
 
   try {
@@ -264,14 +264,14 @@ export const sendRejectionEmail = async (
 
   const mailOptions = {
     from: {
-      name: 'International Skills Labor Company',
-      address: SMTP_FROM || 'noreply@internationalskills.fi',
+      name: EMAIL_ADDRESSES.COMPANY_NAME,
+      address: EMAIL_ADDRESSES.NOREPLY,
     },
     to: candidateEmail,
-    subject: `Application Status Update - International Skills Labor Company`,
+    subject: `Application Status Update - ${EMAIL_ADDRESSES.COMPANY_NAME}`,
     text: textTemplate,
     html: htmlTemplate,
-    replyTo: 'Apply@internationalskills.fi',
+    replyTo: EMAIL_ADDRESSES.APPLY,
   };
 
   try {
@@ -315,14 +315,14 @@ export const sendCancellationEmail = async ({
 
   const mailOptions = {
     from: {
-      name: 'International Skills Labor Company',
-      address: SMTP_FROM || 'noreply@internationalskills.fi',
+      name: EMAIL_ADDRESSES.COMPANY_NAME,
+      address: EMAIL_ADDRESSES.NOREPLY,
     },
     to: candidateEmail,
     subject: `⚠️ Interview Cancelled - ${jobTitle || 'Position'} at International Skills`,
     html: htmlTemplate,
     text: textTemplate,
-    replyTo: 'Apply@internationalskills.fi',
+    replyTo: EMAIL_ADDRESSES.APPLY,
   };
 
   try {

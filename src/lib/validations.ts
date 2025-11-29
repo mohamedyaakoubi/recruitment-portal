@@ -123,5 +123,35 @@ export const cancelInterviewSchema = z.object({
   reason: z.string().optional(),
 });
 
+// Job schema
+export const jobSchema = z.object({
+  title: z.string().min(1, 'Job title is required').max(200),
+  category: z.enum([
+    'Agricole',
+    'Bâtiment et travail publique',
+    'Development & IT',
+    'Industriel',
+    'Restauration',
+    'Santé',
+    'Services',
+    'Sociale',
+    'Tourisme',
+  ]),
+  description: z.string().min(10, 'Description must be at least 10 characters'),
+  requirements: z.string().optional(),
+  location: z.string().optional(),
+  employmentType: z.string().optional(),
+  salary: z.string().optional(),
+  isActive: z.boolean().default(true),
+  specialties: z.array(z.string()).default([]),
+  createdAt: z.any().optional(),
+  updatedAt: z.any().optional(),
+});
+
+// Job update schema (includes jobId)
+export const jobUpdateSchema = jobSchema.extend({
+  jobId: z.string().min(1, 'Job ID is required'),
+});
+
 export type CheckDuplicateData = z.infer<typeof checkDuplicateSchema>;
 export type CancelInterviewData = z.infer<typeof cancelInterviewSchema>;

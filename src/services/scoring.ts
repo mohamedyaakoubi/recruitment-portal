@@ -59,6 +59,20 @@ async function uploadFileToGemini(fileUrl: string, mimeType: string) {
       throw new Error(`Failed to fetch file: ${response.statusText}`);
     }
 
+    // Check file size before loading into memory (max 20MB)
+    const contentLength = response.headers.get('content-length');
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+
+    if (contentLength) {
+      const fileSize = parseInt(contentLength, 10);
+      if (fileSize > MAX_FILE_SIZE) {
+        logger.warn('File too large for Gemini upload', { fileSize, maxSize: MAX_FILE_SIZE });
+        throw new Error(
+          `File size (${(fileSize / 1024 / 1024).toFixed(2)}MB) exceeds maximum allowed (20MB)`
+        );
+      }
+    }
+
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 

@@ -3,6 +3,8 @@ import { NextRequest } from 'next/server';
 import { getJobs, createJob, updateJob, deleteJob } from '@/services/jobs';
 import logger from '@/lib/logger';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { jobSchema, jobUpdateSchema } from '@/lib/validations';
+import { requireAdminAuth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,9 +19,19 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
-    const jobData = await request.json();
-    const { jobId } = await createJob(jobData);
+    const body = await request.json();
+    const validatedData = jobSchema.safeParse(body);
+
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
+    }
+
+    const { jobId } = await createJob(validatedData.data);
     return successResponse({ jobId }, { message: 'Job created successfully' });
   } catch (error) {
     logger.error('Error creating job', error);
@@ -28,8 +40,19 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
-    const { jobId, ...jobData } = await request.json();
+    const body = await request.json();
+    const validatedData = jobUpdateSchema.safeParse(body);
+
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
+    }
+
+    const { jobId, ...jobData } = validatedData.data;
     await updateJob(jobId, jobData);
     return successResponse({ jobId }, { message: 'Job updated successfully' });
   } catch (error) {
@@ -39,12 +62,19 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get('jobId');
-    if (jobId) {
-      await deleteJob(jobId);
+
+    if (!jobId) {
+      return ApiErrors.badRequest('Job ID is required');
     }
+
+    await deleteJob(jobId);
     return successResponse({ jobId }, { message: 'Job deleted successfully' });
   } catch (error) {
     logger.error('Error deleting job', error);

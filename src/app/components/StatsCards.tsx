@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StatsCardsProps } from '@/types';
 import logger from '@/lib/logger';
 
@@ -56,28 +56,39 @@ const StatCard: React.FC<StatCardProps> = ({
 };
 
 const StatsCards: React.FC<StatsCardsProps> = ({ stats, candidates }) => {
-  const averageScore =
-    candidates.length > 0
-      ? candidates.filter((c) => c.score !== null).reduce((sum, c) => sum + (c.score || 0), 0) /
-        candidates.filter((c) => c.score !== null).length
-      : 0;
+  // Memoize expensive calculations to avoid re-computing on every render
+  const { averageScore, highScorers, conversionRate, interviewCompletionRate } = useMemo(() => {
+    const candidatesWithScores = candidates.filter((c) => c.score !== null);
+    const avgScore =
+      candidatesWithScores.length > 0
+        ? candidatesWithScores.reduce((sum, c) => sum + (c.score || 0), 0) /
+          candidatesWithScores.length
+        : 0;
 
-  const highScorers = candidates.filter((c) => (c.score || 0) >= 80).length;
+    const highScorerCount = candidates.filter((c) => (c.score || 0) >= 80).length;
 
-  const calculateConversionRate = () => {
-    if (stats.submitted === 0) return '0.0';
-    const conversionRate = (stats.scheduled / stats.submitted) * 100;
-    if (conversionRate > 100) {
-      logger.warn(
-        'Scheduled count is higher than submitted count. This may indicate data inconsistency.'
-      );
-      return '100.0';
-    }
-    return conversionRate.toFixed(1);
-  };
+    const calcConversionRate = () => {
+      if (stats.submitted === 0) return '0.0';
+      const rate = (stats.scheduled / stats.submitted) * 100;
+      if (rate > 100) {
+        logger.warn(
+          'Scheduled count is higher than submitted count. This may indicate data inconsistency.'
+        );
+        return '100.0';
+      }
+      return rate.toFixed(1);
+    };
 
-  const interviewCompletionRate =
-    stats.scheduled > 0 ? ((stats.approved / stats.scheduled) * 100).toFixed(1) : '0.0';
+    const interviewSuccess =
+      stats.scheduled > 0 ? ((stats.approved / stats.scheduled) * 100).toFixed(1) : '0.0';
+
+    return {
+      averageScore: avgScore,
+      highScorers: highScorerCount,
+      conversionRate: calcConversionRate(),
+      interviewCompletionRate: interviewSuccess,
+    };
+  }, [candidates, stats]);
 
   const mainStats = [
     {
@@ -198,7 +209,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, candidates }) => {
     },
     {
       title: 'Conversion Rate',
-      value: `${calculateConversionRate()}%`,
+      value: `${conversionRate}%`,
       icon: (
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
@@ -246,4 +257,4 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, candidates }) => {
   );
 };
 
-export default StatsCards;
+export default React.memo(StatsCards);

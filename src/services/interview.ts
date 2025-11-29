@@ -34,7 +34,11 @@ export const scheduleInterview = async (
   adminEmail: string,
   notes: string,
   origin: string
-) => {
+): Promise<{
+  meetLink: string;
+  calendarEventId: string;
+  interviewTimestampISO: string;
+}> => {
   if (!candidateEmail || !candidateName || !interviewDate || !interviewTime) {
     throw new Error('Missing required fields');
   }
@@ -171,19 +175,13 @@ export const scheduleInterview = async (
   }
 
   return {
-    interviewDateTime: interviewDateTime.toISOString(),
-    endDateTime: endDateTime.toISOString(),
-    duration: duration,
     meetLink: meetLink,
     calendarEventId: calendarEventId,
-    emailsSent: {
-      candidate: candidateEmail,
-      interviewer: adminEmail || 'wassim@internationalskills.fi',
-    },
+    interviewTimestampISO: interviewDateTime.toISOString(),
   };
 };
 
-export const cancelInterview = async (candidateId: string, reason: string) => {
+export const cancelInterview = async (candidateId: string, reason: string): Promise<void> => {
   if (!candidateId) {
     throw new Error('Candidate ID is required');
   }

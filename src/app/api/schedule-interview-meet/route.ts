@@ -4,8 +4,12 @@ import { scheduleInterview } from '@/services/interview';
 import logger from '@/lib/logger';
 import { scheduleInterviewSchema } from '@/lib/validations';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
   try {
     const body = await request.json();
     const validatedData = scheduleInterviewSchema.safeParse(body);

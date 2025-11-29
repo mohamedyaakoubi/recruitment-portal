@@ -1,4 +1,4 @@
-import { google } from 'googleapis';
+import { google, Auth } from 'googleapis';
 import { getFirestoreAdmin } from './firebase-admin';
 import logger from '@/lib/logger';
 
@@ -17,7 +17,7 @@ const TOKEN_DB_PATH = 'settings/google_auth_tokens';
 /**
  * Creates a new OAuth2 client.
  */
-export function getOAuth2Client() {
+export function getOAuth2Client(): Auth.OAuth2Client {
   if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
     throw new Error('Google OAuth2 credentials are not configured in environment variables.');
   }
@@ -27,7 +27,7 @@ export function getOAuth2Client() {
 /**
  * Generates the authentication URL for the user to grant consent.
  */
-export function generateAuthUrl() {
+export function generateAuthUrl(): string {
   const oauth2Client = getOAuth2Client();
   return oauth2Client.generateAuthUrl({
     access_type: 'offline', // 'offline' gets a refresh token
@@ -44,7 +44,7 @@ export async function storeTokens(tokens: {
   refresh_token?: string;
   expiry_date?: number;
   [key: string]: unknown;
-}) {
+}): Promise<void> {
   const db = getFirestoreAdmin();
   const tokenRef = db.doc(TOKEN_DB_PATH);
   await tokenRef.set(tokens);
@@ -54,7 +54,7 @@ export async function storeTokens(tokens: {
 /**
  * Retrieves stored tokens from Firestore.
  */
-async function getStoredTokens() {
+async function getStoredTokens(): Promise<Record<string, unknown> | null> {
   const db = getFirestoreAdmin();
   const tokenRef = db.doc(TOKEN_DB_PATH);
   const tokenDoc = await tokenRef.get();
@@ -63,14 +63,14 @@ async function getStoredTokens() {
     logger.warn('Google Auth tokens not found in Firestore');
     return null;
   }
-  return tokenDoc.data();
+  return (tokenDoc.data() as Record<string, unknown>) || null;
 }
 
 /**
  * Creates and returns an authenticated OAuth2 client using stored tokens.
  * Handles token refreshing automatically.
  */
-export async function getAuthenticatedClient() {
+export async function getAuthenticatedClient(): Promise<Auth.OAuth2Client | null> {
   const tokens = await getStoredTokens();
   if (!tokens) {
     return null;

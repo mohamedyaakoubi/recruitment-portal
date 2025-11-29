@@ -1,5 +1,5 @@
 // src/hooks/useCandidateForm.ts
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   collection,
@@ -62,96 +62,96 @@ export const useCandidateForm = () => {
     message: '',
   });
 
-  const validatePhoneNumber = async (
-    countryCode: string,
-    phoneNumber: string
-  ): Promise<boolean> => {
-    // 🔥 CRITICAL: Skip validation entirely for existing candidates
-    if (isExistingCandidate) {
-      logger.debug('Skipping phone validation for existing candidate');
-      setPhoneValidation({
-        isValid: true, // Assume valid since it was previously accepted
-        isValidating: false,
-        message: '✅ Phone number from previous application (validated)',
-        warning: 'Using phone number from your previous application',
-      });
-      return true;
-    }
-
-    if (!phoneNumber.trim()) {
-      setPhoneValidation({
-        isValid: false,
-        isValidating: false,
-        message: 'Phone number is required',
-      });
-      return false;
-    }
-
-    setPhoneValidation({
-      isValid: null,
-      isValidating: true,
-      message: 'Validating phone number...',
-    });
-
-    try {
-      const response = await fetch('/api/validate-phone', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          countryCode,
-          phoneNumber: phoneNumber.trim(),
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Validation failed');
-      }
-
-      const validationMessage =
-        result.message ||
-        (result.isValid
-          ? '✅ Phone number is valid'
-          : `❌ ${result.error || 'Invalid phone number format'}`);
-
-      setPhoneValidation({
-        isValid: result.isValid,
-        isValidating: false,
-        message: validationMessage,
-        warning: result.warning || result.suggestion,
-      });
-
-      // Log validation details for debugging
-      if (result.isValid && result.country) {
-        logger.info('Phone validated successfully', {
-          country: result.country.name,
-          type: result.type || 'unknown',
-          carrier: result.carrier,
+  const validatePhoneNumber = useCallback(
+    async (countryCode: string, phoneNumber: string): Promise<boolean> => {
+      // 🔥 CRITICAL: Skip validation entirely for existing candidates
+      if (isExistingCandidate) {
+        logger.debug('Skipping phone validation for existing candidate');
+        setPhoneValidation({
+          isValid: true, // Assume valid since it was previously accepted
+          isValidating: false,
+          message: '✅ Phone number from previous application (validated)',
+          warning: 'Using phone number from your previous application',
         });
+        return true;
       }
 
-      return result.isValid;
-    } catch (error) {
-      logger.error('Phone validation error', error, { countryCode, phoneNumber });
-
-      // Fallback validation - just check basic format
-      const basicValidation = /^\d{6,15}$/.test(phoneNumber.replace(/\D/g, ''));
+      if (!phoneNumber.trim()) {
+        setPhoneValidation({
+          isValid: false,
+          isValidating: false,
+          message: 'Phone number is required',
+        });
+        return false;
+      }
 
       setPhoneValidation({
-        isValid: basicValidation,
-        isValidating: false,
-        message: basicValidation
-          ? '⚠️ Phone format appears valid (validation service unavailable)'
-          : '❌ Phone number format appears invalid',
-        warning: 'Validation service temporarily unavailable',
+        isValid: null,
+        isValidating: true,
+        message: 'Validating phone number...',
       });
 
-      return basicValidation;
-    }
-  };
+      try {
+        const response = await fetch('/api/validate-phone', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode,
+            phoneNumber: phoneNumber.trim(),
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Validation failed');
+        }
+
+        const validationMessage =
+          result.message ||
+          (result.isValid
+            ? '✅ Phone number is valid'
+            : `❌ ${result.error || 'Invalid phone number format'}`);
+
+        setPhoneValidation({
+          isValid: result.isValid,
+          isValidating: false,
+          message: validationMessage,
+          warning: result.warning || result.suggestion,
+        });
+
+        // Log validation details for debugging
+        if (result.isValid && result.country) {
+          logger.info('Phone validated successfully', {
+            country: result.country.name,
+            type: result.type || 'unknown',
+            carrier: result.carrier,
+          });
+        }
+
+        return result.isValid;
+      } catch (error) {
+        logger.error('Phone validation error', error, { countryCode, phoneNumber });
+
+        // Fallback validation - just check basic format
+        const basicValidation = /^\d{6,15}$/.test(phoneNumber.replace(/\D/g, ''));
+
+        setPhoneValidation({
+          isValid: basicValidation,
+          isValidating: false,
+          message: basicValidation
+            ? '⚠️ Phone format appears valid (validation service unavailable)'
+            : '❌ Phone number format appears invalid',
+          warning: 'Validation service temporarily unavailable',
+        });
+
+        return basicValidation;
+      }
+    },
+    [isExistingCandidate]
+  );
 
   // 🔥 FIXED: Single useEffect with proper debouncing
   useEffect(() => {

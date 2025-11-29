@@ -116,9 +116,9 @@ describe('emailVerification', () => {
 
       const result = await verifyEmail('test@example.com');
 
-      // Should fallback to allowing email through
+      // Should fallback to allowing email through in dev mode
       expect(result.isValid).toBe(true);
-      expect(result.error).toBe('Verification service temporarily unavailable');
+      expect(result.error).toContain('Verification service temporarily unavailable');
     });
 
     it('should handle network errors', async () => {
@@ -127,7 +127,7 @@ describe('emailVerification', () => {
       const result = await verifyEmail('test@example.com');
 
       expect(result.isValid).toBe(true);
-      expect(result.error).toBe('Verification service temporarily unavailable');
+      expect(result.error).toContain('Verification service temporarily unavailable');
     });
   });
 
@@ -186,7 +186,7 @@ describe('emailVerification', () => {
       const result = await verifyEmail('test@example.com');
 
       expect(result.isValid).toBe(true);
-      expect(result.error).toBe('Verification service temporarily unavailable');
+      expect(result.error).toContain('Verification service temporarily unavailable');
     });
   });
 
