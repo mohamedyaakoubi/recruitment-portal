@@ -38,11 +38,11 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
-__mocks__/
-# Ignore test files
-
+# Markdown documentation files (except README and instructions)
+*.md
+!README.md
+!.github/**/*.md
 
 # Ignore test snapshots (used with Jest)
 *.snap
@@ -56,7 +56,13 @@ test-results/
 test-results.json
 *.log
 
-# Ignore Playwright/Cypress test artifacts (optional if you use them)
+# Ignore Playwright/Cypress test artifacts
 playwright-report/
 cypress/videos/
 cypress/screenshots/
+
+# Temporary/generated files
+*.txt
+!public/**/*.txt
+!src/lib/emailTemplates/*.txt
+
