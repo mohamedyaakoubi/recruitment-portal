@@ -67,8 +67,11 @@ export default function LandingPage() {
         throw new Error(checkResult.error || 'Failed to check candidate status');
       }
 
+      // Extract data from API response wrapper
+      const checkData = checkResult.data || checkResult;
+
       // If candidate exists in database, skip email verification
-      if (checkResult.exists && checkResult.count > 0) {
+      if (checkData.exists && checkData.count > 0) {
         logger.info('Existing candidate found, redirecting to choices', { email: normalizedEmail });
         router.push(`/candidate-choices?email=${encodeURIComponent(normalizedEmail)}`);
         return;
@@ -88,7 +91,10 @@ export default function LandingPage() {
         throw new Error(verifyResult.error || 'Email verification failed');
       }
 
-      if (!verifyResult.isValid) {
+      // Extract data from API response wrapper
+      const verifyData = verifyResult.data || verifyResult;
+
+      if (!verifyData.isValid) {
         setError('Please enter a valid email address that exists');
         return;
       }
