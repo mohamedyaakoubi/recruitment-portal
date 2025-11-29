@@ -4,20 +4,19 @@ import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import { getAuthenticatedClient } from '@/lib/googleOAuth'; // 👈 CHANGE
 import { sendCancellationEmail } from './email';
 import logger from '@/lib/logger';
+import crypto from 'crypto';
 
 const generateMeetLink = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyz';
-  const part1 = Array.from(
-    { length: 3 },
-    () => chars[Math.floor(Math.random() * chars.length)]
-  ).join('');
-  const part2 = Array.from(
-    { length: 4 },
-    () => chars[Math.floor(Math.random() * chars.length)]
-  ).join('');
+  const randomBytes = crypto.randomBytes(5); // Generate 5 random bytes for 10 chars (3+4+3)
+
+  const part1 = Array.from({ length: 3 }, (_, i) => chars[randomBytes[i]! % chars.length]).join('');
+  const part2 = Array.from({ length: 4 }, (_, i) => chars[randomBytes[i % 5]! % chars.length]).join(
+    ''
+  );
   const part3 = Array.from(
     { length: 3 },
-    () => chars[Math.floor(Math.random() * chars.length)]
+    (_, i) => chars[randomBytes[(i + 2) % 5]! % chars.length]
   ).join('');
 
   return `https://meet.google.com/${part1}-${part2}-${part3}`;

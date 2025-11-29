@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('CSRF token generation error:', error);
+    logger.error('CSRF token generation error', error);
     return NextResponse.json({ error: 'Failed to generate CSRF token' }, { status: 500 });
   }
 }

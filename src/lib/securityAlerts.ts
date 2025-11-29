@@ -29,7 +29,6 @@ function getAlertSeverity(eventType: SecurityEventType): SecurityAlert['severity
   const criticalEvents = [
     SecurityEventType.UNAUTHORIZED_ACCESS,
     SecurityEventType.SUSPICIOUS_ACTIVITY,
-    SecurityEventType.AUTH_BRUTE_FORCE,
   ];
 
   const highEvents = [
@@ -92,7 +91,14 @@ export async function sendSecurityAlert(
   };
 
   // Log the alert
-  logger.warn('Security Alert Triggered', alert);
+  logger.warn('Security Alert Triggered', {
+    severity: alert.severity,
+    eventType: alert.eventType,
+    message: alert.message,
+    timestamp: alert.timestamp,
+    ip: alert.ip,
+    details: alert.details,
+  });
 
   // Send to configured channels
   const config = getAlertConfig();
