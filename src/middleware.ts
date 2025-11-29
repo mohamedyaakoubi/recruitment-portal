@@ -105,7 +105,15 @@ export async function middleware(request: NextRequest) {
 
     // Apply rate limiting
     const identifier = getRateLimitIdentifier(request);
-    const rateLimitResult = await checkRateLimit(identifier, request.nextUrl.pathname);
+
+    let rateLimitResult;
+    try {
+      rateLimitResult = await checkRateLimit(identifier, request.nextUrl.pathname);
+    } catch (error) {
+      // On error, allow request through but log it
+      console.error('[Middleware] Rate limit error:', error);
+      rateLimitResult = { success: true, limit: 0, remaining: 0, reset: Date.now() };
+    }
 
     if (!rateLimitResult.success) {
       logSecurityEvent({

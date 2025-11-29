@@ -25,7 +25,7 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
         accept=".pdf,.doc,.docx"
         onChange={handleFileChange}
         disabled={isLoading}
-        helpText="Accepted formats: PDF, DOC, DOCX"
+        helpText="PDF, DOC, DOCX • Max 5 MB"
       />
       <FileInput
         name="passport"
@@ -34,7 +34,7 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
         accept=".pdf,.jpg,.jpeg,.png"
         onChange={handleFileChange}
         disabled={isLoading}
-        helpText="Accepted formats: PDF, JPG, PNG"
+        helpText="PDF, JPG, PNG • Max 5 MB"
       />
       <div className="sm:col-span-2">
         <FileInput
@@ -43,7 +43,7 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
           accept=".jpg,.jpeg,.png"
           onChange={handleFileChange}
           disabled={isLoading}
-          helpText="Accepted formats: JPG, PNG (Optional)"
+          helpText="JPG, PNG • Max 2 MB (Optional)"
         />
       </div>
     </div>

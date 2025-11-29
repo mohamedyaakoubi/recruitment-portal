@@ -28,6 +28,7 @@
     "clsx": "^2.1.1",
     "csrf": "^3.1.0",
     "date-fns": "^4.1.0",
+    "email-validator-dns-provider-rules": "^2.0.0",
     "firebase": "^11.8.1",
     "firebase-admin": "^13.4.0",
     "glob": "^13.0.0",

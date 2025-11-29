@@ -484,11 +484,45 @@ export const useCandidateForm = (emailParam?: string) => {
     [filteredJobs]
   );
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, files } = e.target;
     if (files && files.length > 0) {
       const file = files[0];
       if (file) {
+        // Determine file type for validation
+        const fileType = name === 'photo' ? 'image' : name === 'passport' ? 'passport' : 'document';
+
+        // Get size limit based on file type
+        const sizeLimits: Record<string, number> = {
+          cv: 5 * 1024 * 1024, // 5 MB
+          passport: 5 * 1024 * 1024, // 5 MB
+          photo: 2 * 1024 * 1024, // 2 MB
+        };
+        const maxSize = sizeLimits[name] || 5 * 1024 * 1024;
+
+        // Check file size immediately
+        if (file.size > maxSize) {
+          const maxSizeMB = maxSize / (1024 * 1024);
+          setError(
+            `${name === 'cv' ? 'CV/Resume' : name === 'passport' ? 'Passport/ID' : 'Photo'} file size exceeds ${maxSizeMB} MB limit. Please choose a smaller file.`
+          );
+          e.target.value = ''; // Clear the input
+          return;
+        }
+
+        // Validate file type and content
+        const validation = await validateFile(file, fileType);
+        if (!validation.isValid) {
+          setError(
+            `${name === 'cv' ? 'CV/Resume' : name === 'passport' ? 'Passport/ID' : 'Photo'}: ${validation.error}`
+          );
+          e.target.value = ''; // Clear the input
+          return;
+        }
+
+        // Clear error if validation passes
+        setError(null);
+
         if (name === 'cv') {
           setCvFile(file);
         } else if (name === 'passport') {

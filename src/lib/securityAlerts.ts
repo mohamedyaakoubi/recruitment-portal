@@ -1,10 +1,22 @@
 /**
  * Security Alert Service
  * Sends real-time alerts for critical security events
+ * Uses pattern detection to avoid spam for routine events
  */
 
 import logger from './logger';
-import { SecurityEventType } from './security-logger';
+
+// Re-define event types here to avoid circular dependency with security-logger.ts
+// These must match the SecurityEventType enum in security-logger.ts
+const SecurityEventTypes = {
+  RATE_LIMIT_EXCEEDED: 'rate_limit_exceeded',
+  AUTH_FAILURE: 'auth_failure',
+  INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  CSRF_VALIDATION_FAILED: 'csrf_validation_failed',
+  UNAUTHORIZED_ACCESS: 'unauthorized_access',
+  SUSPICIOUS_ACTIVITY: 'suspicious_activity',
+  AUTH_INVALID_TOKEN: 'auth_invalid_token',
+} as const;
 
 interface AlertConfig {
   webhookUrl?: string;
@@ -21,7 +33,7 @@ export enum AlertSeverity {
 
 interface SecurityAlert {
   severity: 'critical' | 'high' | 'medium' | 'low';
-  eventType: SecurityEventType;
+  eventType: string;
   message: string;
   details: Record<string, unknown>;
   timestamp: string;
@@ -29,25 +41,116 @@ interface SecurityAlert {
   userAgent?: string;
 }
 
+// ============================================
+// Pattern Detection - Track violations per IP
+// ============================================
+interface ViolationRecord {
+  count: number;
+  firstSeen: number;
+  lastSeen: number;
+  alertSent: boolean;
+}
+
+// Store violation patterns per IP+eventType
+const violationPatterns = new Map<string, ViolationRecord>();
+
+// Thresholds for pattern detection
+const PATTERN_THRESHOLDS: Record<string, { count: number; windowMs: number }> = {
+  // Rate limit: alert after 10 violations in 5 minutes from same IP
+  [SecurityEventTypes.RATE_LIMIT_EXCEEDED]: { count: 10, windowMs: 5 * 60 * 1000 },
+  // Auth failures: alert after 5 failures in 10 minutes from same IP
+  [SecurityEventTypes.AUTH_FAILURE]: { count: 5, windowMs: 10 * 60 * 1000 },
+  // Input validation: alert after 20 failures in 5 minutes (potential fuzzing)
+  [SecurityEventTypes.INPUT_VALIDATION_FAILED]: { count: 20, windowMs: 5 * 60 * 1000 },
+};
+
+// Events that should ALWAYS alert immediately (no pattern detection)
+const IMMEDIATE_ALERT_EVENTS = new Set<string>([
+  SecurityEventTypes.CSRF_VALIDATION_FAILED,
+  SecurityEventTypes.UNAUTHORIZED_ACCESS,
+  SecurityEventTypes.SUSPICIOUS_ACTIVITY,
+  SecurityEventTypes.AUTH_INVALID_TOKEN,
+]);
+
 /**
- * Check if event should trigger an alert
+ * Check if this violation forms a suspicious pattern
  */
-function shouldAlert(eventType: SecurityEventType, severity: SecurityAlert['severity']): boolean {
-  // Only alert on critical and high severity events by default
-  if (severity === 'critical' || severity === 'high') {
-    return true;
+function checkViolationPattern(
+  eventType: string,
+  ip: string | undefined
+): { shouldAlert: boolean; patternDetails?: { count: number; windowMinutes: number } } {
+  // Always alert for critical security events
+  if (IMMEDIATE_ALERT_EVENTS.has(eventType)) {
+    return { shouldAlert: true };
   }
 
-  // In production, be more aggressive
-  if (process.env.NODE_ENV === 'production' && severity === 'medium') {
-    return true;
+  // Skip pattern tracking if no IP
+  if (!ip) {
+    return { shouldAlert: false };
   }
 
-  return false;
+  // Get threshold for this event type
+  const threshold = PATTERN_THRESHOLDS[eventType];
+  if (!threshold) {
+    // No threshold defined - don't alert for this event type
+    return { shouldAlert: false };
+  }
+
+  const key = `${ip}:${eventType}`;
+  const now = Date.now();
+  const record = violationPatterns.get(key);
+
+  if (!record || now - record.firstSeen > threshold.windowMs) {
+    // Start new tracking window
+    violationPatterns.set(key, {
+      count: 1,
+      firstSeen: now,
+      lastSeen: now,
+      alertSent: false,
+    });
+    return { shouldAlert: false };
+  }
+
+  // Update existing record
+  record.count++;
+  record.lastSeen = now;
+
+  // Check if pattern threshold reached and alert not yet sent
+  if (record.count >= threshold.count && !record.alertSent) {
+    record.alertSent = true;
+    return {
+      shouldAlert: true,
+      patternDetails: {
+        count: record.count,
+        windowMinutes: Math.round(threshold.windowMs / 60000),
+      },
+    };
+  }
+
+  return { shouldAlert: false };
+}
+
+/**
+ * Clean up old violation records periodically
+ */
+function cleanupOldRecords(): void {
+  const now = Date.now();
+  const maxAge = 30 * 60 * 1000; // 30 minutes
+
+  for (const [key, record] of violationPatterns.entries()) {
+    if (now - record.lastSeen > maxAge) {
+      violationPatterns.delete(key);
+    }
+  }
+}
+
+// Run cleanup every 10 minutes
+if (typeof setInterval !== 'undefined') {
+  setInterval(cleanupOldRecords, 10 * 60 * 1000);
 }
 
 interface SendAlertParams {
-  eventType: SecurityEventType;
+  eventType: string;
   severity: AlertSeverity;
   description: string;
   userId?: string;
@@ -64,20 +167,49 @@ interface SendAlertParams {
 export async function sendSecurityAlert(params: SendAlertParams): Promise<void> {
   const severity = params.severity;
 
-  if (!shouldAlert(params.eventType, severity)) {
+  // Skip alerts in development for non-critical events
+  if (process.env.NODE_ENV === 'development' && severity !== AlertSeverity.CRITICAL) {
+    // Still log locally, just don't send to Slack/webhooks
+    logger.info('Security event (dev mode - not alerting)', {
+      eventType: params.eventType,
+      ip: params.ipAddress,
+    });
     return;
+  }
+
+  // Check if this event forms a suspicious pattern worth alerting
+  const patternCheck = checkViolationPattern(params.eventType, params.ipAddress);
+
+  if (!patternCheck.shouldAlert) {
+    // Log locally but don't send external alert
+    logger.info('Security event tracked (no pattern detected yet)', {
+      eventType: params.eventType,
+      ip: params.ipAddress,
+    });
+    return;
+  }
+
+  // Build alert message with pattern info if available
+  let alertMessage = params.description;
+  if (patternCheck.patternDetails) {
+    alertMessage = `🔥 PATTERN DETECTED: ${params.eventType} - ${patternCheck.patternDetails.count} violations from same IP in ${patternCheck.patternDetails.windowMinutes} minutes`;
   }
 
   const alert: SecurityAlert = {
     severity,
     eventType: params.eventType,
-    message: params.description,
+    message: alertMessage,
     details: {
       ...(params.additionalContext || {}),
       path: params.requestPath,
       method: params.requestMethod,
       userId: params.userId,
       environment: process.env.NODE_ENV || 'unknown',
+      ...(patternCheck.patternDetails && {
+        patternDetected: true,
+        violationCount: patternCheck.patternDetails.count,
+        windowMinutes: patternCheck.patternDetails.windowMinutes,
+      }),
     },
     timestamp: new Date().toISOString(),
     ip: params.ipAddress,

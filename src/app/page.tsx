@@ -103,8 +103,40 @@ export default function LandingPage() {
       logger.info('Email verified, redirecting to application form', { email: normalizedEmail });
       router.push(`/candidate-form?email=${encodeURIComponent(normalizedEmail)}`);
     } catch (err) {
-      logger.error('Email submission error', err);
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+
+      // Use logger.warn for expected/user errors to avoid Next.js error overlay in dev
+      const isExpectedError =
+        errorMessage.includes('Too many requests') ||
+        errorMessage.includes('rate limit') ||
+        errorMessage.includes('verification failed') ||
+        errorMessage.includes('temporarily unavailable') ||
+        errorMessage.includes('Invalid email') ||
+        errorMessage.includes('email format') ||
+        errorMessage.includes('validation failed') ||
+        errorMessage.includes('domain') ||
+        errorMessage.includes('MX records');
+
+      if (isExpectedError) {
+        logger.warn('Email submission validation error', { error: errorMessage });
+      } else {
+        // Only use logger.error for truly unexpected errors
+        logger.error('Email submission error', err);
+      }
+
+      // Make error messages user-friendly
+      if (errorMessage.includes('Too many requests') || errorMessage.includes('rate limit')) {
+        setError("You're submitting too quickly. Please wait a moment and try again.");
+      } else if (
+        errorMessage.includes('verification failed') ||
+        errorMessage.includes('temporarily unavailable')
+      ) {
+        setError(
+          'Email verification is temporarily unavailable. Please try again in a few seconds.'
+        );
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
