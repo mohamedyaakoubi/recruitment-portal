@@ -558,7 +558,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionPropsExtended> = ({
                   <div className="max-h-60 overflow-y-auto">
                     {filteredCountryCodes.map((item) => (
                       <button
-                        key={item.code}
+                        key={item.iso}
                         type="button"
                         onClick={() => {
                           setCountryCode(item.code);

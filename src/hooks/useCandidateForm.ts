@@ -115,29 +115,32 @@ export const useCandidateForm = (emailParam?: string) => {
           throw new Error(result.error || 'Validation failed');
         }
 
+        // Handle wrapped API response: { success: true, data: {...} }
+        const validationData = result.data || result;
+
         const validationMessage =
-          result.message ||
-          (result.isValid
+          validationData.message ||
+          (validationData.isValid
             ? '✅ Phone number is valid'
-            : `❌ ${result.error || 'Invalid phone number format'}`);
+            : `❌ ${validationData.error || 'Invalid phone number format'}`);
 
         setPhoneValidation({
-          isValid: result.isValid,
+          isValid: validationData.isValid,
           isValidating: false,
           message: validationMessage,
-          warning: result.warning || result.suggestion,
+          warning: validationData.warning || validationData.suggestion,
         });
 
         // Log validation details for debugging
-        if (result.isValid && result.country) {
+        if (validationData.isValid && validationData.country) {
           logger.info('Phone validated successfully', {
-            country: result.country.name,
-            type: result.type || 'unknown',
-            carrier: result.carrier,
+            country: validationData.country.name,
+            type: validationData.type || 'unknown',
+            carrier: validationData.carrier,
           });
         }
 
-        return result.isValid;
+        return validationData.isValid;
       } catch (error) {
         logger.error('Phone validation error', error, { countryCode, phoneNumber });
 

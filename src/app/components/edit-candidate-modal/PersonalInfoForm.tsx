@@ -139,7 +139,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
               disabled={isLoading}
             >
               {countryCodes.map((item) => (
-                <option key={item.code} value={item.code}>
+                <option key={item.iso} value={item.code}>
                   {item.flag} {item.code}
                 </option>
               ))}
