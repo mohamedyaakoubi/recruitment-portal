@@ -1,16 +1,45 @@
-
-> candidate-portal@0.1.0 build /home/ubuntu/candidate
+﻿
+> candidate-portal@0.1.0 build C:\Users\MSI\Desktop\wassim
 > next build
 
-   ▲ Next.js 15.1.8
+   Ôû▓ Next.js 15.1.8
+   - Environments: .env.local, .env
 
    Creating an optimized production build ...
-(node:6039) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
-(node:6170) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
-(Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ Compiled successfully
-   Skipping linting
-   Checking validity of types ...
-Next.js build worker exited with code: null and signal: SIGKILL
- ELIFECYCLE  Command failed with exit code 1.
+node.exe : <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (129kiB) impacts 
+deserialization performance (consider using Buffer instead and decode when needed)
+At C:\Program Files\nodejs\pnpm.ps1:16 char:5
++     & "$basedir/node$exe"  "$basedir/node_modules/pnpm/bin/pnpm.cjs"  ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (<w> [webpack.ca...de when needed):String) [], RemoteEx 
+   ception
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+
+ ÔÜá The Next.js plugin was not detected in your ESLint configuration. See 
+https://nextjs.org/docs/app/api-reference/config/eslint#migrating-existing-config
+   Collecting page data ...
+Error: ENOENT: no such file or directory, open 
+'C:\Users\MSI\Desktop\wassim\.next\browser\default-stylesheet.css'
+    at 3238 (C:\Users\MSI\Desktop\wassim\.next\server\chunks\5670.js:32:30063)
+    at t (C:\Users\MSI\Desktop\wassim\.next\server\webpack-runtime.js:1:143)
+    at 92148 (C:\Users\MSI\Desktop\wassim\.next\server\chunks\5670.js:32:164859)
+    at t (C:\Users\MSI\Desktop\wassim\.next\server\webpack-runtime.js:1:143)
+    at 27457 (C:\Users\MSI\Desktop\wassim\.next\server\chunks\5670.js:21:1045146)
+    at t (C:\Users\MSI\Desktop\wassim\.next\server\webpack-runtime.js:1:143)
+    at 22942 (C:\Users\MSI\Desktop\wassim\.next\server\chunks\5670.js:21:127625)
+    at t (C:\Users\MSI\Desktop\wassim\.next\server\webpack-runtime.js:1:143)
+    at 2740 (C:\Users\MSI\Desktop\wassim\.next\server\chunks\5670.js:21:1017206) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\MSI\\Desktop\\wassim\\.next\\browser\\default-stylesheet.css'
+}
+
+> Build error occurred
+[Error: Failed to collect page data for /api/export-candidates] {
+  type: 'Error'
+}
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

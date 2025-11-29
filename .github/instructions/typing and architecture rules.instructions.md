@@ -1,7 +1,7 @@
 ---
 applyTo: '**'
 ---
-- if you ever encounter an issue to solve something ahead your training data and knowledge always search the web for documentations and solutions. When you search you have to first check the current date as we are not in 2024.
+- if you ever encounter an issue to solve something ahead your training data and knowledge always search the web for documentations and solutions. When you search the internet you have to first check the current date with Get-Date -Format "yyyy-MM-dd HH:mm:ss".
 
 - Respect the code architecture and typescript and ESLint typing. DO NOT BYPASS THEM.
 

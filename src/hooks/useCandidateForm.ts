@@ -17,8 +17,9 @@ import { validateFile } from '@/lib/fileValidation';
 import { detectBot } from '@/lib/honeypot';
 import type { Job } from '@/types';
 
-export const useCandidateForm = () => {
+export const useCandidateForm = (emailParam?: string) => {
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
 
   const [candidateEmail, setCandidateEmail] = useState('');
   const [isExistingCandidate, setIsExistingCandidate] = useState(false);
@@ -271,16 +272,34 @@ export const useCandidateForm = () => {
     }
   };
 
+  // Set mounted state
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    // If email is passed as prop, use it directly (from Server Component)
+    if (emailParam) {
+      setCandidateEmail(emailParam);
+      loadExistingCandidateData(emailParam);
+      return;
+    }
+
+    // Fallback: Only run on client after mount
+    if (!isMounted || typeof window === 'undefined') return;
+
+    // Use window.location.search but only after component is mounted
     const urlParams = new URLSearchParams(window.location.search);
     const email = urlParams.get('email');
+
     if (email) {
       setCandidateEmail(email);
       loadExistingCandidateData(email);
     } else {
-      router.push('/');
+      // Don't redirect immediately in WebKit, give it a moment
+      setTimeout(() => router.push('/'), 100);
     }
-  }, [router]);
+  }, [emailParam, isMounted, router]);
 
   const loadExistingCandidateData = async (email: string) => {
     try {

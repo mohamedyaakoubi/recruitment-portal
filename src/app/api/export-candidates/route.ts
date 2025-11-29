@@ -9,6 +9,9 @@ import { withCsrfProtection } from '@/lib/csrf-middleware';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 import { z } from 'zod';
 
+// Mark as dynamic to prevent static optimization during build
+export const dynamic = 'force-dynamic';
+
 // Validation schema for export filters
 const exportFiltersSchema = z.object({
   format: z.enum(['json', 'csv', 'xlsx']).default('json'),

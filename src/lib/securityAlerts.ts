@@ -12,6 +12,13 @@ interface AlertConfig {
   slackWebhook?: string;
 }
 
+export enum AlertSeverity {
+  CRITICAL = 'critical',
+  HIGH = 'high',
+  MEDIUM = 'medium',
+  LOW = 'low',
+}
+
 interface SecurityAlert {
   severity: 'critical' | 'high' | 'medium' | 'low';
   eventType: SecurityEventType;
@@ -20,29 +27,6 @@ interface SecurityAlert {
   timestamp: string;
   ip?: string;
   userAgent?: string;
-}
-
-/**
- * Determine alert severity based on event type
- */
-function getAlertSeverity(eventType: SecurityEventType): SecurityAlert['severity'] {
-  const criticalEvents = [
-    SecurityEventType.UNAUTHORIZED_ACCESS,
-    SecurityEventType.SUSPICIOUS_ACTIVITY,
-  ];
-
-  const highEvents = [
-    SecurityEventType.AUTH_FAILURE,
-    SecurityEventType.CSRF_VALIDATION_FAILED,
-    SecurityEventType.RATE_LIMIT_EXCEEDED,
-  ];
-
-  const mediumEvents = [SecurityEventType.AUTH_INVALID_TOKEN, SecurityEventType.AUTH_EXPIRED_TOKEN];
-
-  if (criticalEvents.includes(eventType)) return 'critical';
-  if (highEvents.includes(eventType)) return 'high';
-  if (mediumEvents.includes(eventType)) return 'medium';
-  return 'low';
 }
 
 /**
@@ -62,32 +46,42 @@ function shouldAlert(eventType: SecurityEventType, severity: SecurityAlert['seve
   return false;
 }
 
+interface SendAlertParams {
+  eventType: SecurityEventType;
+  severity: AlertSeverity;
+  description: string;
+  userId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  requestPath?: string;
+  requestMethod?: string;
+  additionalContext?: Record<string, unknown>;
+}
+
 /**
  * Send security alert
  */
-export async function sendSecurityAlert(
-  eventType: SecurityEventType,
-  details: Record<string, unknown>,
-  context?: { ip?: string; userAgent?: string; path?: string }
-): Promise<void> {
-  const severity = getAlertSeverity(eventType);
+export async function sendSecurityAlert(params: SendAlertParams): Promise<void> {
+  const severity = params.severity;
 
-  if (!shouldAlert(eventType, severity)) {
+  if (!shouldAlert(params.eventType, severity)) {
     return;
   }
 
   const alert: SecurityAlert = {
     severity,
-    eventType,
-    message: `Security Event: ${eventType}`,
+    eventType: params.eventType,
+    message: params.description,
     details: {
-      ...details,
-      path: context?.path,
+      ...(params.additionalContext || {}),
+      path: params.requestPath,
+      method: params.requestMethod,
+      userId: params.userId,
       environment: process.env.NODE_ENV || 'unknown',
     },
     timestamp: new Date().toISOString(),
-    ip: context?.ip,
-    userAgent: context?.userAgent,
+    ip: params.ipAddress,
+    userAgent: params.userAgent,
   };
 
   // Log the alert

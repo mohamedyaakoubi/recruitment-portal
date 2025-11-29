@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { sendApplicationConfirmationEmail } from '@/services/email';
 import logger from '@/lib/logger';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
@@ -14,6 +13,9 @@ const confirmationEmailSchema = z.object({
   specialty: z.string().max(200).optional(),
   applicationId: z.string().min(1).max(200),
 });
+
+// Mark as dynamic to prevent static optimization during build
+export const dynamic = 'force-dynamic';
 
 /**
  * Public endpoint for sending application confirmation emails
@@ -44,6 +46,9 @@ export async function POST(request: NextRequest) {
 
     // Generate submission date
     const submissionDate = new Date();
+
+    // Dynamically import email service to prevent build-time issues
+    const { sendApplicationConfirmationEmail } = await import('@/services/email');
 
     // Send confirmation email
     await sendApplicationConfirmationEmail({

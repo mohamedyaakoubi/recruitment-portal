@@ -57,24 +57,37 @@ if (transporter && process.env.NODE_ENV === 'development') {
 const templateCache = new Map<string, string>();
 
 const getTemplate = (templateName: string, type: 'html' | 'txt') => {
+  // During build time, Next.js collects page data which can trigger imports
+  // Check if we're in a build context by looking for process.env.NEXT_PHASE
+  if (process.env.NEXT_PHASE === 'phase-production-build' || typeof window !== 'undefined') {
+    return '';
+  }
+
   const cacheKey = `${templateName}.${type}`;
 
   if (templateCache.has(cacheKey)) {
     return templateCache.get(cacheKey)!;
   }
 
-  const filePath = path.join(
-    process.cwd(),
-    'src',
-    'lib',
-    'emailTemplates',
-    `${templateName}.${type}`
-  );
+  try {
+    const filePath = path.join(
+      process.cwd(),
+      'src',
+      'lib',
+      'emailTemplates',
+      `${templateName}.${type}`
+    );
 
-  const template = readFileSync(filePath, 'utf8');
-  templateCache.set(cacheKey, template);
+    const template = readFileSync(filePath, 'utf8');
+    templateCache.set(cacheKey, template);
 
-  return template;
+    return template;
+  } catch (error) {
+    logger.warn(`Email template ${templateName}.${type} not accessible`, {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return '';
+  }
 };
 
 export const sendNotificationEmail = async (

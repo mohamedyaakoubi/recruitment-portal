@@ -282,6 +282,18 @@ export class CandidateFormPage {
    * Check if form has validation errors
    */
   async hasValidationErrors(): Promise<boolean> {
+    // Wait a bit for validation to trigger (especially important for WebKit)
+    await this.page.waitForTimeout(500);
+
+    // Wait for either validation errors to appear or form to be valid
+    await Promise.race([
+      this.validationErrors
+        .first()
+        .waitFor({ state: 'visible', timeout: 3000 })
+        .catch(() => {}),
+      this.page.waitForTimeout(3000),
+    ]);
+
     const count = await this.validationErrors.count();
     return count > 0;
   }

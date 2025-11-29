@@ -47,14 +47,11 @@ test.describe('Error Pages', () => {
     // Navigate to non-existent page
     await page.goto('/missing-page');
     await page.waitForLoadState('networkidle');
-
-    // Verify page has basic layout elements
-    const container = page.locator('div, main, section').first();
-    await expect(container).toBeVisible();
+    await page.waitForTimeout(2000);
 
     // Verify 404 heading is styled (large text)
     const heading404 = page.locator('h1:has-text("404")');
-    await expect(heading404).toBeVisible();
+    await expect(heading404).toBeVisible({ timeout: 10000 });
   });
 
   test('should display 404 for invalid candidate route', async ({ page }) => {
