@@ -253,8 +253,12 @@ Request → Middleware → Rate Limiting → CSRF Validation → Origin Check �
 | `pnpm format:check` | Check code formatting |
 | `pnpm test` | Run unit tests with Vitest |
 | `pnpm test:ui` | Run tests with Vitest UI |
+| `pnpm test:integration` | Run integration tests (requires emulators) |
+| `pnpm test:integration:run` | Run integration tests with emulators |
+| `pnpm test:all` | Run all tests (unit + integration) |
 | `pnpm test:e2e` | Run E2E tests with Playwright |
 | `pnpm test:e2e:ui` | Run E2E tests with Playwright UI |
+| `pnpm emulators` | Start Firebase emulators |
 | `pnpm reset-db` | Reset database (use with caution) |
 
 ---
@@ -493,11 +497,20 @@ candidate/
 │   ├── types/                   # TypeScript definitions
 │   │   ├── api.ts               # API types
 │   │   └── index.ts             # Shared types
-│   └── __tests__/               # Integration tests
+│   ├── __tests__/               # Unit tests
+│   └── __integration__/         # Integration tests
+│       ├── auth/                # Auth flow tests
+│       ├── flows/               # End-to-end flow tests
+│       ├── services/            # Service integration tests
+│       ├── helpers.ts           # Test helpers
+│       ├── setup.ts             # Test setup
+│       └── vitest.integration.setup.ts
 ├── .env.local                   # Environment variables (not committed)
 ├── eslint.config.mjs            # ESLint configuration
 ├── firebase.json                # Firebase configuration
+├── firebase.test.json           # Firebase test configuration
 ├── firestore.rules              # Firestore security rules
+├── firestore.rules.test         # Firestore test rules
 ├── firestore.indexes.json       # Firestore indexes
 ├── next.config.ts               # Next.js configuration
 ├── package.json                 # Dependencies
@@ -506,7 +519,8 @@ candidate/
 ├── storage.rules                # Firebase Storage rules
 ├── tailwind.config.ts           # Tailwind CSS configuration
 ├── tsconfig.json                # TypeScript configuration
-├── vitest.config.ts             # Vitest configuration
+├── vitest.config.ts             # Vitest unit test configuration
+├── vitest.integration.config.ts # Vitest integration test configuration
 └── vitest.setup.ts              # Vitest setup
 ```
 
@@ -676,6 +690,34 @@ The application enforces strict security headers via middleware:
 - **File validation** with magic byte verification
 - **URL sanitization** to prevent protocol attacks
 
+### Security Alerts & Monitoring
+
+The application includes a comprehensive security alerting system with:
+
+- **Attacker Fingerprinting**: Captures detailed information about potential attackers:
+  - Network: IP, proxy chain, Cloudflare headers, country detection
+  - Client: Browser, OS, device type, client hints
+  - Request: Origin, referer, accept headers
+  - Anomaly detection: Missing headers, CLI tools, bots, oversized user agents
+
+- **Pattern Detection**: Intelligent alerting to avoid spam:
+  - Rate limit: Alert after 10 violations in 5 min from same IP
+  - Auth failures: Alert after 5 failures in 10 min from same IP
+  - Input validation: Alert after 20 failures in 5 min (potential fuzzing)
+  - Immediate alerts for: CSRF failures, unauthorized access, suspicious activity
+
+- **Alert Channels**:
+  - Slack webhooks with rich formatting
+  - Generic webhook integration
+  - Email notifications (configurable)
+
+- **Environment Variables for Alerts**:
+  ```env
+  SECURITY_ALERT_SLACK_WEBHOOK=https://hooks.slack.com/...
+  SECURITY_ALERT_WEBHOOK_URL=https://your-webhook-url
+  SECURITY_ALERT_EMAIL=security@yourdomain.com
+  ```
+
 ### Authentication
 
 - Firebase Authentication for admin access
@@ -712,6 +754,45 @@ pnpm test:ui
 pnpm test src/lib/__tests__/sanitize.test.ts
 ```
 
+### Integration Tests (Vitest + Firebase Emulators)
+
+Integration tests run against Firebase Emulators for realistic testing of services and flows.
+
+```bash
+# Start Firebase emulators for development
+pnpm emulators
+
+# Run integration tests with emulators (recommended)
+pnpm test:integration:run
+
+# Run integration tests (requires running emulators separately)
+pnpm test:integration
+
+# Run integration tests with UI
+pnpm test:integration:ui
+
+# Run all tests (unit + integration)
+pnpm test:all
+```
+
+**Integration Test Categories:**
+
+| Category | Test Files | Description |
+|----------|------------|-------------|
+| Auth Flows | `auth/auth-flow.integration.test.ts` | Authentication and session management |
+| Form Submission | `flows/form-submission.integration.test.ts` | Complete application submission flow |
+| Candidate Service | `services/candidate.integration.test.ts` | Candidate CRUD operations |
+| Jobs Service | `services/jobs.integration.test.ts` | Job management operations |
+
+**Firebase Emulators Configuration:**
+
+| Service | Port |
+|---------|------|
+| Auth | 9099 |
+| Firestore | 8080 |
+| Storage | 9199 |
+| Emulator UI | 4000 |
+
 ### E2E Tests (Playwright)
 
 ```bash
@@ -741,7 +822,8 @@ pnpm test:e2e --project=chromium
 
 ### Test Configuration
 
-- **Vitest**: jsdom environment, path aliases
+- **Vitest (Unit)**: jsdom environment, path aliases
+- **Vitest (Integration)**: Node environment, Firebase Emulators, sequential execution
 - **Playwright**: Chromium, Firefox, WebKit
 - **CI/CD**: Single worker, 2 retries
 
@@ -757,6 +839,22 @@ pnpm reset-db
 
 # With confirmation prompt
 pnpm reset-db:confirm
+```
+
+### Firebase Emulators
+
+```bash
+# Start emulators for development
+pnpm emulators
+
+# Start emulators with test configuration
+pnpm emulators:test
+
+# Export emulator data
+pnpm emulators:export
+
+# Import previously exported data
+pnpm emulators:import
 ```
 
 ### Code Quality

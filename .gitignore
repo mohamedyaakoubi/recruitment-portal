@@ -61,6 +61,12 @@ playwright-report/
 cypress/videos/
 cypress/screenshots/
 
+# Firebase emulator data
+emulator-data/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
 # Temporary/generated files
 *.txt
 !public/**/*.txt

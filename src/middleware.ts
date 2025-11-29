@@ -160,6 +160,70 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // Rate limit admin login page to prevent brute force attacks
+  if (request.nextUrl.pathname === '/admin-dashboard-secret/login') {
+    const identifier = getRateLimitIdentifier(request);
+
+    let rateLimitResult;
+    try {
+      rateLimitResult = await checkRateLimit(identifier, request.nextUrl.pathname);
+    } catch (error) {
+      console.error('[Middleware] Rate limit error on login page:', error);
+      rateLimitResult = { success: true, limit: 0, remaining: 0, reset: Date.now() };
+    }
+
+    if (!rateLimitResult.success) {
+      logSecurityEvent({
+        type: SecurityEventType.RATE_LIMIT_EXCEEDED,
+        ...context,
+        details: {
+          limit: rateLimitResult.limit,
+          reset: rateLimitResult.reset,
+          page: 'admin-login',
+        },
+      });
+
+      // Return a simple HTML page for rate limited login attempts
+      const retryAfter = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+      const response = new NextResponse(
+        `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Too Many Requests</title>
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f5f5; }
+    .container { text-align: center; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h1 { color: #dc2626; margin-bottom: 1rem; }
+    p { color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Too Many Login Attempts</h1>
+    <p>Please wait ${retryAfter} seconds before trying again.</p>
+  </div>
+</body>
+</html>`,
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'text/html',
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.reset.toString(),
+            'Retry-After': retryAfter.toString(),
+          },
+        }
+      );
+
+      applySecurityHeaders(response);
+      addRequestIdToHeaders(response.headers, requestId);
+      return response;
+    }
+  }
+
   // For non-API routes, apply security headers
   const response = NextResponse.next();
 

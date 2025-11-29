@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// TEST RULES - Allow all operations for integration testing with Firebase emulators
+// DO NOT deploy these rules to production!
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow all operations on all documents for testing
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

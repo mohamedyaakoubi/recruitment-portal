@@ -58,6 +58,9 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   // Authentication - very strict
   '/api/auth/*': { requests: 5, window: '1 m' },
 
+  // Admin login page - strict to match Firebase's rate limit
+  '/admin-dashboard-secret/login': { requests: 5, window: '1 m' },
+
   // Admin endpoints - more generous for legitimate use
   '/api/admin/*': { requests: 60, window: '1 m' },
   '/api/candidates/*': { requests: 30, window: '1 m' },
