@@ -354,6 +354,7 @@ Please provide a thorough assessment based on ALL available information includin
       }
     }
 
+    let parsedResponse: GeminiScoringResponse;
     try {
       // Clean and parse JSON response
       let cleanedText = responseText.trim();
@@ -367,7 +368,7 @@ Please provide a thorough assessment based on ALL available information includin
       }
 
       cleanedText = cleanedText.substring(jsonStart, jsonEnd + 1);
-      const parsedResponse: GeminiScoringResponse = JSON.parse(cleanedText);
+      parsedResponse = JSON.parse(cleanedText);
 
       // Validate response structure
       if (

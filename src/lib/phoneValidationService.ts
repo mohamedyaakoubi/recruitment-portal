@@ -137,7 +137,17 @@ export async function validatePhoneWithAbstractAPI(
     logger.info('Validating phone via Abstract API', { phone: phoneForAPI });
 
     const responseText = await httpGetAsync(url);
-    const data = JSON.parse(responseText);
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      logger.error('Failed to parse Abstract API response', parseError, {
+        phone: fullPhone,
+        responsePreview: responseText.substring(0, 200),
+      });
+      throw new Error('Invalid response format from phone validation API');
+    }
 
     return {
       isValid: data.valid === true,

@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import logger from '@/lib/logger';
 import { EMAIL_ADDRESSES } from '@/lib/constants/emails';
+import { sanitizeText } from '@/lib/sanitize';
 
 const SMTP_HOST = process.env.SMTP_HOST;
 const SMTP_PORT = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
@@ -83,16 +84,18 @@ export const sendNotificationEmail = async (
 
   if (status === 'rejected') {
     subject = `Application Status Update - ${companyName}`;
+    const safeCandidateName = sanitizeText(candidateName);
     htmlBody = getTemplate('statusRejected', 'html')
       .replace(/\${companyName}/g, companyName)
-      .replace(/\${candidateName}/g, candidateName);
+      .replace(/\${candidateName}/g, safeCandidateName);
     textBody = getTemplate('statusRejected', 'txt')
       .replace(/\${companyName}/g, companyName)
-      .replace(/\${candidateName}/g, candidateName);
+      .replace(/\${candidateName}/g, safeCandidateName);
   } else if (status === 'interview_scheduled' && interviewDate) {
     subject = `Interview Invitation from ${companyName}`;
     fromAddress = EMAIL_ADDRESSES.RECRUIT;
     replyToAddress = EMAIL_ADDRESSES.RECRUIT;
+    const safeCandidateName = sanitizeText(candidateName);
     const formattedDate = interviewDate.toLocaleDateString(undefined, {
       weekday: 'long',
       year: 'numeric',
@@ -106,12 +109,12 @@ export const sendNotificationEmail = async (
     });
     htmlBody = getTemplate('statusInterviewScheduled', 'html')
       .replace(/\${companyName}/g, companyName)
-      .replace(/\${candidateName}/g, candidateName)
+      .replace(/\${candidateName}/g, safeCandidateName)
       .replace(/\${formattedDate}/g, formattedDate)
       .replace(/\${formattedTime}/g, formattedTime);
     textBody = getTemplate('statusInterviewScheduled', 'txt')
       .replace(/\${companyName}/g, companyName)
-      .replace(/\${candidateName}/g, candidateName)
+      .replace(/\${candidateName}/g, safeCandidateName)
       .replace(/\${formattedDate}/g, formattedDate)
       .replace(/\${formattedTime}/g, formattedTime);
   } else {
@@ -174,27 +177,32 @@ export const sendApplicationConfirmationEmail = async ({
     timeZone: 'Europe/Helsinki',
   });
 
+  const safeCandidateName = sanitizeText(candidateName);
+  const safeJobTitle = sanitizeText(jobTitle);
+  const safeApplicationId = sanitizeText(applicationId);
+
   let htmlTemplate = getTemplate('applicationConfirmation', 'html')
-    .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitle}/g, jobTitle)
-    .replace(/\${applicationId}/g, applicationId)
+    .replace(/\${candidateName}/g, safeCandidateName)
+    .replace(/\${jobTitle}/g, safeJobTitle)
+    .replace(/\${applicationId}/g, safeApplicationId)
     .replace(/\${formattedDate}/g, formattedDate);
 
   let textTemplate = getTemplate('applicationConfirmation', 'txt')
-    .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitle}/g, jobTitle)
-    .replace(/\${applicationId}/g, applicationId)
+    .replace(/\${candidateName}/g, safeCandidateName)
+    .replace(/\${jobTitle}/g, safeJobTitle)
+    .replace(/\${applicationId}/g, safeApplicationId)
     .replace(/\${formattedDate}/g, formattedDate);
 
   let jobCategoryHtml = '';
   let jobCategoryText = '';
   if (jobCategory) {
+    const safeJobCategory = sanitizeText(jobCategory);
     jobCategoryHtml = `
                         <div class="detail-row">
                             <span class="detail-label">Job Category:</span>
-                            <span class="detail-value">${jobCategory}</span>
+                            <span class="detail-value">${safeJobCategory}</span>
                         </div>`;
-    jobCategoryText = `- Job Category: ${jobCategory}`;
+    jobCategoryText = `- Job Category: ${safeJobCategory}`;
   }
   htmlTemplate = htmlTemplate.replace('<!-- JOB_CATEGORY_PLACEHOLDER -->', jobCategoryHtml);
   textTemplate = textTemplate.replace('<!-- JOB_CATEGORY_PLACEHOLDER -->', jobCategoryText);
@@ -202,12 +210,13 @@ export const sendApplicationConfirmationEmail = async ({
   let specialtyHtml = '';
   let specialtyText = '';
   if (specialty) {
+    const safeSpecialty = sanitizeText(specialty);
     specialtyHtml = `
                         <div class="detail-row">
                             <span class="detail-label">Specialty:</span>
-                            <span class="detail-value">${specialty}</span>
+                            <span class="detail-value">${safeSpecialty}</span>
                         </div>`;
-    specialtyText = `- Specialty: ${specialty}`;
+    specialtyText = `- Specialty: ${safeSpecialty}`;
   }
   htmlTemplate = htmlTemplate.replace('<!-- SPECIALTY_PLACEHOLDER -->', specialtyHtml);
   textTemplate = textTemplate.replace('<!-- SPECIALTY_PLACEHOLDER -->', specialtyText);
@@ -252,14 +261,15 @@ export const sendRejectionEmail = async (
     return;
   }
 
-  const jobTitleText = jobTitle ? `the ${jobTitle} position` : 'opportunities';
+  const jobTitleText = jobTitle ? `the ${sanitizeText(jobTitle)} position` : 'opportunities';
+  const safeCandidateName = sanitizeText(candidateName);
 
   const htmlTemplate = getTemplate('rejectionEmail', 'html')
-    .replace(/\${candidateName}/g, candidateName)
+    .replace(/\${candidateName}/g, safeCandidateName)
     .replace(/\${jobTitleText}/g, jobTitleText);
 
   const textTemplate = getTemplate('rejectionEmail', 'txt')
-    .replace(/\${candidateName}/g, candidateName)
+    .replace(/\${candidateName}/g, safeCandidateName)
     .replace(/\${jobTitleText}/g, jobTitleText);
 
   const mailOptions = {
@@ -302,16 +312,19 @@ export const sendCancellationEmail = async ({
   }
 
   const jobTitleText = jobTitle || 'the position';
+  const safeCandidateName = sanitizeText(candidateName);
+  const safeJobTitleText = sanitizeText(jobTitleText);
+  const safeReason = sanitizeText(reason);
 
   const htmlTemplate = getTemplate('cancellationEmail', 'html')
-    .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitleText}/g, jobTitleText)
-    .replace(/\${reason}/g, reason);
+    .replace(/\${candidateName}/g, safeCandidateName)
+    .replace(/\${jobTitleText}/g, safeJobTitleText)
+    .replace(/\${reason}/g, safeReason);
 
   const textTemplate = getTemplate('cancellationEmail', 'txt')
-    .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitleText}/g, jobTitleText)
-    .replace(/\${reason}/g, reason);
+    .replace(/\${candidateName}/g, safeCandidateName)
+    .replace(/\${jobTitleText}/g, safeJobTitleText)
+    .replace(/\${reason}/g, safeReason);
 
   const mailOptions = {
     from: {

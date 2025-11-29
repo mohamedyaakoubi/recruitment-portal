@@ -4,8 +4,10 @@ import logger from '@/lib/logger';
 import { statusUpdateSchema } from '@/lib/validations';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
 import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
-export async function POST(request: NextRequest) {
+export const POST = withCsrfProtection(async (request: NextRequest) => {
   // Require admin authentication
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
@@ -30,6 +32,14 @@ export async function POST(request: NextRequest) {
       duration
     );
 
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_STATUS_CHANGED,
+      ...context,
+      details: { candidateId, newStatus, emailSent: result.emailSent },
+    });
+
     return successResponse({
       newStatus: result.status,
       emailSent: result.emailSent, // 🔥 NEW: Include email status
@@ -38,4 +48,4 @@ export async function POST(request: NextRequest) {
     logger.error('Error in /api/update-status', error);
     return ApiErrors.internal('Failed to update candidate status', error);
   }
-}
+});

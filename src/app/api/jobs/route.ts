@@ -5,6 +5,8 @@ import logger from '@/lib/logger';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
 import { jobSchema, jobUpdateSchema } from '@/lib/validations';
 import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +20,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withCsrfProtection(async (request: NextRequest) => {
   // Require admin authentication
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
@@ -32,14 +34,23 @@ export async function POST(request: NextRequest) {
     }
 
     const { jobId } = await createJob(validatedData.data);
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_JOB_CREATED,
+      ...context,
+      details: { jobId, jobTitle: validatedData.data.title },
+    });
+
     return successResponse({ jobId }, { message: 'Job created successfully' });
   } catch (error) {
     logger.error('Error creating job', error);
     return ApiErrors.internal('Failed to create job', error);
   }
-}
+});
 
-export async function PUT(request: NextRequest) {
+export const PUT = withCsrfProtection(async (request: NextRequest) => {
   // Require admin authentication
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
@@ -54,14 +65,23 @@ export async function PUT(request: NextRequest) {
 
     const { jobId, ...jobData } = validatedData.data;
     await updateJob(jobId, jobData);
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_JOB_UPDATED,
+      ...context,
+      details: { jobId, updatedFields: Object.keys(jobData) },
+    });
+
     return successResponse({ jobId }, { message: 'Job updated successfully' });
   } catch (error) {
     logger.error('Error updating job', error);
     return ApiErrors.internal('Failed to update job', error);
   }
-}
+});
 
-export async function DELETE(request: NextRequest) {
+export const DELETE = withCsrfProtection(async (request: NextRequest) => {
   // Require admin authentication
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
@@ -75,9 +95,18 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteJob(jobId);
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_JOB_DELETED,
+      ...context,
+      details: { jobId },
+    });
+
     return successResponse({ jobId }, { message: 'Job deleted successfully' });
   } catch (error) {
     logger.error('Error deleting job', error);
     return ApiErrors.internal('Failed to delete job', error);
   }
-}
+});

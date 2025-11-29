@@ -17,13 +17,23 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Enforce request body size limits via experimental features
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb', // For file uploads
+    },
+  },
   async headers() {
     const isDevelopment = process.env.NODE_ENV === 'development';
 
-    // Content Security Policy
+    // Content Security Policy - stricter in production
+    const scriptSrc = isDevelopment
+      ? "'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseio.com https://accounts.google.com"
+      : "'self' 'unsafe-inline' https://apis.google.com https://*.firebaseio.com https://accounts.google.com";
+
     const cspHeader = `
       default-src 'self';
-      script-src 'self' 'unsafe-inline' ${isDevelopment ? "'unsafe-eval'" : ''} https://apis.google.com https://*.firebaseio.com https://accounts.google.com;
+      script-src ${scriptSrc};
       style-src 'self' 'unsafe-inline' https://accounts.google.com;
       img-src 'self' blob: data: https://*.googleapis.com https://*.googleusercontent.com https://firebasestorage.googleapis.com;
       font-src 'self' data: https://accounts.google.com;

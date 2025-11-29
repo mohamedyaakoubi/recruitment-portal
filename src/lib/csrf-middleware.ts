@@ -25,9 +25,16 @@ export async function validateCsrf(request: NextRequest): Promise<NextResponse |
     logSecurityEvent({
       type: SecurityEventType.CSRF_VALIDATION_FAILED,
       ...context,
-      details: { reason: 'No session ID' },
+      details: { reason: 'No session ID - client needs to call /api/csrf-token first' },
     });
-    return ApiErrors.forbidden('Invalid session');
+    return NextResponse.json(
+      {
+        error: 'Session not initialized. Please initialize CSRF protection.',
+        code: 'CSRF_SESSION_MISSING',
+        action: 'Call GET /api/csrf-token to initialize session',
+      },
+      { status: 403 }
+    );
   }
 
   // Get CSRF token from header or body

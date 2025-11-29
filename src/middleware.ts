@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
-import { generateCsrfToken, generateSessionId } from '@/lib/csrf';
 
 // CORS allowed origins
 const ALLOWED_ORIGINS = [
@@ -31,10 +30,16 @@ function applyCorsHeaders(response: NextResponse, origin: string | null): void {
  * Apply comprehensive security headers
  */
 function applySecurityHeaders(response: NextResponse): void {
-  // Content Security Policy
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  // Content Security Policy - stricter in production
+  const scriptSrc = isDevelopment
+    ? "'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseio.com https://accounts.google.com"
+    : "'self' 'unsafe-inline' https://apis.google.com https://*.firebaseio.com https://accounts.google.com";
+
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseio.com https://accounts.google.com;
+    script-src ${scriptSrc};
     style-src 'self' 'unsafe-inline' https://accounts.google.com;
     img-src 'self' blob: data: https://*.googleapis.com https://*.googleusercontent.com https://firebasestorage.googleapis.com;
     font-src 'self' data: https://accounts.google.com;
@@ -139,31 +144,8 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // For non-API routes, ensure CSRF token exists in session
+  // For non-API routes, apply security headers
   const response = NextResponse.next();
-
-  // Generate session ID if not present
-  let sessionId = request.cookies.get('session_id')?.value;
-  if (!sessionId) {
-    sessionId = generateSessionId();
-    response.cookies.set('session_id', sessionId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: '/',
-    });
-  }
-
-  // Generate CSRF token for the session
-  const csrfToken = generateCsrfToken(sessionId);
-  response.cookies.set('csrf-token', csrfToken, {
-    httpOnly: false, // Needs to be readable by client
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 60 * 15, // 15 minutes
-    path: '/',
-  });
 
   // Apply security headers
   applySecurityHeaders(response);

@@ -17,6 +17,17 @@ export enum SecurityEventType {
   INPUT_VALIDATION_FAILED = 'input_validation_failed',
   SESSION_CREATED = 'session_created',
   SESSION_DESTROYED = 'session_destroyed',
+  // Admin operations audit events
+  ADMIN_JOB_CREATED = 'admin_job_created',
+  ADMIN_JOB_UPDATED = 'admin_job_updated',
+  ADMIN_JOB_DELETED = 'admin_job_deleted',
+  ADMIN_CANDIDATE_UPDATED = 'admin_candidate_updated',
+  ADMIN_CANDIDATE_SCORED = 'admin_candidate_scored',
+  ADMIN_STATUS_CHANGED = 'admin_status_changed',
+  ADMIN_INTERVIEW_SCHEDULED = 'admin_interview_scheduled',
+  ADMIN_INTERVIEW_CANCELLED = 'admin_interview_cancelled',
+  ADMIN_DATA_EXPORTED = 'admin_data_exported',
+  ADMIN_EMAIL_SENT = 'admin_email_sent',
 }
 
 interface SecurityEventData {

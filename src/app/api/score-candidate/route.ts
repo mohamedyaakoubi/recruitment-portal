@@ -4,8 +4,10 @@ import logger from '@/lib/logger';
 import { scoreCandidateSchema } from '@/lib/validations';
 import { successResponse, ApiErrors, errorResponse } from '@/lib/apiResponse';
 import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
-export async function POST(request: NextRequest) {
+export const POST = withCsrfProtection(async (request: NextRequest) => {
   // Require admin authentication
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
@@ -26,6 +28,18 @@ export async function POST(request: NextRequest) {
     const scoringResult = await scoreCandidate(candidateId, jobId || '', jobTitle, jobDescription);
 
     logger.info('Scoring completed', { candidateId, score: scoringResult.score });
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_CANDIDATE_SCORED,
+      ...context,
+      details: {
+        candidateId,
+        score: scoringResult.score,
+        recommendation: scoringResult.recommendation,
+      },
+    });
 
     return successResponse({
       score: scoringResult.score,
@@ -49,4 +63,4 @@ export async function POST(request: NextRequest) {
 
     return ApiErrors.internal('Failed to score candidate with Gemini 2.5 Pro', error);
   }
-}
+});

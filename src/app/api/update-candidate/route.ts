@@ -5,8 +5,15 @@ import { calculateAge } from '@/lib/dateUtils';
 import logger from '@/lib/logger';
 import { updateCandidateSchema } from '@/lib/validations';
 import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
-export async function PUT(request: NextRequest) {
+export const PUT = withCsrfProtection(async (request: NextRequest) => {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { candidateId, updatedData } = body;
@@ -58,6 +65,14 @@ export async function PUT(request: NextRequest) {
 
     logger.info('Successfully updated candidate', { candidateId });
 
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_CANDIDATE_UPDATED,
+      ...context,
+      details: { candidateId, updatedFields: Object.keys(validUpdates) },
+    });
+
     return successResponse(
       {
         candidateId,
@@ -69,4 +84,4 @@ export async function PUT(request: NextRequest) {
     logger.error('Update candidate error', error);
     return ApiErrors.internal('Failed to update candidate', error);
   }
-}
+});

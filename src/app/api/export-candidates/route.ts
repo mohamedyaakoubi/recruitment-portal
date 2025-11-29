@@ -4,8 +4,14 @@ import { generateCSV } from '@/lib/csvUtils';
 import { format } from 'date-fns';
 import logger from '@/lib/logger';
 import { ApiErrors } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
 export async function GET(request: NextRequest) {
+  // Require admin authentication for sensitive data export
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const exportFormat = searchParams.get('format') || 'json';
@@ -48,6 +54,18 @@ export async function GET(request: NextRequest) {
     );
 
     logger.info('Exporting candidates', { count: candidates.length, format: exportFormat });
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_DATA_EXPORTED,
+      ...context,
+      details: {
+        format: exportFormat,
+        count: candidates.length,
+        filters: { status: filterStatus, name: filterName },
+      },
+    });
 
     const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm-ss');
     const baseFilename = `candidates_${timestamp}`;
