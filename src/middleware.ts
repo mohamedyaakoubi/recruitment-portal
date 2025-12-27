@@ -94,8 +94,11 @@ export async function middleware(request: NextRequest) {
 
   // Handle API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    // Skip health check endpoint from rate limiting
-    if (request.nextUrl.pathname === '/api/health') {
+    // Skip health check and keepalive endpoints from rate limiting
+    if (
+      request.nextUrl.pathname === '/api/health' ||
+      request.nextUrl.pathname === '/api/redis-keepalive'
+    ) {
       const response = NextResponse.next();
       applySecurityHeaders(response);
       applyCorsHeaders(response, origin);
