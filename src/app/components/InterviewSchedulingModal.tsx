@@ -241,6 +241,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
               placeholder="Any additional information for the interview..."
               disabled={isLoading}
+              maxLength={5000}
             />
           </div>
 

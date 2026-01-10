@@ -44,6 +44,7 @@ const AdditionalInfoItem: React.FC<AdditionalInfoItemProps> = ({
             className="w-full rounded-lg border border-slate-300 px-4 py-3 shadow-sm focus:border-[#003A70] focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             placeholder="https://linkedin.com/in/yourprofile"
             disabled={isLoading}
+            maxLength={2000}
           />
         )}
         {info.type === 'file' && (
@@ -67,6 +68,7 @@ const AdditionalInfoItem: React.FC<AdditionalInfoItemProps> = ({
             placeholder="Enter additional notes..."
             rows={2}
             disabled={isLoading}
+            maxLength={2000}
           />
         )}
       </div>

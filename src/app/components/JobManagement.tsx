@@ -339,6 +339,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                       className={inputFieldStyles}
                       placeholder="e.g., Senior Developer"
                       required
+                      maxLength={200}
                     />
                   </InputField>
                 </div>
@@ -350,6 +351,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                     placeholder="Describe the role..."
                     rows={4}
                     required
+                    maxLength={10000}
                   />
                 </InputField>
                 <div>
@@ -369,6 +371,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                           className={`${inputFieldStyles} flex-1`}
                           placeholder={`Specialty ${index + 1}`}
                           required
+                          maxLength={200}
                         />
                         {formData.specialties.length > 1 && (
                           <button
@@ -445,6 +448,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={inputFieldStyles}
                   placeholder="Search..."
+                  maxLength={200}
                 />
               </InputField>
               <InputField label="Filter by Category">

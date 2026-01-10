@@ -67,6 +67,40 @@ export const SECURITY_CONFIG = {
   LOGIN_LOCKOUT_DURATION_MS: 15 * 60 * 1000, // 15 minutes
 } as const;
 
+// Field length limits (for input validation and buffer overflow protection)
+export const FIELD_LENGTH_LIMITS = {
+  // Personal information
+  NAME: 50,
+  EMAIL: 254, // RFC 5321 maximum
+  PHONE: 15, // E.164 format maximum
+  CITY: 100,
+  COUNTRY: 100,
+  NATIONALITY: 100,
+
+  // Job-related fields
+  JOB_TITLE: 200,
+  JOB_CATEGORY: 200,
+  JOB_DESCRIPTION: 10000,
+  JOB_REQUIREMENTS: 10000,
+  JOB_LOCATION: 200,
+  JOB_EMPLOYMENT_TYPE: 100,
+  JOB_SALARY: 100,
+  SPECIALTY: 200,
+  MAX_SPECIALTIES: 50,
+
+  // Interview and notes
+  INTERVIEW_NOTES: 5000,
+  ADDITIONAL_TEXT: 2000,
+  URL: 2000,
+  CANCEL_REASON: 1000,
+
+  // System fields
+  CANDIDATE_ID: 200,
+  JOB_ID: 200,
+  CALENDAR_EVENT_ID: 500,
+  MEET_LINK: 2000,
+} as const;
+
 // Re-export constants from submodules for convenience
 export { ERROR_MESSAGES } from './constants/errors';
 export type { ErrorMessageKey } from './constants/errors';

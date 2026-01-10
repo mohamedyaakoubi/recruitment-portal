@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 import { getOrCreateRequestId, addRequestIdToHeaders } from '@/lib/requestId';
+import { REQUEST_LIMITS } from '@/lib/constants';
 
 // CORS allowed origins
 const ALLOWED_ORIGINS = [
@@ -104,6 +105,47 @@ export async function middleware(request: NextRequest) {
       applyCorsHeaders(response, origin);
       addRequestIdToHeaders(response.headers, requestId);
       return response;
+    }
+
+    // Validate request body size to prevent buffer overflow attacks
+    if (request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH') {
+      const contentLength = request.headers.get('content-length');
+
+      if (contentLength) {
+        const bodySize = parseInt(contentLength, 10);
+        const contentType = request.headers.get('content-type') || '';
+
+        // Use different limits based on content type
+        const maxSize = contentType.includes('multipart/form-data')
+          ? REQUEST_LIMITS.MAX_FORM_SIZE_BYTES
+          : REQUEST_LIMITS.MAX_JSON_SIZE_BYTES;
+
+        if (bodySize > maxSize) {
+          logSecurityEvent({
+            type: SecurityEventType.SUSPICIOUS_ACTIVITY,
+            ...context,
+            details: {
+              reason: 'Request body size exceeds limit',
+              bodySize,
+              maxSize,
+              contentType,
+            },
+          });
+
+          const response = NextResponse.json(
+            {
+              error: 'Request body too large',
+              message: `Maximum allowed size is ${maxSize / (1024 * 1024)}MB`,
+            },
+            { status: 413 }
+          );
+
+          applySecurityHeaders(response);
+          applyCorsHeaders(response, origin);
+          addRequestIdToHeaders(response.headers, requestId);
+          return response;
+        }
+      }
     }
 
     // Apply rate limiting

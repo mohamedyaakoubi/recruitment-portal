@@ -770,6 +770,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionPropsExtended> = ({
             className="w-full rounded-lg border border-slate-300 px-4 py-3 shadow-sm focus:border-[#003A70] focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             placeholder="Enter your city"
             disabled={isLoading}
+            maxLength={100}
           />
         </div>
 
