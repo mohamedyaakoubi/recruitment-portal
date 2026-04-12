@@ -60,23 +60,30 @@ export async function POST(request: NextRequest) {
 
   const { email } = parsed.data;
 
-  // Layer 2 + 3: DNS MX, disposable domain blocklist, and Abstract API deep verification
-  const emailCheck = await verifyEmail(email);
-  if (!emailCheck.isValid) {
-    logSecurityEvent({
-      type: SecurityEventType.INPUT_VALIDATION_FAILED,
-      ...context,
-      details: {
-        endpoint: '/api/candidate-auth/request-magic-link',
-        reason: emailCheck.error,
-        disposable: emailCheck.disposable,
-      },
-    });
-    return ApiErrors.badRequest(
-      emailCheck.disposable
-        ? 'Disposable email addresses are not accepted. Please use a permanent email address.'
-        : 'This email address could not be verified. Please check it and try again.'
-    );
+  // Layer 2 + 3: DNS MX, disposable domain blocklist, and Abstract API deep verification.
+  // Wrapped in try/catch so that a verification service failure never blocks the magic link flow.
+  try {
+    const emailCheck = await verifyEmail(email);
+    if (!emailCheck.isValid) {
+      logSecurityEvent({
+        type: SecurityEventType.INPUT_VALIDATION_FAILED,
+        ...context,
+        details: {
+          endpoint: '/api/candidate-auth/request-magic-link',
+          reason: emailCheck.error,
+          disposable: emailCheck.disposable,
+        },
+      });
+      return ApiErrors.badRequest(
+        emailCheck.disposable
+          ? 'Disposable email addresses are not accepted. Please use a permanent email address.'
+          : 'This email address could not be verified. Please check it and try again.'
+      );
+    }
+  } catch (verifyError) {
+    // Fail open: log the error but do not block the request.
+    // Email format is already validated by Zod; verification is best-effort.
+    logger.error('Email verification service threw unexpectedly, continuing', verifyError);
   }
 
   // Server-side destination determination — never trust client input
