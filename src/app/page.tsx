@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from './components/ui/ThemeSwitcher';
 import { useTheme } from 'next-themes';
 import { useEffect } from 'react';
@@ -24,12 +23,20 @@ export default function LandingPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [linkSent, setLinkSent] = useState(false);
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // Show expiry / error messages from magic link redirects
+    const params = new URLSearchParams(window.location.search);
+    const urlError = params.get('error');
+    if (urlError === 'link_expired') {
+      setError('Your sign-in link has expired or was already used. Please request a new one.');
+    } else if (urlError === 'session_expired') {
+      setError('Your session has expired. Please sign in again.');
+    }
   }, []);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -41,7 +48,6 @@ export default function LandingPage() {
       return;
     }
 
-    // Basic email validation first
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address');
@@ -53,89 +59,38 @@ export default function LandingPage() {
     try {
       const normalizedEmail = email.toLowerCase().trim();
 
-      // 🔥 STEP 1: Check database first (FREE - no API cost)
-      logger.info('Checking database for existing candidate', { email: normalizedEmail });
+      // Determine destination: existing candidates go to choices, new ones to form
       const checkResponse = await fetch('/api/check-candidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: normalizedEmail }),
       });
-
       const checkResult = await checkResponse.json();
-
       if (!checkResponse.ok) {
         throw new Error(checkResult.error || 'Failed to check candidate status');
       }
-
-      // Extract data from API response wrapper
       const checkData = checkResult.data || checkResult;
+      const dest = checkData.exists && checkData.count > 0 ? 'choices' : 'form';
 
-      // If candidate exists in database, skip email verification
-      if (checkData.exists && checkData.count > 0) {
-        logger.info('Existing candidate found, redirecting to choices', { email: normalizedEmail });
-        router.push(`/candidate-choices?email=${encodeURIComponent(normalizedEmail)}`);
-        return;
-      }
-
-      // 🔥 STEP 2: Only verify email if candidate doesn't exist (COSTS MONEY)
-      logger.info('New email, verifying with external API', { email: normalizedEmail });
-      const verifyResponse = await fetch('/api/verify-email', {
+      // Send magic link — always returns success (prevents enumeration)
+      const mlResponse = await fetch('/api/candidate-auth/request-magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: normalizedEmail }),
+        body: JSON.stringify({ email: normalizedEmail, dest }),
       });
-
-      const verifyResult = await verifyResponse.json();
-
-      if (!verifyResponse.ok) {
-        throw new Error(verifyResult.error || 'Email verification failed');
+      const mlResult = await mlResponse.json();
+      if (!mlResponse.ok) {
+        throw new Error(mlResult.error || 'Failed to send sign-in link');
       }
 
-      // Extract data from API response wrapper
-      const verifyData = verifyResult.data || verifyResult;
-
-      if (!verifyData.isValid) {
-        setError('Please enter a valid email address that exists');
-        return;
-      }
-
-      // 🔥 STEP 3: Email is valid and new - redirect to form
-      logger.info('Email verified, redirecting to application form', { email: normalizedEmail });
-      router.push(`/candidate-form?email=${encodeURIComponent(normalizedEmail)}`);
+      setLinkSent(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-
-      // Use logger.warn for expected/user errors to avoid Next.js error overlay in dev
-      const isExpectedError =
-        errorMessage.includes('Too many requests') ||
-        errorMessage.includes('rate limit') ||
-        errorMessage.includes('verification failed') ||
-        errorMessage.includes('temporarily unavailable') ||
-        errorMessage.includes('Invalid email') ||
-        errorMessage.includes('email format') ||
-        errorMessage.includes('validation failed') ||
-        errorMessage.includes('domain') ||
-        errorMessage.includes('MX records');
-
-      if (isExpectedError) {
-        logger.warn('Email submission validation error', { error: errorMessage });
+      const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
+      if (msg.includes('Too many requests') || msg.includes('rate limit')) {
+        setError("You're requesting too quickly. Please wait a moment and try again.");
       } else {
-        // Only use logger.error for truly unexpected errors
-        logger.error('Email submission error', err);
-      }
-
-      // Make error messages user-friendly
-      if (errorMessage.includes('Too many requests') || errorMessage.includes('rate limit')) {
-        setError("You're submitting too quickly. Please wait a moment and try again.");
-      } else if (
-        errorMessage.includes('verification failed') ||
-        errorMessage.includes('temporarily unavailable')
-      ) {
-        setError(
-          'Email verification is temporarily unavailable. Please try again in a few seconds.'
-        );
-      } else {
-        setError(errorMessage);
+        logger.error('Magic link request error', err);
+        setError(msg);
       }
     } finally {
       setIsLoading(false);
@@ -282,7 +237,7 @@ export default function LandingPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-xl border border-slate-300 px-6 py-4 text-lg shadow-sm transition-colors focus:border-[#003A70] focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     placeholder="your.email@example.com"
-                    disabled={isLoading}
+                    disabled={isLoading || linkSent}
                   />
                 </div>
 
@@ -292,26 +247,62 @@ export default function LandingPage() {
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  className="w-full transform rounded-xl bg-[#003A70] px-8 py-4 text-lg font-bold tracking-wide text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-[#002B54] focus:outline-none focus:ring-2 focus:ring-[#003A70] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                      <span>Checking...</span>
+                {linkSent ? (
+                  <div className="rounded-xl border border-green-200 bg-green-50 p-6 text-center dark:border-green-500/30 dark:bg-green-900/20">
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-800/50">
+                      <svg
+                        className="h-6 w-6 text-green-600 dark:text-green-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                      </svg>
                     </div>
-                  ) : (
-                    'Continue'
-                  )}
-                </button>
+                    <p className="font-semibold text-green-800 dark:text-green-300">
+                      Check your inbox
+                    </p>
+                    <p className="mt-1 text-sm text-green-700 dark:text-green-400">
+                      We sent a sign-in link to <strong>{email}</strong>. It expires in 15 minutes.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLinkSent(false);
+                        setEmail('');
+                        setError(null);
+                      }}
+                      className="mt-4 text-sm text-green-700 underline hover:text-green-900 dark:text-green-400 dark:hover:text-green-200"
+                    >
+                      Use a different email
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="submit"
+                    className="w-full transform rounded-xl bg-[#003A70] px-8 py-4 text-lg font-bold tracking-wide text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-[#002B54] focus:outline-none focus:ring-2 focus:ring-[#003A70] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        <span>Sending link...</span>
+                      </div>
+                    ) : (
+                      'Send sign-in link'
+                    )}
+                  </button>
+                )}
               </form>
 
               <div className="text-center">
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  We'll check if you're an existing candidate or verify your email for new
-                  applications.
+                  We&apos;ll send a secure one-time link to your inbox. No password needed.
                 </p>
               </div>
             </div>

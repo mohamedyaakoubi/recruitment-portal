@@ -8,6 +8,7 @@ import { InterviewScheduledEmail } from '@/components/emails/InterviewScheduledE
 import { RejectionEmail } from '@/components/emails/RejectionEmail';
 import { CancellationEmail } from '@/components/emails/CancellationEmail';
 import { AdminOtpEmail } from '@/components/emails/AdminOtpEmail';
+import { MagicLinkEmail } from '@/components/emails/MagicLinkEmail';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
@@ -275,4 +276,40 @@ export const sendAdminOtpEmail = async (adminEmail: string, otp: string): Promis
   }
 
   logger.info('Admin OTP email sent', { messageId: data?.id, adminEmail });
+};
+
+export const sendMagicLinkEmail = async ({
+  to,
+  magicLinkUrl,
+  expiryMinutes,
+}: {
+  to: string;
+  magicLinkUrl: string;
+  expiryMinutes: number;
+}) => {
+  if (!resend) {
+    logger.warn('Resend not configured, skipping magic link email');
+    return;
+  }
+
+  const meta = getEmailMeta();
+
+  const { data, error } = await resend.emails.send({
+    from: meta.from,
+    to,
+    subject: `Your sign-in link for ${meta.companyName}`,
+    react: React.createElement(MagicLinkEmail, {
+      magicLinkUrl,
+      companyName: meta.companyName,
+      expiryMinutes,
+    }),
+  });
+
+  if (error) {
+    logger.error('Error sending magic link email', error, { to: '[redacted]' });
+    throw new Error(error.message);
+  }
+
+  logger.info('Magic link email sent', { messageId: data?.id });
+  return data;
 };

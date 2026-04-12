@@ -65,6 +65,11 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   '/api/admin-auth/request-otp': { requests: 3, window: '10 m' },
   '/api/admin-auth/verify-otp': { requests: 10, window: '10 m' },
 
+  // Candidate magic link — 5 requests per 10 min per IP
+  '/api/candidate-auth/request-magic-link': { requests: 5, window: '10 m' },
+  // Verify is a one-click GET, allow reasonable retries
+  '/api/candidate-auth/verify-magic-link': { requests: 10, window: '10 m' },
+
   // Admin endpoints - more generous for legitimate use
   '/api/admin/*': { requests: 60, window: '1 m' },
   '/api/candidates/*': { requests: 30, window: '1 m' },

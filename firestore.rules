@@ -2,32 +2,28 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper: true when the caller holds the admin custom claim
+    // (set by /api/admin-auth/verify-otp via Firebase Admin createCustomToken)
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
     // Candidates Collection Rules
     match /candidates/{candidateId} {
-      // Allow any user (authenticated or unauthenticated) to create new candidate documents.
-      // By setting `allow create: if true;`, we ensure that there are no restrictions
-      // based on authentication status for creating new candidate entries. This is
-      // essential for an open application process where candidates do not log in.
+      // Allow any visitor to create a new candidate document (open application process).
       allow create: if true;
 
-      // Allow authenticated administrators to read, update, and delete candidate documents.
-      // This rule remains unchanged to ensure that only the specified admin email
-      // (`airopanget@gmail.com`) has comprehensive management capabilities over the
-      // candidate data, maintaining administrative oversight and data integrity.
-      allow read, update, delete: if request.auth != null && request.auth.token.email == "airopanget@gmail.com";
+      // Only verified admins (custom-claim admin=true) can read/update/delete.
+      allow read, update, delete: if isAdmin();
     }
 
     // Jobs Collection Rules
     match /jobs/{jobId} {
-      // Allow all users (authenticated or unauthenticated) to read job listings.
-      // This rule is crucial for the candidate application form to display available
-      // job positions to all applicants, ensuring public readability of job data.
+      // Anyone can read public job listings.
       allow read: if true;
 
-      // Allow authenticated administrators to create, update, and delete job listings.
-      // This restricts the modification of job data to authorized personnel only,
-      // preventing unauthorized changes to the available job positions.
-      allow create, update, delete: if request.auth != null && request.auth.token.email == "airopanget@gmail.com";
+      // Only verified admins can manage job listings.
+      allow create, update, delete: if isAdmin();
     }
   }
 }

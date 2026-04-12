@@ -128,6 +128,14 @@ const ENV_VARS: EnvVarConfig[] = [
     required: false,
     description: 'Base URL of the application',
   },
+
+  // Candidate session secret (magic link auth)
+  {
+    name: 'CANDIDATE_SESSION_SECRET',
+    required: false,
+    description:
+      'HMAC secret for signing candidate session cookies (generate with: openssl rand -hex 32)',
+  },
 ];
 
 export interface ValidationResult {

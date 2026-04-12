@@ -268,6 +268,25 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Protect candidate pages — validate HMAC-signed session cookie
+  const candidateRoutes = ['/candidate-choices', '/candidate-dashboard', '/candidate-form'];
+  if (candidateRoutes.some((r) => request.nextUrl.pathname.startsWith(r))) {
+    const cookieVal = request.cookies.get('_candidate_session')?.value;
+    let sessionValid = false;
+    if (cookieVal) {
+      const { parseSessionCookie } = await import('@/lib/candidate-session');
+      const sessionEmail = await parseSessionCookie(cookieVal);
+      sessionValid = sessionEmail !== null;
+    }
+    if (!sessionValid) {
+      const redirectUrl = new URL('/?error=session_expired', request.url);
+      const response = NextResponse.redirect(redirectUrl);
+      applySecurityHeaders(response);
+      addRequestIdToHeaders(response.headers, requestId);
+      return response;
+    }
+  }
+
   // For non-API routes, apply security headers
   const response = NextResponse.next();
 
