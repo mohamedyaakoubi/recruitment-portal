@@ -166,19 +166,26 @@ export default function CandidateChoices() {
                 <p className="text-sm text-blue-700 dark:text-blue-300/80">
                   If you have questions about your applications or need assistance, please contact
                   us at{' '}
-                  <a
-                    href="mailto:wassim@internationalskills.fi"
-                    className="underline hover:text-blue-800 dark:hover:text-blue-200"
-                  >
-                    wassim@internationalskills.fi
-                  </a>{' '}
-                  or call{' '}
-                  <a
-                    href="tel:+358452644966"
-                    className="underline hover:text-blue-800 dark:hover:text-blue-200"
-                  >
-                    +358 452644966
-                  </a>
+                  {process.env.NEXT_PUBLIC_SUPPORT_EMAIL && (
+                    <a
+                      href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
+                      className="underline hover:text-blue-800 dark:hover:text-blue-200"
+                    >
+                      {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}
+                    </a>
+                  )}
+                  {process.env.NEXT_PUBLIC_CONTACT_PHONE && (
+                    <>
+                      {' '}
+                      or call{' '}
+                      <a
+                        href={`tel:${process.env.NEXT_PUBLIC_CONTACT_PHONE}`}
+                        className="underline hover:text-blue-800 dark:hover:text-blue-200"
+                      >
+                        {process.env.NEXT_PUBLIC_CONTACT_PHONE}
+                      </a>
+                    </>
+                  )}
                   .
                 </p>
               </div>

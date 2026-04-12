@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
           <div>
             <Image
               src="/logo-skills-white.png"
-              alt="International Skills"
+              alt={process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
               width={180}
               height={45}
               className="mb-4"
@@ -38,15 +38,18 @@ const Footer: React.FC = () => {
               Contact
             </h3>
             <div className="mt-4 space-y-3 text-sm text-slate-300">
-              <p className="flex items-center">
-                <span className="mr-2 opacity-80">📧</span> wassim@internationalskills.fi
-              </p>
-              <p className="flex items-center">
-                <span className="mr-2 opacity-80">📞</span> +358 452644966
-              </p>
-              <p className="flex items-center">
-                <span className="mr-2 opacity-80">📞</span> +216 29 581 180
-              </p>
+              {process.env.NEXT_PUBLIC_SUPPORT_EMAIL && (
+                <p className="flex items-center">
+                  <span className="mr-2 opacity-80">📧</span>{' '}
+                  {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}
+                </p>
+              )}
+              {process.env.NEXT_PUBLIC_CONTACT_PHONE && (
+                <p className="flex items-center">
+                  <span className="mr-2 opacity-80">📞</span>{' '}
+                  {process.env.NEXT_PUBLIC_CONTACT_PHONE}
+                </p>
+              )}
             </div>
           </div>
 
@@ -73,7 +76,7 @@ const Footer: React.FC = () => {
                   />
                 </svg>
               </SocialIcon>
-              <SocialIcon href="https://www.instagram.com/internationalskillscompany?igsh=MTI4enh4ODNzOGN5Mw%3D%3D">
+              <SocialIcon href="https://www.instagram.com/">
                 <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     fillRule="evenodd"
@@ -87,7 +90,10 @@ const Footer: React.FC = () => {
           </div>
         </div>
         <div className="mt-12 border-t border-slate-700 pt-8 text-center">
-          <p className="text-sm text-slate-400">© 2025 Wassim Abbessi. All Rights Reserved.</p>
+          <p className="text-sm text-slate-400">
+            © {new Date().getFullYear()}{' '}
+            {process.env.NEXT_PUBLIC_COMPANY_NAME || 'The Organization'}. All Rights Reserved.
+          </p>
         </div>
       </div>
     </footer>

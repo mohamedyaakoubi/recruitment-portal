@@ -5,7 +5,7 @@ test.describe('Dashboard Page', () => {
     await page.goto('/');
 
     // Check if the page loaded with correct title
-    await expect(page).toHaveTitle(/International Skills/);
+    await expect(page).toHaveTitle(/Career Portal/);
 
     // Check for main heading
     await expect(page.getByRole('heading', { name: /Your Career Journey/i })).toBeVisible();

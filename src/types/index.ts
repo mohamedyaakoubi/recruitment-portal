@@ -236,11 +236,16 @@ export interface ToastProps {
   duration?: number;
 }
 
+export type OtpStep = 'email' | 'otp';
+
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  signIn: (email: string, password: string) => Promise<void>;
+  otpStep: OtpStep;
+  pendingEmail: string;
+  requestOtp: (email: string) => Promise<void>;
+  verifyOtp: (email: string, otp: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 

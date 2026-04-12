@@ -70,7 +70,7 @@ export const scheduleInterview = async (
 
     const eventDetails = {
       summary: `Interview: ${jobTitle || 'Position'} - ${candidateName}`,
-      description: `Interview scheduled with ${candidateName} for ${jobTitle || 'the position'} at International Skills Labor Company.\n\nCandidate Email: ${candidateEmail}\nDuration: ${duration} minutes${notes ? `\n\nNotes: ${notes}` : ''}`,
+      description: `Interview scheduled with ${candidateName} for ${jobTitle || 'the position'}.\n\nCandidate Email: ${candidateEmail}\nDuration: ${duration} minutes${notes ? `\n\nNotes: ${notes}` : ''}`,
       start: {
         dateTime: interviewDateTime.toISOString(),
         timeZone: 'Europe/Helsinki',
@@ -86,8 +86,8 @@ export const scheduleInterview = async (
           responseStatus: 'needsAction',
         },
         {
-          email: adminEmail || process.env.FALLBACK_ADMIN_EMAIL || 'admin@internationalskills.fi',
-          displayName: 'International Skills Hiring',
+          email: adminEmail || process.env.FALLBACK_ADMIN_EMAIL || '',
+          displayName: process.env.COMPANY_NAME || 'Hiring Team',
           responseStatus: 'accepted',
         },
       ],

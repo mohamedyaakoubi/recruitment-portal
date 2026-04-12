@@ -15,9 +15,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
   const [interviewDate, setInterviewDate] = useState('');
   const [interviewTime, setInterviewTime] = useState('');
   const [duration, setDuration] = useState(30); // Default 30 minutes
-  const [adminEmail, setAdminEmail] = useState(
-    process.env.NEXT_PUBLIC_DEFAULT_ADMIN_EMAIL || 'admin@internationalskills.fi'
-  );
+  const [adminEmail, setAdminEmail] = useState(process.env.NEXT_PUBLIC_DEFAULT_ADMIN_EMAIL || '');
   const [notes, setNotes] = useState('');
   const modalRef = useFocusTrap(isOpen);
 
@@ -65,7 +63,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
         interviewDate,
         interviewTime,
         duration,
-        adminEmail || process.env.NEXT_PUBLIC_DEFAULT_ADMIN_EMAIL || 'admin@internationalskills.fi',
+        adminEmail || process.env.NEXT_PUBLIC_DEFAULT_ADMIN_EMAIL || '',
         notes
       );
 
@@ -222,7 +220,7 @@ const InterviewSchedulingModal: React.FC<InterviewSchedulingModalProps> = ({
               onChange={(e) => setAdminEmail(e.target.value)}
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
               disabled={isLoading}
-              placeholder="wassim@internationalskills.fi"
+              placeholder="admin@yourdomain.com"
             />
           </div>
 

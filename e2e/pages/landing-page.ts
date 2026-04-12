@@ -49,7 +49,9 @@ export class LandingPage {
     this.fastTrackFeature = page.locator('text=/Fast.*Track/i');
 
     // Header - Updated to match actual HTML
-    this.logo = page.locator('img[alt="International Skills Labor Company"]');
+    this.logo = page
+      .locator('img[alt="Career Portal"], img[alt*="Portal"], img[alt*="Company"]')
+      .first();
     this.themeToggle = page.locator('button:has(svg.lucide-sun), button:has(svg.lucide-moon)');
     this.contactBanner = page.locator('.bg-\\[\\#003A70\\]').first();
 

@@ -161,46 +161,50 @@ export default function LandingPage() {
               <span>Découvrez les dernières opportunités!</span>
             </div>
             <div className="hidden items-center space-x-6 md:flex">
-              <a
-                href="tel:+358452644966"
-                className="flex items-center space-x-2 transition-colors hover:text-gray-300"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              {process.env.NEXT_PUBLIC_CONTACT_PHONE && (
+                <a
+                  href={`tel:${process.env.NEXT_PUBLIC_CONTACT_PHONE.replace(/\s/g, '')}`}
+                  className="flex items-center space-x-2 transition-colors hover:text-gray-300"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                  />
-                </svg>
-                <span>+358 452644966</span>
-              </a>
-              <a
-                href="mailto:wassim@internationalskills.fi"
-                className="flex items-center space-x-2 transition-colors hover:text-gray-300"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    />
+                  </svg>
+                  <span>{process.env.NEXT_PUBLIC_CONTACT_PHONE}</span>
+                </a>
+              )}
+              {process.env.NEXT_PUBLIC_SUPPORT_EMAIL && (
+                <a
+                  href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
+                  className="flex items-center space-x-2 transition-colors hover:text-gray-300"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-                <span>wassim@internationalskills.fi</span>
-              </a>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>{process.env.NEXT_PUBLIC_SUPPORT_EMAIL}</span>
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -209,7 +213,7 @@ export default function LandingPage() {
             {mounted ? (
               <Image
                 src={theme === 'dark' ? '/logo-skills-white.png' : '/logo-skills.png'}
-                alt="International Skills Labor Company"
+                alt={process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
                 width={180}
                 height={45}
                 priority
@@ -393,7 +397,7 @@ export default function LandingPage() {
             <div>
               <Image
                 src="/logo-skills-white.png"
-                alt="International Skills"
+                alt={process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
                 width={180}
                 height={45}
                 className="mb-4"
@@ -408,15 +412,18 @@ export default function LandingPage() {
                 Contact
               </h3>
               <div className="mt-4 space-y-3 text-sm text-slate-300">
-                <p className="flex items-center">
-                  <span className="mr-2 opacity-80"></span> wassim@internationalskills.fi
-                </p>
-                <p className="flex items-center">
-                  <span className="mr-2 opacity-80"></span> +358 452644966
-                </p>
-                <p className="flex items-center">
-                  <span className="mr-2 opacity-80"></span> +216 29 581 180
-                </p>
+                {process.env.NEXT_PUBLIC_SUPPORT_EMAIL && (
+                  <p className="flex items-center">
+                    <span className="mr-2 opacity-80">📧</span>{' '}
+                    {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}
+                  </p>
+                )}
+                {process.env.NEXT_PUBLIC_CONTACT_PHONE && (
+                  <p className="flex items-center">
+                    <span className="mr-2 opacity-80">📞</span>{' '}
+                    {process.env.NEXT_PUBLIC_CONTACT_PHONE}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -453,7 +460,7 @@ export default function LandingPage() {
                     />
                   </svg>
                 </SocialIcon>
-                <SocialIcon href="https://www.instagram.com/internationalskillscompany?igsh=MTI4enh4ODNzOGN5Mw%3D%3D">
+                <SocialIcon href="https://www.instagram.com/">
                   <svg
                     className="h-6 w-6"
                     fill="currentColor"
@@ -472,7 +479,10 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="mt-12 border-t border-slate-700 pt-8 text-center">
-            <p className="text-sm text-slate-400">© 2025 Wassim Abbessi. All Rights Reserved.</p>
+            <p className="text-sm text-slate-400">
+              © {new Date().getFullYear()}{' '}
+              {process.env.NEXT_PUBLIC_COMPANY_NAME || 'The Organization'}. All Rights Reserved.
+            </p>
           </div>
         </div>
       </footer>

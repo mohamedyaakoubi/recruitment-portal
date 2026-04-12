@@ -24,7 +24,7 @@ describe('DashboardHeader', () => {
 
   it('should render the logo', () => {
     render(<DashboardHeader />);
-    const logo = screen.getByAltText('International Skills Labor Company');
+    const logo = screen.getByAltText(/Career Portal/i);
     expect(logo).toBeInTheDocument();
   });
 
@@ -45,9 +45,13 @@ describe('DashboardHeader', () => {
     expect(themeSwitcher).toBeInTheDocument();
   });
 
-  it('should render the contact information in the top bar', () => {
+  it('should render the contact information in the top bar when env vars are set', () => {
+    process.env.NEXT_PUBLIC_CONTACT_PHONE = '+1 555 000 0000';
+    process.env.NEXT_PUBLIC_SUPPORT_EMAIL = 'support@example.com';
     render(<DashboardHeader />);
-    expect(screen.getByText('+358 452644966')).toBeInTheDocument();
-    expect(screen.getByText('wassim@internationalskills.fi')).toBeInTheDocument();
+    expect(screen.getByText('+1 555 000 0000')).toBeInTheDocument();
+    expect(screen.getByText('support@example.com')).toBeInTheDocument();
+    delete process.env.NEXT_PUBLIC_CONTACT_PHONE;
+    delete process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
   });
 });

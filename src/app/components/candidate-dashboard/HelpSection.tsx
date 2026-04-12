@@ -25,24 +25,28 @@ const HelpSection = () => {
             If you have questions, please contact us:
           </p>
           <div className="space-y-2 text-sm">
-            <p className="text-blue-700 dark:text-blue-300/80">
-              📧 Email:{' '}
-              <a
-                href="mailto:wassim@internationalskills.fi"
-                className="underline hover:text-blue-800 dark:hover:text-blue-200"
-              >
-                wassim@internationalskills.fi
-              </a>
-            </p>
-            <p className="text-blue-700 dark:text-blue-300/80">
-              📞 Phone:{' '}
-              <a
-                href="tel:+358452644966"
-                className="underline hover:text-blue-800 dark:hover:text-blue-200"
-              >
-                +358 452644966
-              </a>
-            </p>
+            {process.env.NEXT_PUBLIC_SUPPORT_EMAIL && (
+              <p className="text-blue-700 dark:text-blue-300/80">
+                📧 Email:{' '}
+                <a
+                  href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
+                  className="underline hover:text-blue-800 dark:hover:text-blue-200"
+                >
+                  {process.env.NEXT_PUBLIC_SUPPORT_EMAIL}
+                </a>
+              </p>
+            )}
+            {process.env.NEXT_PUBLIC_CONTACT_PHONE && (
+              <p className="text-blue-700 dark:text-blue-300/80">
+                📞 Phone:{' '}
+                <a
+                  href={`tel:${process.env.NEXT_PUBLIC_CONTACT_PHONE.replace(/\s/g, '')}`}
+                  className="underline hover:text-blue-800 dark:hover:text-blue-200"
+                >
+                  {process.env.NEXT_PUBLIC_CONTACT_PHONE}
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </div>

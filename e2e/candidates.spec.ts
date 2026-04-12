@@ -32,8 +32,8 @@ test.describe('Candidate Management Flow', () => {
   test('should display contact information', async ({ page }) => {
     await page.goto('/');
 
-    // Check footer contact info (use first() to handle multiple matches)
-    await expect(page.getByText(/wassim@internationalskills.fi/i).first()).toBeVisible();
-    await expect(page.getByText(/\+358 452644966/).first()).toBeVisible();
+    // Check that at least one contact link (email or phone) is present
+    const contactLinks = page.locator('a[href^="mailto:"], a[href^="tel:"]');
+    await expect(contactLinks.first()).toBeVisible();
   });
 });

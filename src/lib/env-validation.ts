@@ -48,12 +48,34 @@ const ENV_VARS: EnvVarConfig[] = [
   // Admin Configuration
   { name: 'ADMIN_EMAILS', required: true, description: 'Comma-separated list of admin emails' },
 
-  // SMTP Configuration (optional)
-  { name: 'SMTP_HOST', required: false, description: 'SMTP server for emails' },
-  { name: 'SMTP_PORT', required: false, description: 'SMTP port' },
-  { name: 'SMTP_USER', required: false, description: 'SMTP username' },
-  { name: 'SMTP_PASS', required: false, description: 'SMTP password' },
-  { name: 'SMTP_FROM_EMAIL', required: false, description: 'SMTP from email address' },
+  // Resend Email Configuration (optional — emails disabled when absent)
+  {
+    name: 'RESEND_API_KEY',
+    required: false,
+    description: 'Resend API key for transactional emails',
+  },
+  {
+    name: 'RESEND_FROM_EMAIL',
+    required: false,
+    description: 'Verified sender email address in Resend',
+  },
+
+  // Company Branding (optional — defaults to "The Organization")
+  {
+    name: 'COMPANY_NAME',
+    required: false,
+    description: 'Company display name used in emails and UI',
+  },
+  {
+    name: 'SUPPORT_EMAIL',
+    required: false,
+    description: 'Support contact email shown to candidates',
+  },
+  {
+    name: 'CONTACT_PHONE',
+    required: false,
+    description: 'Optional support phone number shown in emails',
+  },
 
   // AI Configuration (optional)
   { name: 'GEMINI_API_KEY', required: false, description: 'Gemini AI for scoring' },

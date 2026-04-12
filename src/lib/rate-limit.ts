@@ -58,8 +58,12 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   // Authentication - very strict
   '/api/auth/*': { requests: 5, window: '1 m' },
 
-  // Admin login page - strict to match Firebase's rate limit
+  // Admin login page - strict to prevent brute force
   '/admin-dashboard-secret/login': { requests: 5, window: '1 m' },
+
+  // OTP endpoints - very strict (3 requests per email per 10 min enforced in service layer)
+  '/api/admin-auth/request-otp': { requests: 3, window: '10 m' },
+  '/api/admin-auth/verify-otp': { requests: 10, window: '10 m' },
 
   // Admin endpoints - more generous for legitimate use
   '/api/admin/*': { requests: 60, window: '1 m' },

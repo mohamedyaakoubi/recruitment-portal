@@ -78,7 +78,7 @@ const CandidateFormUI: React.FC<CandidateFormUIProps> = ({
           <div className="flex items-center justify-between py-4">
             <Image
               src={theme === 'dark' ? '/logo-skills-white.png' : '/logo-skills.png'}
-              alt="International Skills Labor Company"
+              alt={process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
               width={180}
               height={45}
               priority

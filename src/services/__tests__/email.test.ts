@@ -1,27 +1,14 @@
 import { vi } from 'vitest';
-/**
- * @jest-environment node
- */
 
-const { mockSendMail, mockVerify } = vi.hoisted(() => {
-  return {
-    mockSendMail: vi.fn().mockResolvedValue({ messageId: 'mock-message-id' }),
-    mockVerify: vi.fn((callback) => callback(null, true)),
-  };
-});
+const { mockEmailSend } = vi.hoisted(() => ({
+  mockEmailSend: vi.fn().mockResolvedValue({ data: { id: 'mock-email-id' }, error: null }),
+}));
 
-vi.mock('nodemailer', () => {
-  const mockCreateTransport = vi.fn().mockReturnValue({
-    sendMail: mockSendMail,
-    verify: mockVerify,
-  });
-  return {
-    default: {
-      createTransport: mockCreateTransport,
-    },
-    createTransport: mockCreateTransport,
-  };
-});
+vi.mock('resend', () => ({
+  Resend: vi.fn().mockImplementation(() => ({
+    emails: { send: mockEmailSend },
+  })),
+}));
 
 describe('Email Service', () => {
   let sendNotificationEmail: any, sendRejectionEmail: any, sendCancellationEmail: any;
@@ -29,13 +16,11 @@ describe('Email Service', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.resetModules();
-    // Set up SMTP env vars for tests
-    process.env.SMTP_HOST = 'smtp.example.com';
-    process.env.SMTP_USER = 'user';
-    process.env.SMTP_PASS = 'pass';
-    process.env.SMTP_FROM_EMAIL = 'from@example.com';
+    process.env.RESEND_API_KEY = 'test-resend-api-key';
+    process.env.RESEND_FROM_EMAIL = 'noreply@example.com';
+    process.env.COMPANY_NAME = 'Test Company';
+    process.env.SUPPORT_EMAIL = 'support@example.com';
 
-    // Re-import the module to get the new mock implementation and env vars
     const emailService = await import('../email');
     sendNotificationEmail = emailService.sendNotificationEmail;
     sendRejectionEmail = emailService.sendRejectionEmail;
@@ -47,29 +32,32 @@ describe('Email Service', () => {
       const to = 'test@example.com';
       const candidateName = 'Test User';
       const interviewDate = new Date();
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
       await sendNotificationEmail(to, 'interview_scheduled', candidateName, interviewDate);
 
-      expect(mockSendMail).toHaveBeenCalled();
-      const mailOptions = mockSendMail.mock.calls[0][0];
-      expect(mailOptions.to).toBe(to);
-      expect(mailOptions.subject).toContain('Interview Invitation');
-      expect(mailOptions.html).toContain(candidateName);
-      consoleLogSpy.mockRestore();
+      expect(mockEmailSend).toHaveBeenCalledOnce();
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.to).toBe(to);
+      expect(callArg.subject).toContain('Interview Invitation');
+      expect(callArg.react).toBeDefined();
     });
 
-    it('should send a rejection email', async () => {
+    it('should send a rejection notification email', async () => {
       const to = 'test@example.com';
       const candidateName = 'Test User';
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
       await sendNotificationEmail(to, 'rejected', candidateName);
 
-      expect(mockSendMail).toHaveBeenCalled();
-      const mailOptions = mockSendMail.mock.calls[0][0];
-      expect(mailOptions.to).toBe(to);
-      expect(mailOptions.subject).toContain('Application Status Update');
-      expect(mailOptions.html).toContain('decided not to move forward');
-      consoleLogSpy.mockRestore();
+      expect(mockEmailSend).toHaveBeenCalledOnce();
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.to).toBe(to);
+      expect(callArg.subject).toContain('Application Status Update');
+      expect(callArg.react).toBeDefined();
+    });
+
+    it('should skip sending if no matching status', async () => {
+      await sendNotificationEmail('test@example.com', 'unknown_status', 'Test User');
+      expect(mockEmailSend).not.toHaveBeenCalled();
     });
   });
 
@@ -78,15 +66,20 @@ describe('Email Service', () => {
       const to = 'test@example.com';
       const candidateName = 'Test User';
       const jobTitle = 'Developer';
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
       await sendRejectionEmail(to, candidateName, jobTitle);
 
-      expect(mockSendMail).toHaveBeenCalled();
-      const mailOptions = mockSendMail.mock.calls[0][0];
-      expect(mailOptions.to).toBe(to);
-      expect(mailOptions.subject).toContain('Application Status Update');
-      expect(mailOptions.html).toContain(jobTitle);
-      consoleLogSpy.mockRestore();
+      expect(mockEmailSend).toHaveBeenCalledOnce();
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.to).toBe(to);
+      expect(callArg.subject).toContain('Application Status Update');
+      expect(callArg.react).toBeDefined();
+    });
+
+    it('should throw if required fields are missing', async () => {
+      await expect(sendRejectionEmail('', '', 'Developer')).rejects.toThrow(
+        'Missing required fields'
+      );
     });
   });
 
@@ -96,15 +89,14 @@ describe('Email Service', () => {
       const candidateName = 'Test User';
       const jobTitle = 'Developer';
       const reason = 'Unforeseen circumstances';
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
       await sendCancellationEmail({ candidateEmail: to, candidateName, jobTitle, reason });
 
-      expect(mockSendMail).toHaveBeenCalled();
-      const mailOptions = mockSendMail.mock.calls[0][0];
-      expect(mailOptions.to).toBe(to);
-      expect(mailOptions.subject).toContain('Interview Cancelled');
-      expect(mailOptions.html).toContain(reason);
-      consoleLogSpy.mockRestore();
+      expect(mockEmailSend).toHaveBeenCalledOnce();
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.to).toBe(to);
+      expect(callArg.subject).toContain('Interview Cancelled');
+      expect(callArg.react).toBeDefined();
     });
   });
 });

@@ -8,8 +8,7 @@ import { REQUEST_LIMITS } from '@/lib/constants';
 // CORS allowed origins
 const ALLOWED_ORIGINS = [
   process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  'https://internationalskills.fi',
-  // Add production domains here
+  // Add additional production domains via NEXT_PUBLIC_APP_URL
 ];
 
 /**
