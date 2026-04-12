@@ -59,24 +59,11 @@ export default function LandingPage() {
     try {
       const normalizedEmail = email.toLowerCase().trim();
 
-      // Determine destination: existing candidates go to choices, new ones to form
-      const checkResponse = await fetch('/api/check-candidate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: normalizedEmail }),
-      });
-      const checkResult = await checkResponse.json();
-      if (!checkResponse.ok) {
-        throw new Error(checkResult.error || 'Failed to check candidate status');
-      }
-      const checkData = checkResult.data || checkResult;
-      const dest = checkData.exists && checkData.count > 0 ? 'choices' : 'form';
-
-      // Send magic link — always returns success (prevents enumeration)
+      // Send magic link — server determines login vs sign-up destination
       const mlResponse = await fetch('/api/candidate-auth/request-magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: normalizedEmail, dest }),
+        body: JSON.stringify({ email: normalizedEmail }),
       });
       const mlResult = await mlResponse.json();
       if (!mlResponse.ok) {

@@ -10,12 +10,13 @@ import {
   MagicLinkDest,
 } from '@/services/magicLink';
 import { sendMagicLinkEmail } from '@/services/email';
+import { verifyEmail } from '@/services/emailVerification';
+import { getFirestoreAdmin } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
 const schema = z.object({
   email: z.string().email().max(254).toLowerCase().trim(),
-  dest: z.enum(['choices', 'form']).default('form'),
 });
 
 export async function POST(request: NextRequest) {
@@ -57,12 +58,43 @@ export async function POST(request: NextRequest) {
     return ApiErrors.badRequest('Invalid email address', parsed.error.flatten());
   }
 
-  const { email, dest } = parsed.data;
+  const { email } = parsed.data;
+
+  // Layer 2 + 3: DNS MX, disposable domain blocklist, and Abstract API deep verification
+  const emailCheck = await verifyEmail(email);
+  if (!emailCheck.isValid) {
+    logSecurityEvent({
+      type: SecurityEventType.INPUT_VALIDATION_FAILED,
+      ...context,
+      details: {
+        endpoint: '/api/candidate-auth/request-magic-link',
+        reason: emailCheck.error,
+        disposable: emailCheck.disposable,
+      },
+    });
+    return ApiErrors.badRequest(
+      emailCheck.disposable
+        ? 'Disposable email addresses are not accepted. Please use a permanent email address.'
+        : 'This email address could not be verified. Please check it and try again.'
+    );
+  }
+
+  // Server-side destination determination — never trust client input
+  let dest: MagicLinkDest = 'form';
+  try {
+    const db = getFirestoreAdmin();
+    const snap = await db.collection('candidates').where('email', '==', email).get();
+    dest = !snap.empty && snap.size > 0 ? 'choices' : 'form';
+  } catch (dbError) {
+    logger.error('Firestore candidate lookup failed during magic link request', dbError);
+    // Fail safe: default to 'form' (new user flow) if DB is unreachable
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
   // Generate and send — always return success to prevent email enumeration
   try {
-    const rawToken = await generateMagicLinkToken({ email, dest: dest as MagicLinkDest });
+    const rawToken = await generateMagicLinkToken({ email, dest });
     const magicLinkUrl = `${appUrl}/api/candidate-auth/verify-magic-link?token=${rawToken}`;
     await sendMagicLinkEmail({
       to: email,
