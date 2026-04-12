@@ -10,7 +10,7 @@ import {
   MagicLinkDest,
 } from '@/services/magicLink';
 import { sendMagicLinkEmail } from '@/services/email';
-import { verifyEmail } from '@/services/emailVerification';
+import { isDisposableEmailDomain } from '@/lib/disposableEmailDomains';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
@@ -60,30 +60,22 @@ export async function POST(request: NextRequest) {
 
   const { email } = parsed.data;
 
-  // Layer 2 + 3: DNS MX, disposable domain blocklist, and Abstract API deep verification.
-  // Wrapped in try/catch so that a verification service failure never blocks the magic link flow.
-  try {
-    const emailCheck = await verifyEmail(email);
-    if (!emailCheck.isValid) {
-      logSecurityEvent({
-        type: SecurityEventType.INPUT_VALIDATION_FAILED,
-        ...context,
-        details: {
-          endpoint: '/api/candidate-auth/request-magic-link',
-          reason: emailCheck.error,
-          disposable: emailCheck.disposable,
-        },
-      });
-      return ApiErrors.badRequest(
-        emailCheck.disposable
-          ? 'Disposable email addresses are not accepted. Please use a permanent email address.'
-          : 'This email address could not be verified. Please check it and try again.'
-      );
-    }
-  } catch (verifyError) {
-    // Fail open: log the error but do not block the request.
-    // Email format is already validated by Zod; verification is best-effort.
-    logger.error('Email verification service threw unexpectedly, continuing', verifyError);
+  // Reject known disposable/temporary email domains (synchronous file-based check, no network I/O).
+  // Full DNS MX + Abstract API verification is reserved for the form submission step.
+  const domain = email.split('@')[1];
+  if (domain && isDisposableEmailDomain(domain)) {
+    logSecurityEvent({
+      type: SecurityEventType.INPUT_VALIDATION_FAILED,
+      ...context,
+      details: {
+        endpoint: '/api/candidate-auth/request-magic-link',
+        reason: 'disposable_domain',
+        domain,
+      },
+    });
+    return ApiErrors.badRequest(
+      'Disposable email addresses are not accepted. Please use a permanent email address.'
+    );
   }
 
   // Server-side destination determination — never trust client input
