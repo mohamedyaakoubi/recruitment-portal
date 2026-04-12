@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { DashboardHeaderProps } from '@/types';
 import { ThemeSwitcher } from './ui/ThemeSwitcher';
-import { useTheme } from 'next-themes';
 import TopBar from './common/TopBar';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -12,29 +10,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onSignOut,
 }) => {
   const _router = useRouter();
-  const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   return (
     <header className="sticky top-0 z-20 bg-white shadow-sm dark:bg-gray-800">
       <TopBar />
       <nav className="mx-auto max-w-screen-xl px-4 sm:px-6">
         <div className="flex items-center justify-between py-4">
-          {mounted ? (
-            <Image
-              src={theme === 'dark' ? '/logo-skills-white.png' : '/logo-skills.png'}
-              alt={process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
-              width={180}
-              height={45}
-              priority
-            />
-          ) : (
-            <div style={{ width: 180, height: 45 }} />
-          )}
+          <span className="text-xl font-bold text-[#003A70] dark:text-white">
+            {process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
+          </span>
           <div className="flex items-center gap-4">
             <div className="mr-2 hidden text-sm text-gray-600 dark:text-gray-300 md:block">
               Welcome back,{' '}
