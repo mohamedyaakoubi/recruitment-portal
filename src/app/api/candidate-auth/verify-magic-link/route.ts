@@ -7,6 +7,7 @@ import {
 } from '@/lib/candidate-session';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 import logger from '@/lib/logger';
+import { getFirestoreAdmin } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/?error=link_expired', appUrl));
   }
 
-  const { email, dest } = payload;
+  const { email } = payload;
+
+  // Server-side dest determination: check whether this email already has applications.
+  // Done here (verify step) rather than in the request step to keep the request route
+  // free of any Firestore I/O that could hang on cold-start and cause Lambda timeouts.
+  let dest: 'choices' | 'form' = 'form';
+  try {
+    const db = getFirestoreAdmin();
+    const snap = await db.collection('candidates').where('email', '==', email).get();
+    dest = !snap.empty && snap.size > 0 ? 'choices' : 'form';
+  } catch (dbError) {
+    logger.error('Firestore lookup failed in verify-magic-link, defaulting to form', dbError);
+  }
+
   const redirectPath =
     dest === 'choices'
       ? `/candidate-choices?email=${encodeURIComponent(email)}`

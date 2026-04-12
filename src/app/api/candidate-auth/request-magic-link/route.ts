@@ -11,7 +11,6 @@ import {
 } from '@/services/magicLink';
 import { sendMagicLinkEmail } from '@/services/email';
 import { isDisposableEmailDomain } from '@/lib/disposableEmailDomains';
-import { getFirestoreAdmin } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,16 +77,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Server-side destination determination — never trust client input
-  let dest: MagicLinkDest = 'form';
-  try {
-    const db = getFirestoreAdmin();
-    const snap = await db.collection('candidates').where('email', '==', email).get();
-    dest = !snap.empty && snap.size > 0 ? 'choices' : 'form';
-  } catch (dbError) {
-    logger.error('Firestore candidate lookup failed during magic link request', dbError);
-    // Fail safe: default to 'form' (new user flow) if DB is unreachable
-  }
+  // Destination is determined server-side in the verify route (after token validation),
+  // where a Firestore lookup decides login vs sign-up routing without blocking this response.
+  const dest: MagicLinkDest = 'form';
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
