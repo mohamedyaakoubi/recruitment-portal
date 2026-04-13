@@ -15,11 +15,22 @@ const SCOPES = [
 ];
 
 const TOKEN_DB_PATH = 'settings/google_auth_tokens';
-const _STATE_DB_PATH = 'settings/oauth_states';
 
-// In-memory state storage for OAuth flow (valid for 10 minutes)
-const oauthStates = new Map<string, { timestamp: number; used: boolean }>();
-const STATE_EXPIRATION_MS = 10 * 60 * 1000; // 10 minutes
+/** Redis key prefix for OAuth state tokens */
+const OAUTH_STATE_PREFIX = 'oauth-state:';
+/** TTL in seconds — 10 minutes is generous for a human OAuth click */
+const STATE_TTL_SECONDS = 10 * 60;
+
+// In-memory fallback so dev works without Upstash env vars
+const stateMemory = new Map<string, { usedAt: number | null; expiresAt: number }>();
+
+async function getRedis() {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  const { Redis } = await import('@upstash/redis');
+  return new Redis({ url, token });
+}
 
 /**
  * Creates a new OAuth2 client.
@@ -32,17 +43,23 @@ export function getOAuth2Client(): Auth.OAuth2Client {
 }
 
 /**
- * Generate cryptographic state parameter for OAuth CSRF protection
+ * Generate cryptographic state parameter for OAuth CSRF protection.
+ * Stores state in Upstash Redis (with in-memory fallback) so it survives
+ * across separate Vercel Lambda invocations.
  */
-export function generateOAuthState(): string {
+export async function generateOAuthState(): Promise<string> {
   const state = crypto.randomBytes(32).toString('base64url');
-  oauthStates.set(state, { timestamp: Date.now(), used: false });
+  const key = `${OAUTH_STATE_PREFIX}${state}`;
 
-  // Clean up expired states
-  const now = Date.now();
-  for (const [key, value] of oauthStates.entries()) {
-    if (now - value.timestamp > STATE_EXPIRATION_MS) {
-      oauthStates.delete(key);
+  // Always write to memory first
+  stateMemory.set(key, { usedAt: null, expiresAt: Date.now() + STATE_TTL_SECONDS * 1000 });
+
+  const redis = await getRedis();
+  if (redis) {
+    try {
+      await redis.set(key, '0', { ex: STATE_TTL_SECONDS });
+    } catch (err) {
+      logger.error('OAuth state Redis set failed, using in-memory only', err);
     }
   }
 
@@ -51,44 +68,61 @@ export function generateOAuthState(): string {
 }
 
 /**
- * Validate OAuth state parameter
+ * Validate and consume the OAuth state parameter (one-time use).
+ * Checks Redis first, falls back to in-memory.
  */
-export function validateOAuthState(state: string): boolean {
-  const stored = oauthStates.get(state);
+export async function validateOAuthState(state: string): Promise<boolean> {
+  const key = `${OAUTH_STATE_PREFIX}${state}`;
 
-  if (!stored) {
-    logger.warn('OAuth state not found', { state: state.substring(0, 10) + '...' });
-    return false;
+  const redis = await getRedis();
+  if (redis) {
+    try {
+      // getdel atomically returns the value and deletes the key — guarantees one-time use
+      const val = await redis.getdel(key);
+      if (val !== null && val !== undefined) {
+        // '0' = unused, '1' = already consumed (getdel removes it, so this path means fresh)
+        logger.info('OAuth state validated via Redis', { state: state.substring(0, 10) + '...' });
+        return true;
+      }
+      // Key missing in Redis — fall through to memory check (set may have failed earlier)
+      logger.warn('OAuth state not found in Redis, checking memory', {
+        state: state.substring(0, 10) + '...',
+      });
+    } catch (err) {
+      logger.error('OAuth state Redis getdel failed, falling back to in-memory', err);
+    }
   }
 
-  if (stored.used) {
+  // Memory fallback
+  const entry = stateMemory.get(key);
+  if (!entry) {
+    logger.warn('OAuth state not found in memory', { state: state.substring(0, 10) + '...' });
+    return false;
+  }
+  if (entry.usedAt !== null) {
     logger.warn('OAuth state already used', { state: state.substring(0, 10) + '...' });
     return false;
   }
-
-  const now = Date.now();
-  if (now - stored.timestamp > STATE_EXPIRATION_MS) {
+  if (Date.now() > entry.expiresAt) {
     logger.warn('OAuth state expired', { state: state.substring(0, 10) + '...' });
-    oauthStates.delete(state);
+    stateMemory.delete(key);
     return false;
   }
 
-  // Mark as used
-  stored.used = true;
-  oauthStates.set(state, stored);
-
-  // Clean up after validation
-  setTimeout(() => oauthStates.delete(state), 60000); // Delete after 1 minute
-
+  entry.usedAt = Date.now();
+  stateMemory.set(key, entry);
+  logger.info('OAuth state validated via memory fallback', {
+    state: state.substring(0, 10) + '...',
+  });
   return true;
 }
 
 /**
  * Generates the authentication URL for the user to grant consent.
  */
-export function generateAuthUrl(): string {
+export async function generateAuthUrl(): Promise<string> {
   const oauth2Client = getOAuth2Client();
-  const state = generateOAuthState();
+  const state = await generateOAuthState();
 
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',

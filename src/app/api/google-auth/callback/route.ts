@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const context = extractSecurityContext(request);
 
   // Validate state parameter (CSRF protection)
-  if (!state || !validateOAuthState(state)) {
+  if (!state || !(await validateOAuthState(state))) {
     logger.error('OAuth callback: Invalid or missing state parameter', { state });
     logSecurityEvent({
       type: SecurityEventType.CSRF_VALIDATION_FAILED,

@@ -10,7 +10,7 @@ import { ApiErrors } from '@/lib/apiResponse';
 // 4. Browser navigation (href) doesn't reliably send auth cookies
 export async function GET() {
   try {
-    const authUrl = generateAuthUrl();
+    const authUrl = await generateAuthUrl();
     return NextResponse.redirect(authUrl);
   } catch (error) {
     logger.error('Error generating Google auth URL', error);
