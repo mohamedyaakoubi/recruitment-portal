@@ -3,11 +3,32 @@
 import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { calculateAge } from '@/lib/utils';
+import { secureHeaders } from '@/lib/getCsrfToken';
 import type { Candidate, SortDirection, SortField } from '@/types';
 import logger from '@/lib/logger';
 
 interface Filters {
   [key: string]: string;
+}
+
+async function getExportErrorMessage(response: Response): Promise<string> {
+  const contentType = response.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    try {
+      const errorData = await response.json();
+      if (typeof errorData?.details === 'string' && errorData.details) {
+        return errorData.details;
+      }
+      if (typeof errorData?.error === 'string' && errorData.error) {
+        return errorData.error;
+      }
+    } catch {
+      // Fall back to status text below when the body is empty or malformed.
+    }
+  }
+
+  return response.statusText || 'Failed to export candidates';
 }
 
 export const useCandidateTable = (candidates: Candidate[], filters: Filters) => {
@@ -27,22 +48,32 @@ export const useCandidateTable = (candidates: Candidate[], filters: Filters) => 
   const handleExport = async (format: 'csv' | 'xlsx' | 'json') => {
     setIsExporting(true);
     try {
-      const params = new URLSearchParams({
-        format,
-        ...filters,
+      const response = await fetch('/api/export-candidates', {
+        method: 'POST',
+        headers: await secureHeaders(),
+        body: JSON.stringify({
+          format,
+          ...filters,
+        }),
       });
 
-      const response = await fetch(`/api/export-candidates?${params.toString()}`);
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.details || 'Failed to export candidates');
+        throw new Error(await getExportErrorMessage(response));
       }
 
       if (format === 'xlsx') {
         const result = await response.json();
-        // Handle wrapped API response: { success: true, data: { data, filename, count } }
-        const exportData = result.data || result;
+        // Support both direct route payloads ({ data, filename, count }) and wrapped
+        // API payloads ({ success: true, data: { data, filename, count } }).
+        const exportData =
+          Array.isArray(result?.data) && typeof result?.filename === 'string'
+            ? result
+            : result?.data;
+
+        if (!exportData || !Array.isArray(exportData.data)) {
+          throw new Error('Invalid export response');
+        }
+
         const { data, filename, count } = exportData;
 
         const worksheet = XLSX.utils.json_to_sheet(data);

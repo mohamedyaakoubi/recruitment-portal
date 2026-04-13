@@ -7,6 +7,16 @@ import { requireAdminAuth } from '@/lib/auth';
 import { withCsrfProtection } from '@/lib/csrf-middleware';
 import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
+function normalizeJobDescription(jobTitle: string, jobDescription: string): string {
+  const trimmedDescription = jobDescription.trim();
+
+  if (trimmedDescription.length >= 10) {
+    return trimmedDescription;
+  }
+
+  return `No detailed job description was provided for the role "${jobTitle}". Evaluate the candidate against the job title, likely responsibilities, and the submitted application materials.`;
+}
+
 export const POST = withCsrfProtection(async (request: NextRequest) => {
   // Require admin authentication
   const authError = await requireAdminAuth(request);
@@ -22,10 +32,16 @@ export const POST = withCsrfProtection(async (request: NextRequest) => {
     }
 
     const { candidateId, jobId, jobTitle, jobDescription } = validatedData.data;
+    const normalizedJobDescription = normalizeJobDescription(jobTitle, jobDescription);
 
     logger.info('Scoring candidate', { candidateId, jobTitle });
 
-    const scoringResult = await scoreCandidate(candidateId, jobId || '', jobTitle, jobDescription);
+    const scoringResult = await scoreCandidate(
+      candidateId,
+      jobId || '',
+      jobTitle,
+      normalizedJobDescription
+    );
 
     logger.info('Scoring completed', { candidateId, score: scoringResult.score });
 

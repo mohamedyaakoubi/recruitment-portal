@@ -70,6 +70,38 @@ describe('POST /api/score-candidate', () => {
     expect(result.data.analysis).toBeDefined();
   });
 
+  it('should normalize short job descriptions instead of returning 400', async () => {
+    const mockScore = {
+      score: 82,
+      analysis: 'Good candidate',
+      keyStrengths: ['Communication'],
+      areasForImprovement: ['Domain depth'],
+      recommendation: 'recommended' as const,
+    };
+
+    vi.mocked(scoringService.scoreCandidate).mockResolvedValue(mockScore);
+
+    const request = {
+      json: async () => ({
+        candidateId: '123',
+        jobTitle: 'Developer',
+        jobDescription: 'short',
+      }),
+    } as unknown as NextRequest;
+
+    const response = await POST(request);
+    const result = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(result.data.score).toBe(82);
+    expect(scoringService.scoreCandidate).toHaveBeenCalledWith(
+      '123',
+      '',
+      'Developer',
+      expect.stringContaining('No detailed job description was provided')
+    );
+  });
+
   it('should handle scoring errors', async () => {
     vi.mocked(scoringService.scoreCandidate).mockRejectedValue(new Error('Error'));
 

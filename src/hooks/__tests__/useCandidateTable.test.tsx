@@ -7,6 +7,15 @@ import { useCandidateTable } from '../useCandidateTable';
 import { Candidate } from '@/types';
 import React from 'react';
 import { vi } from 'vitest';
+import { secureHeaders } from '@/lib/getCsrfToken';
+
+vi.mock('@/lib/getCsrfToken', () => ({
+  secureHeaders: vi.fn(async () => ({
+    'Content-Type': 'application/json',
+    'X-CSRF-Token': 'test-csrf-token',
+    Authorization: 'Bearer test-token',
+  })),
+}));
 
 // Mock browser APIs
 const mockCreateObjectURL = vi.fn();
@@ -138,6 +147,7 @@ describe('useCandidateTable', () => {
     mockCreateObjectURL.mockReturnValue('mock-blob-url');
     (global.fetch as vi.Mock).mockResolvedValue({
       ok: true,
+      headers: { get: vi.fn(() => 'application/json') },
       json: () => Promise.resolve({ data: [], filename: 'test.xlsx', count: 0 }),
       blob: () => Promise.resolve(new Blob()),
     });
@@ -256,9 +266,16 @@ describe('useCandidateTable', () => {
       await result.current.handleExport('xlsx');
     });
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/export-candidates?format=xlsx&status=all')
-    );
+    expect(secureHeaders).toHaveBeenCalled();
+    expect(global.fetch).toHaveBeenCalledWith('/api/export-candidates', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': 'test-csrf-token',
+        Authorization: 'Bearer test-token',
+      },
+      body: JSON.stringify({ format: 'xlsx', status: 'all' }),
+    });
   });
 
   it('should handle export with filters', async () => {
@@ -269,9 +286,15 @@ describe('useCandidateTable', () => {
       await result.current.handleExport('csv');
     });
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('format=csv&status=submitted&name=John')
-    );
+    expect(global.fetch).toHaveBeenCalledWith('/api/export-candidates', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': 'test-csrf-token',
+        Authorization: 'Bearer test-token',
+      },
+      body: JSON.stringify({ format: 'csv', status: 'submitted', name: 'John' }),
+    });
   });
 
   it('should split names correctly', () => {
@@ -311,6 +334,8 @@ describe('useCandidateTable', () => {
   it('should handle export errors', async () => {
     (global.fetch as vi.Mock).mockResolvedValueOnce({
       ok: false,
+      statusText: 'Method Not Allowed',
+      headers: { get: vi.fn(() => '') },
       json: () => Promise.resolve({ details: 'Export failed' }),
     });
 
@@ -321,7 +346,7 @@ describe('useCandidateTable', () => {
     });
 
     expect(result.current.isExporting).toBe(false);
-    expect(mockAlert).toHaveBeenCalledWith(expect.stringContaining('Export failed'));
+    expect(mockAlert).toHaveBeenCalledWith(expect.stringContaining('Method Not Allowed'));
   });
 
   it('should set isExporting state during export', async () => {
@@ -346,6 +371,7 @@ describe('useCandidateTable', () => {
     await act(async () => {
       resolvePromise!({
         ok: true,
+        headers: { get: vi.fn(() => 'application/json') },
         json: () => Promise.resolve({ data: [], filename: 'test.xlsx', count: 0 }),
         blob: () => Promise.resolve(new Blob()),
       });
@@ -358,6 +384,19 @@ describe('useCandidateTable', () => {
 
   it('should handle export with csv format', async () => {
     const { result } = renderHook(() => useCandidateTable(mockCandidates, {}));
+
+    (global.fetch as vi.Mock).mockResolvedValueOnce({
+      ok: true,
+      headers: {
+        get: vi.fn((header: string) =>
+          header.toLowerCase() === 'content-disposition'
+            ? 'attachment; filename="candidates.csv"'
+            : ''
+        ),
+      },
+      blob: () => Promise.resolve(new Blob(['csv-data'], { type: 'text/csv' })),
+      json: () => Promise.resolve({}),
+    });
 
     await act(async () => {
       await result.current.handleExport('csv');

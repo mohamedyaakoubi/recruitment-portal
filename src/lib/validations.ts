@@ -124,10 +124,7 @@ export const scoreCandidateSchema = z.object({
   candidateId: z.string().min(1).max(FIELD_LENGTH_LIMITS.CANDIDATE_ID),
   jobId: z.string().max(FIELD_LENGTH_LIMITS.JOB_ID).optional(),
   jobTitle: z.string().min(1, 'Job title is required').max(FIELD_LENGTH_LIMITS.JOB_TITLE),
-  jobDescription: z
-    .string()
-    .min(10, 'Job description is required')
-    .max(FIELD_LENGTH_LIMITS.JOB_DESCRIPTION),
+  jobDescription: z.string().max(FIELD_LENGTH_LIMITS.JOB_DESCRIPTION).optional().default(''),
 });
 
 // Schedule interview schema
