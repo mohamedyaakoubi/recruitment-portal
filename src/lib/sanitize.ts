@@ -1,16 +1,19 @@
 /**
  * HTML Sanitization Utilities
  * Protects against XSS by sanitizing user-generated content
+ *
+ * Uses sanitize-html (pure JS, no jsdom) instead of isomorphic-dompurify
+ * so the module works on Vercel Serverless without the jsdom/parse5 ESM crash.
  */
 
-import DOMPurify from 'isomorphic-dompurify';
+import sanitize from 'sanitize-html';
 
 /**
  * Sanitize HTML content to prevent XSS attacks
  */
 export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: [
+  return sanitize(html, {
+    allowedTags: [
       'p',
       'br',
       'strong',
@@ -27,8 +30,7 @@ export function sanitizeHtml(html: string): string {
       'h5',
       'h6',
     ],
-    ALLOWED_ATTR: ['href', 'target', 'rel'],
-    ALLOW_DATA_ATTR: false,
+    allowedAttributes: { a: ['href', 'target', 'rel'] },
   });
 }
 
@@ -36,9 +38,9 @@ export function sanitizeHtml(html: string): string {
  * Sanitize text content (strips all HTML)
  */
 export function sanitizeText(text: string): string {
-  return DOMPurify.sanitize(text, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
+  return sanitize(text, {
+    allowedTags: [],
+    allowedAttributes: {},
   });
 }
 

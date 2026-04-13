@@ -5,9 +5,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: false,
     dirs: ['src'],
   },
-  // Externalize packages that use jsdom to prevent build issues
-  // jsdom tries to load default-stylesheet.css which doesn't exist during build
-  serverExternalPackages: ['isomorphic-dompurify', 'jsdom'],
+  serverExternalPackages: [],
   images: {
     remotePatterns: [
       {
