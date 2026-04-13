@@ -6,6 +6,7 @@ interface InterviewScheduledEmailProps {
   formattedDate: string;
   formattedTime: string;
   supportEmail: string;
+  meetLink?: string;
 }
 
 export function InterviewScheduledEmail({
@@ -14,6 +15,7 @@ export function InterviewScheduledEmail({
   formattedDate,
   formattedTime,
   supportEmail,
+  meetLink,
 }: InterviewScheduledEmailProps) {
   return (
     <div
@@ -82,11 +84,32 @@ export function InterviewScheduledEmail({
             </p>
           </div>
 
-          <p>
-            <strong>Important:</strong> A separate Google Calendar invitation with the Google Meet
-            link has been sent to your email. Please accept that invitation to confirm your
-            attendance.
-          </p>
+          {meetLink && (
+            <div style={{ textAlign: 'center', margin: '24px 0' }}>
+              <a
+                href={meetLink}
+                style={{
+                  backgroundColor: '#003A70',
+                  color: '#ffffff',
+                  padding: '12px 28px',
+                  borderRadius: '6px',
+                  textDecoration: 'none',
+                  fontWeight: '600',
+                  display: 'inline-block',
+                  fontSize: '15px',
+                }}
+              >
+                Join Google Meet
+              </a>
+              <p style={{ margin: '10px 0 0 0', fontSize: '13px', color: '#666' }}>
+                Or copy the link:{' '}
+                <a href={meetLink} style={{ color: '#003A70', wordBreak: 'break-all' }}>
+                  {meetLink}
+                </a>
+              </p>
+            </div>
+          )}
+
           <p>
             If this time is not suitable, please reply directly to{' '}
             <a href={`mailto:${supportEmail}`} style={{ color: '#003A70' }}>

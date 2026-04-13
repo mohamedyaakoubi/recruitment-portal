@@ -41,8 +41,7 @@ export const POST = withCsrfProtection(async (request: NextRequest) => {
       duration,
       jobTitle || '',
       adminEmail,
-      notes || '',
-      request.nextUrl.origin
+      notes || ''
     );
 
     // Log admin operation

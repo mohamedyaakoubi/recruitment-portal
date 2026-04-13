@@ -1,8 +1,8 @@
-import { vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { scheduleInterview, cancelInterview } from '../interview';
 import { google } from 'googleapis';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getAuthenticatedClient } from '@/lib/googleOAuth';
+import * as candidateService from '../candidate';
 import * as emailService from '../email';
 
 vi.mock('googleapis', () => ({
@@ -20,6 +20,9 @@ vi.mock('firebase/firestore', () => ({
 }));
 vi.mock('@/lib/googleOAuth');
 vi.mock('../email');
+vi.mock('../candidate', () => ({
+  updateCandidateStatus: vi.fn(),
+}));
 const mockDoc = {
   exists: true,
   data: () => ({
@@ -71,11 +74,13 @@ const mockCalendar = {
 (google.calendar as vi.Mock).mockReturnValue(mockCalendar);
 (getAuthenticatedClient as vi.Mock).mockResolvedValue({});
 
-global.fetch = vi.fn();
-
 describe('Interview Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(candidateService.updateCandidateStatus).mockResolvedValue({
+      status: 'interview_scheduled',
+      emailSent: true,
+    });
     mockAdminGet.mockResolvedValue({
       exists: true,
       data: () => ({
@@ -95,7 +100,6 @@ describe('Interview Service', () => {
           hangoutLink: 'https://meet.google.com/test-link',
         },
       });
-      (fetch as vi.Mock).mockResolvedValue({ ok: true, json: () => Promise.resolve({}) });
 
       const result = await scheduleInterview(
         'c1',
@@ -106,14 +110,58 @@ describe('Interview Service', () => {
         30,
         'Dev',
         'a@test.com',
-        'notes',
-        'http://localhost'
+        'notes'
       );
 
       expect(mockEventsInsert).toHaveBeenCalled();
-      expect(fetch).toHaveBeenCalledWith('http://localhost/api/update-status', expect.any(Object));
+      expect(candidateService.updateCandidateStatus).toHaveBeenCalledWith(
+        'c1',
+        'interview_scheduled',
+        expect.any(String),
+        'test-event-id',
+        'https://meet.google.com/test-link',
+        30
+      );
+      expect(emailService.sendInterviewerNotificationEmail).toHaveBeenCalledWith({
+        adminEmail: 'a@test.com',
+        candidateName: 'C Name',
+        candidateEmail: 'c@test.com',
+        jobTitle: 'Dev',
+        interviewDate: expect.any(Date),
+        duration: 30,
+        meetLink: 'https://meet.google.com/test-link',
+        notes: 'notes',
+      });
       expect(result.calendarEventId).toBe('test-event-id');
       expect(result.meetLink).toBe('https://meet.google.com/test-link');
+    });
+
+    it('should fail when candidate status update fails', async () => {
+      mockEventsInsert.mockResolvedValue({
+        data: {
+          id: 'test-event-id',
+          hangoutLink: 'https://meet.google.com/test-link',
+        },
+      });
+      vi.mocked(candidateService.updateCandidateStatus).mockRejectedValue(
+        new Error('Failed to update status')
+      );
+
+      await expect(
+        scheduleInterview(
+          'c1',
+          'c@test.com',
+          'C Name',
+          '2025-12-25',
+          '10:00',
+          30,
+          'Dev',
+          'a@test.com',
+          'notes'
+        )
+      ).rejects.toThrow('Failed to update status');
+
+      expect(emailService.sendInterviewerNotificationEmail).not.toHaveBeenCalled();
     });
   });
 

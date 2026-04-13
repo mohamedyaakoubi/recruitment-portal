@@ -95,7 +95,8 @@ export const updateCandidateStatus = async (
           candidateData.email,
           newStatus,
           candidateData.fullName || 'Candidate',
-          interviewDate
+          interviewDate,
+          meetLink
         );
         logger.info('Interview notification sent successfully', { email: candidateData.email });
         emailSent = true;

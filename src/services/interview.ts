@@ -2,7 +2,8 @@
 import { google } from 'googleapis';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
 import { getAuthenticatedClient } from '@/lib/googleOAuth'; // 👈 CHANGE
-import { sendCancellationEmail } from './email';
+import { sendCancellationEmail, sendInterviewerNotificationEmail } from './email';
+import { updateCandidateStatus } from './candidate';
 import logger from '@/lib/logger';
 import crypto from 'crypto';
 
@@ -31,8 +32,7 @@ export const scheduleInterview = async (
   duration = 30,
   jobTitle: string,
   adminEmail: string,
-  notes: string,
-  origin: string
+  notes: string
 ): Promise<{
   meetLink: string;
   calendarEventId: string;
@@ -150,27 +150,38 @@ export const scheduleInterview = async (
     }
   }
 
+  // Update candidate status and send candidate email directly (no HTTP round-trip that
+  // would fail due to missing CSRF / Authorization headers on a server-to-server request).
   try {
-    const updateResponse = await fetch(`${origin}/api/update-status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        candidateId,
-        newStatus: 'interview_scheduled',
-        interviewTimestampISO: interviewDateTime.toISOString(),
-        meetLink: meetLink, // 👈 ADD THIS
-        calendarEventId: calendarEventId, // 👈 ADD THIS
-        duration: duration, // 👈 ADD THIS
-      }),
-    });
-
-    if (!updateResponse.ok) {
-      const errorData = await updateResponse.json();
-      logger.error('Failed to update candidate status', null, errorData);
-      throw new Error(errorData.error || 'Failed to update status');
-    }
+    await updateCandidateStatus(
+      candidateId,
+      'interview_scheduled',
+      interviewDateTime.toISOString(),
+      calendarEventId || undefined,
+      meetLink || undefined,
+      duration
+    );
   } catch (updateError) {
     logger.error('Database update error', updateError);
+    throw updateError;
+  }
+
+  // Notify the interviewer via email with the meet link and candidate details.
+  if (adminEmail) {
+    try {
+      await sendInterviewerNotificationEmail({
+        adminEmail,
+        candidateName,
+        candidateEmail,
+        jobTitle: jobTitle || '',
+        interviewDate: interviewDateTime,
+        duration,
+        meetLink,
+        notes,
+      });
+    } catch (emailError) {
+      logger.error('Failed to send interviewer notification email', emailError, { adminEmail });
+    }
   }
 
   return {

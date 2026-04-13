@@ -32,7 +32,8 @@ export const sendNotificationEmail = async (
   to: string,
   status: string,
   candidateName: string,
-  interviewDate?: Date
+  interviewDate?: Date,
+  meetLink?: string
 ) => {
   if (!resend) {
     logger.info('Resend not configured, skipping email notification');
@@ -87,6 +88,7 @@ export const sendNotificationEmail = async (
         formattedDate,
         formattedTime,
         supportEmail: meta.supportEmail,
+        meetLink,
       }),
     });
     if (error) {
@@ -312,4 +314,222 @@ export const sendMagicLinkEmail = async ({
 
   logger.info('Magic link email sent', { messageId: data?.id });
   return data;
+};
+
+export const sendInterviewerNotificationEmail = async ({
+  adminEmail,
+  candidateName,
+  candidateEmail,
+  jobTitle,
+  interviewDate,
+  duration,
+  meetLink,
+  notes,
+}: {
+  adminEmail: string;
+  candidateName: string;
+  candidateEmail: string;
+  jobTitle: string;
+  interviewDate: Date;
+  duration: number;
+  meetLink: string;
+  notes?: string;
+}): Promise<void> => {
+  if (!resend) {
+    logger.info('Resend not configured, skipping interviewer notification email');
+    return;
+  }
+
+  const meta = getEmailMeta();
+  const safeCandidateName = sanitizeText(candidateName);
+  const safeJobTitle = sanitizeText(jobTitle);
+  const safeNotes = notes ? sanitizeText(notes) : '';
+
+  const formattedDate = interviewDate.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const formattedTime = interviewDate.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
+
+  const { data, error } = await resend.emails.send({
+    from: meta.from,
+    to: adminEmail,
+    subject: `Interview Scheduled: ${safeCandidateName} - ${safeJobTitle}`,
+    react: React.createElement(
+      'div',
+      {
+        style: {
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+          lineHeight: '1.6',
+          color: '#333',
+          maxWidth: '600px',
+          margin: '20px auto',
+          padding: '0',
+        },
+      },
+      React.createElement(
+        'div',
+        {
+          style: {
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
+            overflow: 'hidden',
+          },
+        },
+        React.createElement(
+          'div',
+          {
+            style: {
+              background: 'linear-gradient(135deg, #003A70 0%, #004080 100%)',
+              color: 'white',
+              padding: '25px 30px',
+            },
+          },
+          React.createElement(
+            'p',
+            {
+              style: { margin: '0', fontSize: '1.2em', fontWeight: 'bold' },
+            },
+            `Interview Confirmed — ${safeJobTitle}`
+          )
+        ),
+        React.createElement(
+          'div',
+          {
+            style: { padding: '30px', backgroundColor: '#ffffff' },
+          },
+          React.createElement(
+            'p',
+            null,
+            `An interview has been scheduled with ${safeCandidateName}.`
+          ),
+          React.createElement(
+            'div',
+            {
+              style: {
+                backgroundColor: '#f9f9f9',
+                border: '1px solid #eee',
+                padding: '20px',
+                margin: '20px 0',
+                borderRadius: '5px',
+              },
+            },
+            React.createElement(
+              'p',
+              { style: { margin: '0 0 8px 0', fontWeight: '600' } },
+              'Interview Details'
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Candidate: '),
+              safeCandidateName
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Candidate Email: '),
+              candidateEmail
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Position: '),
+              safeJobTitle
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Date: '),
+              formattedDate
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Time: '),
+              formattedTime
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Duration: '),
+              `${duration} minutes`
+            ),
+            safeNotes
+              ? React.createElement(
+                  'p',
+                  { style: { margin: '4px 0' } },
+                  React.createElement('strong', null, 'Notes: '),
+                  safeNotes
+                )
+              : null
+          ),
+          meetLink
+            ? React.createElement(
+                'div',
+                { style: { textAlign: 'center', margin: '24px 0' } },
+                React.createElement(
+                  'a',
+                  {
+                    href: meetLink,
+                    style: {
+                      backgroundColor: '#003A70',
+                      color: '#ffffff',
+                      padding: '12px 28px',
+                      borderRadius: '6px',
+                      textDecoration: 'none',
+                      fontWeight: '600',
+                      display: 'inline-block',
+                      fontSize: '15px',
+                    },
+                  },
+                  'Join Google Meet'
+                ),
+                React.createElement(
+                  'p',
+                  { style: { margin: '10px 0 0 0', fontSize: '13px', color: '#666' } },
+                  'Or copy the link: ',
+                  React.createElement(
+                    'a',
+                    { href: meetLink, style: { color: '#003A70', wordBreak: 'break-all' } },
+                    meetLink
+                  )
+                )
+              )
+            : null
+        ),
+        React.createElement(
+          'div',
+          {
+            style: {
+              padding: '20px 30px',
+              backgroundColor: '#f8f9fa',
+              borderTop: '1px solid #e0e0e0',
+              fontSize: '0.9em',
+              color: '#666',
+            },
+          },
+          React.createElement(
+            'p',
+            { style: { margin: '0', fontSize: '12px', color: '#94a3b8' } },
+            'This is an automated message from the Hiring Platform.'
+          )
+        )
+      )
+    ),
+  });
+
+  if (error) {
+    logger.error('Error sending interviewer notification email', error, { adminEmail });
+    throw new Error(error.message);
+  }
+
+  logger.info('Interviewer notification email sent', { messageId: data?.id, adminEmail });
 };
