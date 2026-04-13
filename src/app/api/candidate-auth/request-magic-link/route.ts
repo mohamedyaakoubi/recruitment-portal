@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
   // where a Firestore lookup decides login vs sign-up routing without blocking this response.
   const dest: MagicLinkDest = 'form';
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
   // Generate and send — always return success to prevent email enumeration
   try {

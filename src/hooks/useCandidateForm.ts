@@ -300,8 +300,18 @@ export const useCandidateForm = (emailParam?: string) => {
       setCandidateEmail(email);
       loadExistingCandidateData(email);
     } else {
-      // Don't redirect immediately in WebKit, give it a moment
-      setTimeout(() => router.push('/'), 100);
+      // No email in URL — fall back to session cookie via server
+      fetch('/api/candidate-auth/session')
+        .then((r) => r.json())
+        .then((data: { email: string | null }) => {
+          if (data.email) {
+            setCandidateEmail(data.email);
+            loadExistingCandidateData(data.email);
+          } else {
+            setTimeout(() => router.push('/'), 100);
+          }
+        })
+        .catch(() => setTimeout(() => router.push('/'), 100));
     }
   }, [emailParam, isMounted, router]);
 

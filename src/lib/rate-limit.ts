@@ -52,6 +52,8 @@ interface RateLimitConfig {
   window: string; // e.g., '1 m', '1 h'
 }
 
+const IS_DEV = process.env.NODE_ENV === 'development';
+
 const DEFAULT_RATE_LIMIT: RateLimitConfig = { requests: 30, window: '1 m' };
 
 const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
@@ -62,11 +64,11 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   '/admin-dashboard-secret/login': { requests: 5, window: '1 m' },
 
   // OTP endpoints - very strict (3 requests per email per 10 min enforced in service layer)
-  '/api/admin-auth/request-otp': { requests: 3, window: '10 m' },
+  '/api/admin-auth/request-otp': { requests: IS_DEV ? 30 : 3, window: '10 m' },
   '/api/admin-auth/verify-otp': { requests: 10, window: '10 m' },
 
-  // Candidate magic link — 5 requests per 10 min per IP
-  '/api/candidate-auth/request-magic-link': { requests: 5, window: '10 m' },
+  // Candidate magic link — relaxed in dev for easier testing
+  '/api/candidate-auth/request-magic-link': { requests: IS_DEV ? 30 : 5, window: '10 m' },
   // Verify is a one-click GET, allow reasonable retries
   '/api/candidate-auth/verify-magic-link': { requests: 10, window: '10 m' },
 

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   const context = extractSecurityContext(request);
   const { searchParams } = new URL(request.url);
   const token = searchParams.get('token') ?? '';
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
   const payload = await verifyMagicLinkToken(token);
 

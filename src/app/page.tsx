@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ThemeSwitcher } from './components/ui/ThemeSwitcher';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import logger from '@/lib/logger';
 
 // Helper component for social media icons in the footer
@@ -18,10 +19,13 @@ const SocialIcon = ({ href, children }: { href: string; children: React.ReactNod
 );
 
 export default function LandingPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [linkSent, setLinkSent] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
+
   useEffect(() => {
     // Show expiry / error messages from magic link redirects
     const params = new URLSearchParams(window.location.search);
@@ -31,7 +35,21 @@ export default function LandingPage() {
     } else if (urlError === 'session_expired') {
       setError('Your session has expired. Please sign in again.');
     }
-  }, []);
+
+    // Redirect to choices if already logged in
+    fetch('/api/candidate-auth/session')
+      .then((r) => r.json())
+      .then((data: { email: string | null }) => {
+        if (data.email) {
+          router.replace(`/candidate-choices?email=${encodeURIComponent(data.email)}`);
+        } else {
+          setCheckingSession(false);
+        }
+      })
+      .catch(() => {
+        setCheckingSession(false);
+      });
+  }, [router]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +95,10 @@ export default function LandingPage() {
       setIsLoading(false);
     }
   };
+
+  if (checkingSession) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans dark:bg-gray-900">

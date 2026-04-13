@@ -16,7 +16,17 @@ export default function CandidateChoices() {
     if (email) {
       setCandidateEmail(email);
     } else {
-      router.push('/');
+      // No email in URL — read from session cookie via the server
+      fetch('/api/candidate-auth/session')
+        .then((r) => r.json())
+        .then((data: { email: string | null }) => {
+          if (data.email) {
+            setCandidateEmail(data.email);
+          } else {
+            router.push('/');
+          }
+        })
+        .catch(() => router.push('/'));
     }
   }, [router]);
 

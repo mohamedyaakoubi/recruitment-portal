@@ -9,7 +9,8 @@ import JobApplicationSection from '../JobApplicationSection';
 import FileUploadSection from '../FileUploadSection';
 import AdditionalInfoSection from '../AdditionalInfoSection';
 import SuccessToast from '../../ui/SuccessToast';
-import DebugInfo from '../DebugInfo';
+import LogoutButton from '../../candidate-common/LogoutButton';
+import Link from 'next/link';
 import { CandidateFormUIProps } from './types';
 
 const CandidateFormUI: React.FC<CandidateFormUIProps> = ({
@@ -44,9 +45,9 @@ const CandidateFormUI: React.FC<CandidateFormUIProps> = ({
   setWebsites: _setWebsites,
   additionalInfo,
   setAdditionalInfo: _setAdditionalInfo,
-  cvFile,
-  passportFile,
-  photoFile,
+  cvFile: _cvFile,
+  passportFile: _passportFile,
+  photoFile: _photoFile,
   isLoading,
   error,
   success,
@@ -75,7 +76,18 @@ const CandidateFormUI: React.FC<CandidateFormUIProps> = ({
             <span className="text-xl font-bold text-[#003A70] dark:text-white">
               {process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
             </span>
-            <ThemeSwitcher />
+            <div className="flex items-center gap-3">
+              {email && (
+                <Link
+                  href={`/candidate-choices?email=${encodeURIComponent(email)}`}
+                  className="text-sm font-medium text-[#003A70] hover:text-[#002B54] dark:text-gray-300 dark:hover:text-white"
+                >
+                  ← My options
+                </Link>
+              )}
+              <ThemeSwitcher />
+              <LogoutButton />
+            </div>
           </div>
         </nav>
       </header>
@@ -225,27 +237,6 @@ const CandidateFormUI: React.FC<CandidateFormUIProps> = ({
                   <p className="text-sm text-red-600 dark:text-red-300">{error}</p>
                 </div>
               )}
-              <DebugInfo
-                firstName={firstName}
-                lastName={lastName}
-                email={email}
-                gender={gender}
-                countryCode={countryCode}
-                phoneNumber={phoneNumber}
-                dateOfBirth={dateOfBirth}
-                city={city}
-                country={country}
-                nationality={nationality}
-                selectedCategory={selectedCategory}
-                jobTitle={jobTitle}
-                specialty={specialty}
-                availableSpecialties={availableSpecialties}
-                cvFile={cvFile}
-                passportFile={passportFile}
-                photoFile={photoFile}
-                calculateAge={calculateAge}
-              />
-
               <button
                 type="submit"
                 className="w-full transform rounded-xl bg-[#003A70] px-12 py-4 text-lg font-bold tracking-wide text-white shadow-lg transition-all hover:scale-[1.02] hover:bg-[#002B54] focus:outline-none focus:ring-2 focus:ring-[#003A70] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"

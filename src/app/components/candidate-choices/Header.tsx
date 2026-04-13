@@ -1,11 +1,10 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import { ThemeSwitcher } from '@/app/components/ui/ThemeSwitcher';
+import LogoutButton from '@/app/components/candidate-common/LogoutButton';
 
 const Header: React.FC = () => {
-  const router = useRouter();
   return (
     <header className="sticky top-0 z-20 bg-white shadow-sm dark:bg-gray-800">
       <div className="bg-[#003A70] py-1.5 text-xs text-white">
@@ -67,14 +66,9 @@ const Header: React.FC = () => {
           <span className="text-xl font-bold text-[#003A70] dark:text-white">
             {process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
           </span>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            <button
-              onClick={() => router.push('/')}
-              className="font-medium text-[#003A70] hover:text-[#002B54] dark:text-gray-200 dark:hover:text-white"
-            >
-              ← Back to Home
-            </button>
+            <LogoutButton />
           </div>
         </div>
       </nav>
