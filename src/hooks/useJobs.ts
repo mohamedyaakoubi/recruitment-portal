@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Job } from '@/types';
 import logger from '@/lib/logger';
+import { secureHeaders } from '@/lib/getCsrfToken';
 
 interface JobsResponse {
   jobs: Job[];
@@ -26,7 +27,7 @@ async function fetchJobs(activeOnly: boolean = true): Promise<JobsResponse> {
 async function createJobApi(jobData: Partial<Job>): Promise<{ jobId: string }> {
   const response = await fetch('/api/jobs', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: await secureHeaders(),
     body: JSON.stringify(jobData),
   });
   if (!response.ok) {
@@ -42,7 +43,7 @@ async function createJobApi(jobData: Partial<Job>): Promise<{ jobId: string }> {
 async function updateJobApi(jobId: string, jobData: Partial<Job>): Promise<void> {
   const response = await fetch('/api/jobs', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: await secureHeaders(),
     body: JSON.stringify({ jobId, ...jobData }),
   });
   if (!response.ok) {

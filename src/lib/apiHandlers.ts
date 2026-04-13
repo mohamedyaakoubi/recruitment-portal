@@ -1,5 +1,6 @@
 import type { Candidate } from '@/types';
 import logger from '@/lib/logger';
+import { secureHeaders } from '@/lib/getCsrfToken';
 
 export const createApiHandlers = (
   showToast: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void,
@@ -31,7 +32,7 @@ export const createApiHandlers = (
     try {
       const response = await fetch('/api/score-candidate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await secureHeaders(),
         body: JSON.stringify({
           candidateId: selectedCandidate.id,
           jobId,
@@ -68,7 +69,7 @@ export const createApiHandlers = (
     try {
       const response = await fetch('/api/update-status', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await secureHeaders(),
         body: JSON.stringify({ candidateId, newStatus, interviewTimestampISO }),
       });
       const result = await response.json();
@@ -153,7 +154,7 @@ export const createApiHandlers = (
     try {
       const response = await fetch('/api/schedule-interview-meet', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await secureHeaders(),
         body: JSON.stringify({
           candidateId: candidate.id,
           candidateEmail: candidate.email,
@@ -202,7 +203,7 @@ export const createApiHandlers = (
         try {
           const response = await fetch('/api/cancel-interview', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await secureHeaders(),
             body: JSON.stringify({
               candidateId,
               reason: reason || 'Cancelled by admin',
@@ -237,7 +238,7 @@ export const createApiHandlers = (
     try {
       const response = await fetch('/api/update-candidate', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await secureHeaders(),
         body: JSON.stringify({ candidateId, updatedData }),
       });
 

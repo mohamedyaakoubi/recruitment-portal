@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { JOB_CATEGORIES, JobCategory } from '@/lib/job-categories';
 import { Job, JobManagementProps } from '@/types';
 import logger from '@/lib/logger';
+import { secureHeaders } from '@/lib/getCsrfToken';
 
 const inputFieldStyles =
   'block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm';
@@ -110,7 +111,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
 
       const response = await fetch('/api/jobs', {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: await secureHeaders(),
         body: JSON.stringify(body),
       });
       const data = await response.json();
@@ -140,7 +141,10 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
 
     setOperationLoading((prev) => ({ ...prev, [`delete_${jobId}`]: true }));
     try {
-      const response = await fetch(`/api/jobs?jobId=${jobId}`, { method: 'DELETE' });
+      const response = await fetch(`/api/jobs?jobId=${jobId}`, {
+        method: 'DELETE',
+        headers: await secureHeaders(),
+      });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to delete job');
       setSuccess(`Job "${jobTitle}" deleted successfully!`);
@@ -160,7 +164,7 @@ const JobManagement: React.FC<JobManagementProps> = ({ isOpen, onClose }) => {
       if (!job) throw new Error('Job not found');
       const response = await fetch('/api/jobs', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await secureHeaders(),
         body: JSON.stringify({
           jobId,
           isActive: !currentStatus,

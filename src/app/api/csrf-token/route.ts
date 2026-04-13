@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate CSRF token
-    const csrfToken = generateCsrfToken(sessionId);
+    const csrfToken = await generateCsrfToken(sessionId);
     response.cookies.set('csrf-token', csrfToken, {
       httpOnly: false, // Must be readable by client JavaScript
       secure: process.env.NODE_ENV === 'production',

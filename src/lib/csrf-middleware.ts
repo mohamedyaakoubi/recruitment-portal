@@ -52,7 +52,7 @@ export async function validateCsrf(request: NextRequest): Promise<NextResponse |
   }
 
   // Validate the token
-  const isValid = validateCsrfToken(sessionId, csrfToken);
+  const isValid = await validateCsrfToken(sessionId, csrfToken);
   if (!isValid) {
     const context = extractSecurityContext(request);
     logSecurityEvent({
