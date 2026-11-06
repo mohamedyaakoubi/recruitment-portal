@@ -39,10 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-# Markdown documentation files (except README and instructions)
+# Markdown files (except the README) and Word documents
 *.md
 !README.md
-!.github/**/*.md
+*.docx
 
 # Ignore test snapshots (used with Jest)
 *.snap

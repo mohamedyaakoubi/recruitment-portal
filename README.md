@@ -1,937 +1,202 @@
-# Candidate Portal - Recruitment Management System
+<div align="center">
 
-A production-ready, enterprise-grade full-stack web application designed to streamline the recruitment process. It provides a comprehensive platform for candidates to apply for jobs and for administrators to manage candidates, schedule interviews, and track the hiring process with AI-powered candidate scoring.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/logo-skills-white.png">
+  <img src="public/logo-skills.png" alt="International Skills Labor Company logo" width="200">
+</picture>
 
----
+# Recruitment Portal
 
-## Table of Contents
+**A hiring system for international recruitment. Candidates apply and follow their applications. Recruiters review, score and interview them, in one place.**
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Configuration](#configuration)
-- [Project Structure](#project-structure)
-- [API Reference](#api-reference)
-- [Data Models](#data-models)
-- [Security](#security)
-- [Testing](#testing)
-- [Scripts](#scripts)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [License](#license)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15-003A70)](https://nextjs.org/)
+[![React 18](https://img.shields.io/badge/React-18-003A70)](https://react.dev/)
+[![TypeScript 5](https://img.shields.io/badge/TypeScript-5-003A70)](https://www.typescriptlang.org/)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%C2%B7%20Storage%20%C2%B7%20Auth-003A70)](https://firebase.google.com/)
+[![Gemini 2.5 Pro](https://img.shields.io/badge/Gemini-2.5%20Pro-003A70)](https://ai.google.dev/)
+[![Hosted on Vercel](https://img.shields.io/badge/Hosted%20on-Vercel-003A70)](https://vercel.com/)
 
----
+[What it does](#what-it-does) · [How it works](#how-it-works) · [Security](#security) · [Tech stack](#tech-stack) · [Run it](#run-it) · [Tests](#tests)
 
-## Overview
+</div>
 
-The Candidate Portal is a comprehensive recruitment management system built for **International Skills Labor Company**. It enables:
+> [!NOTE]
+> **Client work, state on 6 November 2026.** Built by Mohamed Yaakoubi for International Skills Labor Company (InternationalSkills.fi), a Finnish recruitment service that connects skilled international workers with European employers. Every feature below is in the code. Of the 513 unit tests, 502 pass. The 8 that fail were not updated after the code changed; see [Tests](#tests).
 
-- **Candidates** to submit job applications with CVs, photos, and supporting documents
-- **Candidates** to track their application status through a dedicated dashboard
-- **Administrators** to manage the entire recruitment pipeline from a secure dashboard
-- **AI-powered evaluation** of candidates using Google's Gemini 2.5 Pro
-- **Seamless interview scheduling** with Google Calendar and Meet integration
-- **Automated email notifications** for application confirmations, status updates, and interview invites
+## What it does
 
----
+| For | It lets them |
+|---|---|
+| **A candidate** | Apply for a job with a CV, a passport and a photo. Sign in with a link sent by email, without a password. Follow each application, see its AI score once there is one, and join the interview from its Google Meet link. |
+| **A recruiter** | Sign in with a one-time code sent by email. Filter and sort every candidate, and open their documents. Ask Gemini for a score. Book, move or cancel interviews with a Meet link. Manage the job offers, read the charts and export the list. |
 
-## Features
+### For candidates
 
-### Candidate Features
+- **An application form in steps.** Personal details, a job chosen by category and speciality, and three uploads: CV, passport and photo. PDF, Word and image files are accepted, up to 10 MB each.
+- **Checks before anything is saved.** The email address is checked: its format, a list of disposable domains, the domain's mail server, and Abstract API or Hunter.io when their keys are set. The phone number is checked with its country code, and a duplicate check looks for an earlier application from the same person. A hidden "honeypot" field catches simple bots: a person never fills it in, a bot often does.
+- **Sign-in without a password.** The candidate asks for a link by email. The link works once and expires after 15 minutes. A signed session cookie then keeps the candidate signed in.
+- **A personal dashboard.** Every application with its status (submitted, interview scheduled, approved or rejected), its AI score when there is one, and the date and Google Meet link of a booked interview.
+- **Emails at each step.** Application received, interview booked, interview cancelled, application rejected, and the sign-in link. The templates are React components ([React Email](https://react.email)), sent with [Resend](https://resend.com).
 
-- **📝 Job Application Form**
-  - Multi-step application with personal info, job selection, and document uploads
-  - Support for CV (PDF/DOC/DOCX), passport, and photo uploads
-  - Additional information section (links, files, or text)
-  - Email verification with disposable email detection
-  - Phone number validation with country code support
-  - Real-time form validation with Zod schema
+### For recruiters
 
-- **📊 Candidate Dashboard**
-  - Email-based lookup to view all submitted applications
-  - Application status tracking (Submitted, Interview Scheduled, Approved, Rejected)
-  - Interview details with Google Meet links
-  - View AI scoring results and recommendations
+- **Sign-in with a one-time code.** Only the addresses in `ADMIN_EMAILS` can get a code. The 6-digit code expires after 5 minutes and allows 5 tries. The server then gives a Firebase token with an `admin` claim (a flag inside the token), and the database rules check that flag.
+- **The candidate table.** Live from Firestore, with filters on several fields, sorting and pages. A profile window shows every document, and a form edits the candidate's details.
+- **Status changes.** The recruiter moves a candidate to interview scheduled, approved or rejected. A booked interview and a rejection each send the matching email.
+- **An AI score, only on request.** Gemini 2.5 Pro reads the CV and the profile, then gives a score from 0 to 100 on four weighted parts: how well the candidate meets the job's requirements (40%), the quality of their experience (30%), their skills (20%), and their growth potential and fit (10%). It also writes an analysis, the strengths, the points to improve and a recommendation.
+- **Interviews with Google Meet.** A recruiter connects a Google account once. The app then creates the Google Calendar event with a Meet link and emails the candidate. An interview can be moved or cancelled, and a calendar view shows all of them.
+- **Job offers.** Create, edit, turn on or off, and delete.
+- **Charts and export.** Charts of the statuses and the scores, and an export of the list to CSV, XLSX or JSON.
+- **A light and a dark theme.**
 
-- **🌐 Job Categories**
-  - Agricole, Bâtiment et travail publique, Development & IT
-  - Industriel, Restauration, Santé, Services, Sociale, Tourisme
-  - Dynamic specialty selection per job
+## What the AI may and may not do
 
-### Admin Features
+Gemini gives a score and a written opinion, and only when a recruiter asks for one. It does not change a status, reject anyone or send an email. A person makes every decision.
 
-- **🔒 Secure Admin Dashboard** (hidden route with Firebase Auth)
-  - Real-time statistics and charts (status distribution, score distribution)
-  - Comprehensive candidate table with sorting and pagination
-  - Advanced multi-criteria filtering
+## How it works
 
-- **🤖 AI-Powered Candidate Scoring**
-  - Gemini 2.5 Pro integration for CV analysis
-  - Document upload and processing via Google AI File Manager
-  - Website and portfolio analysis
-  - Scoring breakdown: Job Match (40%), Experience (30%), Skills (20%), Potential (10%)
-  - Key strengths and areas for improvement identification
-  - AI recommendation levels: Highly Recommended, Recommended, Conditional, Not Recommended
-
-- **📅 Interview Scheduling**
-  - Google Calendar API integration
-  - Automatic Google Meet link generation
-  - Email invitations to candidates and administrators
-  - Interview rescheduling and cancellation support
-  - Calendar view for scheduled interviews
-
-- **👤 Candidate Management**
-  - View detailed candidate profiles with all documents
-  - Edit candidate information inline
-  - Status management with automated email notifications
-  - Bulk operations support
-
-- **💼 Job Management**
-  - Create, edit, and delete job listings
-  - Category and specialty management
-  - Active/Inactive job status toggling
-
-- **📤 Data Export**
-  - Export to CSV, XLSX, or JSON formats
-  - Filtered exports based on current view
-
-- **☀️/🌙 Theme Support**
-  - Light and dark mode with system preference detection
-  - Persistent theme preference
-
----
-
-## Tech Stack
-
-### Frontend
-| Technology | Purpose |
-|------------|---------|
-| [Next.js 15](https://nextjs.org/) | React framework with App Router |
-| [React 18](https://react.dev/) | UI library |
-| [TypeScript](https://www.typescriptlang.org/) | Type-safe JavaScript |
-| [Tailwind CSS](https://tailwindcss.com/) | Utility-first CSS |
-| [Lucide React](https://lucide.dev/) | Icon library |
-| [React Icons](https://react-icons.github.io/react-icons/) | Additional icons |
-| [Recharts](https://recharts.org/) | Data visualization |
-| [React Big Calendar](https://github.com/jquense/react-big-calendar) | Calendar component |
-| [Headless UI](https://headlessui.com/) | Accessible UI components |
-| [next-themes](https://github.com/pacocoursey/next-themes) | Theme management |
-| [TanStack Query](https://tanstack.com/query) | Server state management |
-
-### Backend
-| Technology | Purpose |
-|------------|---------|
-| [Next.js API Routes](https://nextjs.org/docs/api-routes/introduction) | Serverless API endpoints |
-| [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup) | Server-side Firebase operations |
-| [Nodemailer](https://nodemailer.com/) | Email sending |
-| [Google APIs](https://github.com/googleapis/google-api-nodejs-client) | Calendar & Meet integration |
-| [Zod](https://zod.dev/) | Runtime schema validation |
-
-### Database & Storage
-| Technology | Purpose |
-|------------|---------|
-| [Firebase Firestore](https://firebase.google.com/docs/firestore) | NoSQL document database |
-| [Firebase Storage](https://firebase.google.com/docs/storage) | File storage for documents |
-| [Firebase Authentication](https://firebase.google.com/docs/auth) | Admin authentication |
-
-### AI & ML
-| Technology | Purpose |
-|------------|---------|
-| [Google Gemini 2.5 Pro](https://ai.google.dev/) | CV analysis and candidate scoring |
-| [@google/generative-ai](https://www.npmjs.com/package/@google/generative-ai) | Gemini SDK |
-
-### Security & Rate Limiting
-| Technology | Purpose |
-|------------|---------|
-| [Upstash Redis](https://upstash.com/) | Distributed rate limiting |
-| [csrf](https://www.npmjs.com/package/csrf) | CSRF protection |
-| [isomorphic-dompurify](https://www.npmjs.com/package/isomorphic-dompurify) | XSS sanitization |
-
-### Testing
-| Technology | Purpose |
-|------------|---------|
-| [Vitest](https://vitest.dev/) | Unit testing framework |
-| [React Testing Library](https://testing-library.com/) | Component testing |
-| [Playwright](https://playwright.dev/) | End-to-end testing |
-| [jsdom](https://github.com/jsdom/jsdom) | DOM simulation |
-
-### Code Quality
-| Technology | Purpose |
-|------------|---------|
-| [ESLint](https://eslint.org/) | Code linting |
-| [Prettier](https://prettier.io/) | Code formatting |
-| [Husky](https://typicode.github.io/husky/) | Git hooks |
-| [lint-staged](https://github.com/okonet/lint-staged) | Staged files linting |
-
----
-
-## Architecture
-
-### Application Flow
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Candidate     │────▶│   Next.js App   │────▶│    Firebase     │
-│   Browser       │◀────│   (Frontend)    │◀────│   Firestore     │
-└─────────────────┘     └────────┬────────┘     └─────────────────┘
-                                 │
-                                 ▼
-                        ┌─────────────────┐
-                        │   API Routes    │
-                        │   (Backend)     │
-                        └────────┬────────┘
-                                 │
-         ┌───────────────────────┼───────────────────────┐
-         ▼                       ▼                       ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Firebase Admin │     │   Google APIs   │     │   Nodemailer    │
-│  (Auth/Storage) │     │ (Gemini/Calendar)│     │   (SMTP)        │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+```mermaid
+flowchart LR
+    candidate["Candidate<br/>browser"] -- "application and files" --> firebase
+    recruiter["Recruiter<br/>browser"] -- "live table, admin claim" --> firebase
+    candidate --> api
+    recruiter --> api
+    api["Next.js API routes<br/>behind the middleware:<br/>headers, CORS, rate limits"] --> firebase[("Firebase<br/>Firestore and Storage")]
+    api --> redis[("Upstash Redis<br/>rate limits, CSRF,<br/>codes and links")]
+    api --> gemini["Gemini 2.5 Pro<br/>score on request"]
+    api --> calendar["Google Calendar<br/>event with a Meet link"]
+    api --> resend["Resend<br/>emails"]
 ```
 
-### Security Layers
-
-```
-Request → Middleware → Rate Limiting → CSRF Validation → Origin Check → API Handler
-                          │                   │                │
-                          ▼                   ▼                ▼
-                    Upstash Redis      Token Store       Origin Whitelist
-```
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- **Node.js** v20.x or later
-- **pnpm** (recommended) or npm/yarn
-- **Firebase Project** with Firestore, Storage, and Authentication enabled
-- **Google Cloud Platform** project with Gemini API and Calendar API enabled
-- **SMTP Server** for email notifications (e.g., SendGrid, Mailgun, Gmail)
-- **Upstash Redis** account (optional, for production rate limiting)
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/mohamedyaakoubi/candidate.git
-   cd candidate
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   pnpm install
-   ```
-
-3. **Set up environment variables:**
-   Copy `.env.example` to `.env.local` and fill in the required values.
-
-4. **Set up Firebase:**
-   - Deploy Firestore rules: `firebase deploy --only firestore:rules`
-   - Deploy Storage rules: `firebase deploy --only storage`
-
-5. **Run the development server:**
-   ```bash
-   pnpm dev
-   ```
-
-   The application will be available at `http://localhost:3000`.
-
-### Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development server with Turbopack |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
-| `pnpm lint` | Run ESLint |
-| `pnpm format` | Format code with Prettier |
-| `pnpm format:check` | Check code formatting |
-| `pnpm test` | Run unit tests with Vitest |
-| `pnpm test:ui` | Run tests with Vitest UI |
-| `pnpm test:integration` | Run integration tests (requires emulators) |
-| `pnpm test:integration:run` | Run integration tests with emulators |
-| `pnpm test:all` | Run all tests (unit + integration) |
-| `pnpm test:e2e` | Run E2E tests with Playwright |
-| `pnpm test:e2e:ui` | Run E2E tests with Playwright UI |
-| `pnpm emulators` | Start Firebase emulators |
-| `pnpm reset-db` | Reset database (use with caution) |
-
----
-
-## Environment Variables
-
-Create a `.env.local` file with the following variables:
-
-```env
-# ─────────────────────────────────────────────────────────────
-# Firebase Configuration
-# ─────────────────────────────────────────────────────────────
-FIREBASE_PROJECT_ID=your-project-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-
-# Firebase Client SDK (for frontend)
-NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
-NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef
-
-# ─────────────────────────────────────────────────────────────
-# Google APIs
-# ─────────────────────────────────────────────────────────────
-GEMINI_API_KEY=your-gemini-api-key
-
-# Google OAuth (for Calendar integration)
-GOOGLE_PROJECT_ID=your-project-id
-GOOGLE_PRIVATE_KEY_ID=your-private-key-id
-GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-
-# ─────────────────────────────────────────────────────────────
-# SMTP Configuration (Email)
-# ─────────────────────────────────────────────────────────────
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=your-smtp-user
-SMTP_PASS=your-smtp-password
-SMTP_FROM_EMAIL=noreply@yourdomain.com
-
-# ─────────────────────────────────────────────────────────────
-# Rate Limiting (Upstash Redis - Production)
-# ─────────────────────────────────────────────────────────────
-UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
-UPSTASH_REDIS_REST_TOKEN=your-redis-token
-
-# ─────────────────────────────────────────────────────────────
-# Application Configuration
-# ─────────────────────────────────────────────────────────────
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-FALLBACK_ADMIN_EMAIL=admin@yourdomain.com
-```
-
----
-
-## Configuration
-
-### Firebase Setup
-
-1. **Create a Firebase project** at [Firebase Console](https://console.firebase.google.com/)
-
-2. **Enable Firestore Database:**
-   - Create in production mode
-   - Deploy the included `firestore.rules`
-
-3. **Enable Firebase Storage:**
-   - Deploy the included `storage.rules`
-
-4. **Enable Authentication:**
-   - Enable Email/Password provider
-   - Create an admin user account
-
-5. **Generate Service Account:**
-   - Go to Project Settings → Service Accounts
-   - Generate new private key
-   - Use credentials for `FIREBASE_*` environment variables
-
-### Google Cloud Platform Setup
-
-1. **Enable APIs** in [Google Cloud Console](https://console.cloud.google.com/):
-   - Generative Language API (Gemini)
-   - Google Calendar API
-   - Google Meet API (optional)
-
-2. **Create API Key** for Gemini:
-   - Go to APIs & Services → Credentials
-   - Create API Key → Restrict to Generative Language API
-
-3. **Configure OAuth** for Calendar:
-   - Create OAuth 2.0 Client ID
-   - Configure consent screen
-   - Add authorized redirect URIs
-
-### SMTP Configuration
-
-Configure with your preferred email provider:
-
-| Provider | SMTP Host | Port |
-|----------|-----------|------|
-| Gmail | smtp.gmail.com | 587 |
-| SendGrid | smtp.sendgrid.net | 587 |
-| Mailgun | smtp.mailgun.org | 587 |
-| Amazon SES | email-smtp.region.amazonaws.com | 587 |
-
----
-
-## Project Structure
-
-```
-candidate/
-├── .github/                    # GitHub configurations
-│   └── instructions/           # Copilot instructions
-├── e2e/                        # End-to-end tests (Playwright)
-│   ├── fixtures/               # Test fixtures
-│   ├── pages/                  # Page objects
-│   ├── utils/                  # Test utilities
-│   └── *.spec.ts               # Test files
-├── public/                     # Static assets
-├── scripts/                    # Automation scripts
-│   └── reset-database.ts       # Database reset utility
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── admin-dashboard-secret/  # Admin dashboard (protected)
-│   │   │   └── login/          # Admin login page
-│   │   ├── api/                # API routes
-│   │   │   ├── cancel-interview/
-│   │   │   ├── check-candidate/
-│   │   │   ├── check-duplicate/
-│   │   │   ├── csrf-token/
-│   │   │   ├── export-candidates/
-│   │   │   ├── get-candidate-applications/
-│   │   │   ├── google-auth/
-│   │   │   ├── health/
-│   │   │   ├── jobs/
-│   │   │   ├── schedule-interview-meet/
-│   │   │   ├── score-candidate/
-│   │   │   ├── send-confirmation-email/
-│   │   │   ├── update-candidate/
-│   │   │   ├── update-status/
-│   │   │   ├── validate-phone/
-│   │   │   └── verify-email/
-│   │   ├── candidate-choices/   # Email-based application lookup
-│   │   ├── candidate-dashboard/ # Candidate status tracking
-│   │   ├── candidate-form/      # Job application form
-│   │   ├── components/          # App-specific components
-│   │   │   ├── admin-dashboard/ # Admin components
-│   │   │   ├── candidate-choices/
-│   │   │   ├── candidate-dashboard/
-│   │   │   ├── candidate-form/
-│   │   │   ├── candidate-table/
-│   │   │   ├── common/
-│   │   │   ├── edit-candidate-modal/
-│   │   │   ├── profile-modal/
-│   │   │   └── ui/
-│   │   ├── error.tsx            # Error boundary
-│   │   ├── global-error.tsx     # Global error handler
-│   │   ├── layout.tsx           # Root layout
-│   │   ├── loading.tsx          # Loading state
-│   │   ├── not-found.tsx        # 404 page
-│   │   ├── page.tsx             # Landing page
-│   │   ├── manifest.ts          # PWA manifest
-│   │   ├── robots.ts            # Robots.txt
-│   │   └── sitemap.ts           # Sitemap
-│   ├── components/
-│   │   └── ui/                  # Shared UI components
-│   │       ├── Badge.tsx
-│   │       ├── Button.tsx
-│   │       ├── Card.tsx
-│   │       ├── ErrorBoundary.tsx
-│   │       ├── Input.tsx
-│   │       └── Select.tsx
-│   ├── data/                    # Static data files
-│   ├── hooks/                   # Custom React hooks
-│   │   ├── useAuth.tsx
-│   │   ├── useCandidateDashboard.ts
-│   │   ├── useCandidateForm.ts
-│   │   ├── useCandidates.ts
-│   │   ├── useCandidateScoring.ts
-│   │   ├── useDashboard.ts
-│   │   ├── useEmailVerification.ts
-│   │   ├── useFocusTrap.ts
-│   │   ├── useInterviewEvents.ts
-│   │   ├── useJobs.ts
-│   │   ├── usePhoneValidation.ts
-│   │   └── useScheduleInterview.ts
-│   ├── lib/                     # Utility functions
-│   │   ├── constants/           # Application constants
-│   │   │   ├── emails.ts
-│   │   │   └── errors.ts
-│   │   ├── emailTemplates/      # Email HTML/TXT templates
-│   │   ├── __mocks__/           # Test mocks
-│   │   ├── __tests__/           # Unit tests
-│   │   ├── apiHandlers.ts       # API utilities
-│   │   ├── apiResponse.ts       # Response helpers
-│   │   ├── auth.ts              # Auth utilities
-│   │   ├── constants.ts         # Shared constants
-│   │   ├── csrf.ts              # CSRF protection
-│   │   ├── csrf-middleware.ts   # CSRF middleware
-│   │   ├── csvUtils.ts          # CSV export
-│   │   ├── dateUtils.ts         # Date formatting
-│   │   ├── disposableEmailDomains.ts
-│   │   ├── env-validation.ts    # Environment validation
-│   │   ├── errors.ts            # Error handling
-│   │   ├── fileValidation.ts    # File upload validation
-│   │   ├── firebase-admin.ts    # Firebase Admin SDK
-│   │   ├── firebase.ts          # Firebase Client SDK
-│   │   ├── googleOAuth.ts       # Google OAuth helpers
-│   │   ├── honeypot.ts          # Spam prevention
-│   │   ├── job-categories.ts    # Job category definitions
-│   │   ├── logger.ts            # Logging utility
-│   │   ├── origin-validation.ts # Origin/referer validation
-│   │   ├── phoneValidationService.ts
-│   │   ├── queryClient.ts       # TanStack Query client
-│   │   ├── rate-limit.ts        # Rate limiting
-│   │   ├── requestId.ts         # Request correlation
-│   │   ├── sanitize.ts          # XSS sanitization
-│   │   ├── security-logger.ts   # Security event logging
-│   │   ├── securityAlerts.ts    # Security alerting
-│   │   ├── tokenEncryption.ts   # Token handling
-│   │   └── validations.ts       # Zod schemas
-│   ├── middleware.ts            # Next.js middleware
-│   ├── instrumentation.ts       # Server startup hooks
-│   ├── services/                # External service integrations
-│   │   ├── candidate.ts         # Candidate CRUD
-│   │   ├── email.ts             # Email service
-│   │   ├── emailVerification.ts
-│   │   ├── interview.ts         # Interview scheduling
-│   │   ├── jobs.ts              # Job management
-│   │   └── scoring.ts           # AI scoring
-│   ├── types/                   # TypeScript definitions
-│   │   ├── api.ts               # API types
-│   │   └── index.ts             # Shared types
-│   ├── __tests__/               # Unit tests
-│   └── __integration__/         # Integration tests
-│       ├── auth/                # Auth flow tests
-│       ├── flows/               # End-to-end flow tests
-│       ├── services/            # Service integration tests
-│       ├── helpers.ts           # Test helpers
-│       ├── setup.ts             # Test setup
-│       └── vitest.integration.setup.ts
-├── .env.local                   # Environment variables (not committed)
-├── eslint.config.mjs            # ESLint configuration
-├── firebase.json                # Firebase configuration
-├── firebase.test.json           # Firebase test configuration
-├── firestore.rules              # Firestore security rules
-├── firestore.rules.test         # Firestore test rules
-├── firestore.indexes.json       # Firestore indexes
-├── next.config.ts               # Next.js configuration
-├── package.json                 # Dependencies
-├── playwright.config.ts         # Playwright configuration
-├── postcss.config.mjs           # PostCSS configuration
-├── storage.rules                # Firebase Storage rules
-├── tailwind.config.ts           # Tailwind CSS configuration
-├── tsconfig.json                # TypeScript configuration
-├── vitest.config.ts             # Vitest unit test configuration
-├── vitest.integration.config.ts # Vitest integration test configuration
-└── vitest.setup.ts              # Vitest setup
-```
-
----
-
-## API Reference
-
-### Public Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/jobs` | GET | List all active jobs |
-| `/api/check-candidate` | POST | Check candidate by email |
-| `/api/check-duplicate` | POST | Check for duplicate applications |
-| `/api/send-confirmation-email` | POST | Send application confirmation |
-| `/api/verify-email` | POST | Verify email validity |
-| `/api/validate-phone` | POST | Validate phone number |
-| `/api/get-candidate-applications` | POST | Get applications by email |
-| `/api/csrf-token` | GET | Get CSRF token |
-| `/api/health` | GET | Health check endpoint |
-
-### Protected Endpoints (Admin Only)
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/jobs` | POST | Create new job |
-| `/api/jobs` | PUT | Update job |
-| `/api/jobs` | DELETE | Delete job |
-| `/api/update-status` | POST | Update candidate status |
-| `/api/update-candidate` | PUT | Update candidate info |
-| `/api/score-candidate` | POST | Score candidate with AI |
-| `/api/schedule-interview-meet` | POST | Schedule interview |
-| `/api/cancel-interview` | POST | Cancel interview |
-| `/api/export-candidates` | GET | Export candidate data |
-| `/api/google-auth/*` | Various | Google OAuth flow |
-
-### Rate Limits
-
-| Endpoint Pattern | Requests | Window |
-|-----------------|----------|--------|
-| `/api/auth/*` | 5 | 1 min |
-| `/api/admin/*` | 60 | 1 min |
-| `/api/check-*` | 5 | 1 min |
-| `/api/validate-phone` | 5 | 1 min |
-| `/api/verify-email` | 5 | 1 min |
-| `/api/send-confirmation-email` | 3 | 1 min |
-| `/api/export-candidates` | 3 | 1 min |
-| Default | 30 | 1 min |
-
----
-
-## Data Models
-
-### Candidate
-
-```typescript
-interface Candidate {
-  id: string;
-  fullName: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-  gender?: string;
-  phoneNumber?: string;
-  countryCode?: string;
-  dateOfBirth?: string;
-  age?: number;
-  city?: string;
-  country?: string;
-  nationality?: string;
-  doubleNationality?: string;
-  jobTitle?: string;
-  jobTitleText?: string;
-  jobCategory?: string;
-  specialty?: string;
-  websites: string[];
-  cvUrl: string;
-  passportUrl: string;
-  photoUrl?: string;
-  submittedAt: Timestamp;
-  status: 'submitted' | 'rejected' | 'interview_scheduled' | 'approved';
-  
-  // AI Scoring fields
-  score: number | null;
-  scoreAnalysis?: string;
-  keyStrengths?: string[];
-  areasForImprovement?: string[];
-  aiRecommendation?: 'highly_recommended' | 'recommended' | 'conditional' | 'not_recommended';
-  scoringVersion?: string;
-  lastScoredAt?: Timestamp;
-  
-  // Interview fields
-  interviewDate?: Timestamp;
-  calendarEventId?: string;
-  meetLink?: string;
-  meetSpaceId?: string;
-  duration?: number;
-  
-  // Additional information
-  additionalInfo?: {
-    type: 'link' | 'file' | 'text';
-    content: string;
-    fileUrl?: string;
-  }[];
-}
-```
-
-### Job
-
-```typescript
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  category: JobCategory;
-  specialties: string[];
-  isActive: boolean;
-  createdAt?: Timestamp;
-  updatedAt?: Timestamp;
-}
-```
-
-### Job Categories
-
-- Agricole
-- Bâtiment et travail publique
-- Development & IT
-- Industriel
-- Restauration
-- Santé
-- Services
-- Sociale
-- Tourisme
-
----
+1. **Apply.** The candidate's browser checks each field and reads the first bytes of each file to confirm its real type. The server checks the email address and the phone number. The browser then uploads the files to Firebase Storage and creates the application in Firestore. The rules let anyone create an application, but only a recruiter can read it.
+2. **Confirm.** The candidate gets an email that confirms the application.
+3. **Review.** A recruiter signs in with a code, and the application appears in the table at once.
+4. **Score, if asked.** Gemini reads the CV and the profile and returns a score and an opinion. Nothing else changes.
+5. **Interview.** The recruiter books a time. The app creates the Google Calendar event with a Meet link and emails the candidate, whose dashboard shows the date and the link.
+6. **Decide.** The recruiter sets the final status. A rejection sends an email.
 
 ## Security
 
-### Security Headers
+| Layer | What it does |
+|---|---|
+| **Rate limits** | The middleware limits each visitor on each route. The counters live in Upstash Redis, so a limit holds across all server instances. In production: 3 sign-in codes per 10 minutes, 5 sign-in links per 10 minutes, and 30 requests a minute by default. |
+| **CSRF tokens** | CSRF is a trick where another website sends a request with the visitor's cookies. The 7 recruiter routes that change data (jobs, statuses, edits, scores, interviews, export) need a CSRF token. The secrets live in Redis for 15 minutes, so any server instance can check them. |
+| **Origin check** | The recruiter sign-in routes, the duplicate check and the confirmation email accept requests only from the app's own address. |
+| **Security headers** | A Content Security Policy, HSTS, `X-Frame-Options: DENY`, `nosniff`, a referrer policy and a permissions policy, on every response. |
+| **Input** | 16 of the 25 API routes check their input with Zod schemas. sanitize-html cleans the text that goes into emails. |
+| **Uploads** | The form reads the first bytes of each file to confirm its real type, not only its name. The storage rules accept only PDF, Word and image files of 10 MB or less. |
+| **Database rules** | Anyone can create an application and read the job offers. Only a token with the `admin` claim can read, change or delete candidates, or change the job offers. |
+| **Stored secrets** | Google tokens are encrypted with AES-256-GCM before they are saved. Sign-in codes and links are saved only as SHA-256 hashes, and codes are compared in constant time. |
+| **Monitoring** | Security events go to a structured log. Serious ones can alert a Slack channel, a webhook or an email address. |
+| **Configuration** | The server checks the required environment variables when it starts. |
 
-The application enforces strict security headers via middleware:
+## Tech stack
 
-- **Content-Security-Policy**: Strict CSP with whitelisted sources
-- **Strict-Transport-Security**: HSTS with 1-year max-age
-- **X-Content-Type-Options**: nosniff
-- **X-Frame-Options**: DENY
-- **X-XSS-Protection**: 1; mode=block
-- **Referrer-Policy**: strict-origin-when-cross-origin
-- **Permissions-Policy**: Restrictive feature policy
+| Part | Built with | Why |
+|---|---|---|
+| App | Next.js 15 (App Router), React 18, TypeScript 5 | The pages and the API live in one codebase, and each API route runs as a serverless function. |
+| Look | Tailwind CSS 3, Headless UI, Lucide icons, next-themes | Utility classes for the layout, accessible menus and dialogs, and the light and dark themes. |
+| Charts and calendar | Recharts, React Big Calendar | The dashboard's charts and the interview calendar. |
+| Data | Firebase Firestore, Storage and Auth, with the Firebase Admin SDK on the server | A live database for the table, storage for the documents, and custom tokens for the recruiters. Firestore is set to the `eur3` location, in Europe. |
+| Client cache | TanStack Query | Keeps server data cached and fresh in the browser. |
+| Shared state | Upstash Redis, @upstash/ratelimit | Serverless calls share no memory, so rate limits, CSRF secrets, codes and links must live outside them. |
+| AI | Gemini 2.5 Pro, through @google/generative-ai and @google/genai | Reads the CV files and the profile, and returns the score as JSON. |
+| Interviews | Google Calendar API (googleapis), with OAuth | Creates the event and its Meet link in the recruiter's own calendar. |
+| Email | Resend, React Email | Six templates written as React components, sent through one API. |
+| Validation | Zod 4, sanitize-html | Schemas for the API input, and clean text in emails. |
+| Export | SheetJS (xlsx) | The XLSX export. |
+| Tests | Vitest, Testing Library, jsdom, the Firebase emulators, Playwright | Unit tests, integration tests against local copies of Firebase, and end-to-end tests in a real browser. |
+| Quality | ESLint in strict mode, Prettier, Husky, lint-staged | Lints and formats the changed files before every commit. |
+| Hosting | Vercel | The app, plus a daily cron that keeps the free Upstash database active. |
 
-### Rate Limiting
+## Run it
 
-- **Production**: Upstash Redis for distributed rate limiting
-- **Development**: In-memory rate limiting
-- **Endpoint-specific limits** for sensitive operations
-
-### CSRF Protection
-
-- Token-based CSRF protection for state-changing operations
-- 15-minute token expiration
-- Session-bound tokens
-
-### Input Validation
-
-- **Zod schemas** for runtime validation
-- **XSS sanitization** with DOMPurify
-- **File validation** with magic byte verification
-- **URL sanitization** to prevent protocol attacks
-
-### Security Alerts & Monitoring
-
-The application includes a comprehensive security alerting system with:
-
-- **Attacker Fingerprinting**: Captures detailed information about potential attackers:
-  - Network: IP, proxy chain, Cloudflare headers, country detection
-  - Client: Browser, OS, device type, client hints
-  - Request: Origin, referer, accept headers
-  - Anomaly detection: Missing headers, CLI tools, bots, oversized user agents
-
-- **Pattern Detection**: Intelligent alerting to avoid spam:
-  - Rate limit: Alert after 10 violations in 5 min from same IP
-  - Auth failures: Alert after 5 failures in 10 min from same IP
-  - Input validation: Alert after 20 failures in 5 min (potential fuzzing)
-  - Immediate alerts for: CSRF failures, unauthorized access, suspicious activity
-
-- **Alert Channels**:
-  - Slack webhooks with rich formatting
-  - Generic webhook integration
-  - Email notifications (configurable)
-
-- **Environment Variables for Alerts**:
-  ```env
-  SECURITY_ALERT_SLACK_WEBHOOK=https://hooks.slack.com/...
-  SECURITY_ALERT_WEBHOOK_URL=https://your-webhook-url
-  SECURITY_ALERT_EMAIL=security@yourdomain.com
-  ```
-
-### Authentication
-
-- Firebase Authentication for admin access
-- Email/Password provider
-- Token verification via Firebase Admin SDK
-
-### Firestore Security Rules
-
-```javascript
-// Candidates: Public create, admin-only read/update/delete
-// Jobs: Public read, admin-only write operations
-```
-
-### Storage Security Rules
-
-- 10MB file size limit
-- Allowed MIME types: PDF, DOC, DOCX, JPEG, PNG, WebP
-- Read access requires authentication
-
----
-
-## Testing
-
-### Unit Tests (Vitest)
+You need Node.js 20 or newer and pnpm 10. For the integration tests, you also need the Firebase CLI and Java, which its Firestore emulator runs on.
 
 ```bash
-# Run all unit tests
-pnpm test
-
-# Run with UI
-pnpm test:ui
-
-# Run specific test file
-pnpm test src/lib/__tests__/sanitize.test.ts
+pnpm install
+# create .env.local with the values below (it is never committed)
+pnpm dev
 ```
 
-### Integration Tests (Vitest + Firebase Emulators)
+The app opens at http://localhost:3000, and the recruiter sign-in at http://localhost:3000/admin-dashboard-secret/login.
 
-Integration tests run against Firebase Emulators for realistic testing of services and flows.
+### The setup steps
 
-```bash
-# Start Firebase emulators for development
-pnpm emulators
+Each value goes into `.env.local` for local work, and into the project settings on Vercel. Never into the code.
 
-# Run integration tests with emulators (recommended)
-pnpm test:integration:run
+| Step | Variables | Where it comes from |
+|---|---|---|
+| 1 | `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` | Firebase console, Project settings, Service accounts, "Generate new private key". Only the server uses them. Keep the key on one line, with `\n` for each line break. |
+| 2 | `NEXT_PUBLIC_FIREBASE_API_KEY`, `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`, `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID`, `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` | Firebase console, Project settings, Your apps, the web app's config. These values reach the browser by design, and the rules protect the data. In Google Cloud, limit this API key to the Firebase APIs. |
+| 3 | `ADMIN_EMAILS` | The addresses that may sign in to the recruiter dashboard, separated by commas. |
+| | `NEXT_PUBLIC_DEFAULT_ADMIN_EMAIL`, `FALLBACK_ADMIN_EMAIL` | The recruiter address that the interview form fills in, and the one that the server adds to an event when none is given. |
+| 4 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | A Redis database at [upstash.com](https://upstash.com), from its REST API section. |
+| | `REDIS_KEEPALIVE_SECRET` | Optional. Any long random text. When it is set, the daily keep-alive route asks for it. |
+| 5 | `TOKEN_ENCRYPTION_KEY`, `CANDIDATE_SESSION_SECRET` | Two long random values, for example from `openssl rand -hex 32`. The first encrypts the Google tokens. The second signs the candidate session cookie. |
+| 6 | `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | [resend.com](https://resend.com), with a verified sending domain. |
+| 7 | `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com). |
+| 8 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Google Cloud console: turn on the Google Calendar API, then create an OAuth client of the type "Web application". The redirect URI is the app's address followed by `/api/google-auth/callback`. |
+| 9 | `ABSTRACT_API_KEY`, `ABSTRACT_PHONE_API_KEY`, `HUNTER_API_KEY` | Optional. [Abstract API](https://www.abstractapi.com) for email and phone validation, and [Hunter](https://hunter.io). Without them, the email check still covers the format, the disposable domains and the mail server. |
+| 10 | `COMPANY_NAME`, `SUPPORT_EMAIL`, `CONTACT_PHONE`, and the same three with the prefix `NEXT_PUBLIC_` | The organisation's name and contacts, shown on the pages and in the emails. |
+| 11 | `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_BASE_URL` | The public address of the app, used for the links in emails. |
+| 12 | `SECURITY_ALERT_SLACK_WEBHOOK`, `SECURITY_ALERT_WEBHOOK_URL`, `SECURITY_ALERT_EMAIL` | Optional. Where serious security events are sent. |
 
-# Run integration tests (requires running emulators separately)
-pnpm test:integration
+### The commands
 
-# Run integration tests with UI
-pnpm test:integration:ui
+| Command | What it does |
+|---|---|
+| `pnpm dev` | Starts the app at http://localhost:3000, with Turbopack. |
+| `pnpm build`, then `pnpm start` | Builds the production version, then serves it. |
+| `pnpm lint` | Runs ESLint on `src`. |
+| `pnpm format`, `pnpm format:check` | Prettier: rewrites the files, or only checks them. |
+| `pnpm vitest run` | Runs the unit tests once. `pnpm test` keeps them running while you work, and `pnpm test:ui` shows them in a browser. |
+| `pnpm test:integration:run` | Starts the Firebase emulators, runs the integration tests against them, then stops them. |
+| `pnpm test:e2e` | Starts the app and runs the Playwright tests. `pnpm test:e2e:ui` opens Playwright's window. |
+| `pnpm emulators` | Starts local copies of Firebase Auth (port 9099), Firestore (8080) and Storage (9199), with their UI on port 4000. |
+| `pnpm reset-db:confirm` | **Deletes every candidate and every job** in the Firebase project of your environment, after you type `YES`. There is no undo. |
 
-# Run all tests (unit + integration)
-pnpm test:all
+## Tests
+
+| Kind | Where | How many | State on 6 November 2026 |
+|---|---|---|---|
+| Unit | `src/**/__tests__` | 513 tests in 99 files | 502 pass, 8 fail, 3 are skipped |
+| Integration | `src/__integration__` | 4 files | Not run for this README. They need the Firebase emulators. |
+| End to end | `e2e/` | 23 Playwright files | Not run for this README. |
+
+The 8 failures come from tests that were not updated after the code changed in April 2026. The recruiter sign-in moved from a password to a one-time code, so `useAuth.test.tsx` (3 tests) still calls a password sign-in that no longer exists. The candidate header started to read the page address, and the mock in `DashboardHeader.test.tsx` (4 tests) does not provide it. `useCandidateDashboard.test.ts` (1 test) has the same kind of out-of-date mock.
+
+## Project structure
+
+```text
+src/
+  app/                  pages: home, candidate choices, application form, candidate dashboard, recruiter dashboard
+    api/                25 API routes: sign-in, candidates, jobs, scoring, interviews, export, health
+    components/         the interface, one folder per feature
+  components/emails/    the 6 email templates
+  hooks/                React hooks, one per feature
+  lib/                  security (CSRF, rate limits, origin check, encryption), Firebase, logging, validation
+  services/             the logic: candidates, jobs, scoring, interviews, email, codes, links
+  middleware.ts         security headers, CORS and rate limits on every request
+  instrumentation.ts    checks the environment when the server starts
+e2e/                    Playwright tests
+scripts/                maintenance scripts
+firestore.rules         database rules
+storage.rules           file storage rules
+vercel.json             the daily cron
 ```
 
-**Integration Test Categories:**
+## Deploy
 
-| Category | Test Files | Description |
-|----------|------------|-------------|
-| Auth Flows | `auth/auth-flow.integration.test.ts` | Authentication and session management |
-| Form Submission | `flows/form-submission.integration.test.ts` | Complete application submission flow |
-| Candidate Service | `services/candidate.integration.test.ts` | Candidate CRUD operations |
-| Jobs Service | `services/jobs.integration.test.ts` | Job management operations |
+1. Import the repository in Vercel, and add every variable of the setup steps in the project settings.
+2. Publish the rules and the indexes: `firebase deploy --only firestore:rules,firestore:indexes,storage`.
+3. In Google Cloud, add the deployed address followed by `/api/google-auth/callback` to the redirect URIs of the OAuth client.
+4. `vercel.json` calls `/api/redis-keepalive` every day at 00:00 UTC, so that Upstash does not archive the free database. If you set `REDIS_KEEPALIVE_SECRET`, give `CRON_SECRET` the same value: Vercel sends `CRON_SECRET` as the Bearer token of its cron calls.
 
-**Firebase Emulators Configuration:**
+## Author
 
-| Service | Port |
-|---------|------|
-| Auth | 9099 |
-| Firestore | 8080 |
-| Storage | 9199 |
-| Emulator UI | 4000 |
+Built by **Mohamed Yaakoubi**: [mohamedyaakoubi.com](https://mohamedyaakoubi.com) · [GitHub](https://github.com/mohamedyaakoubi)
 
-### E2E Tests (Playwright)
+## Licence
 
-```bash
-# Run all E2E tests
-pnpm test:e2e
-
-# Run with UI
-pnpm test:e2e:ui
-
-# Run specific test file
-pnpm test:e2e e2e/admin-login.spec.ts
-
-# Run in specific browser
-pnpm test:e2e --project=chromium
-```
-
-### Test Coverage
-
-| Category | Test Files |
-|----------|------------|
-| Admin Dashboard | `admin-*.spec.ts` |
-| Candidate Flow | `candidate-*.spec.ts` |
-| Authentication | `auth.spec.ts` |
-| Error Handling | `error-pages.spec.ts` |
-| Responsive Design | `responsive.spec.ts` |
-| Cross-Browser | `cross-browser.spec.ts` |
-
-### Test Configuration
-
-- **Vitest (Unit)**: jsdom environment, path aliases
-- **Vitest (Integration)**: Node environment, Firebase Emulators, sequential execution
-- **Playwright**: Chromium, Firefox, WebKit
-- **CI/CD**: Single worker, 2 retries
-
----
-
-## Scripts
-
-### Database Reset
-
-```bash
-# Reset all data (requires confirmation)
-pnpm reset-db
-
-# With confirmation prompt
-pnpm reset-db:confirm
-```
-
-### Firebase Emulators
-
-```bash
-# Start emulators for development
-pnpm emulators
-
-# Start emulators with test configuration
-pnpm emulators:test
-
-# Export emulator data
-pnpm emulators:export
-
-# Import previously exported data
-pnpm emulators:import
-```
-
-### Code Quality
-
-```bash
-# Lint and fix
-pnpm lint
-
-# Format code
-pnpm format
-
-# Check formatting
-pnpm format:check
-```
-
-### Pre-commit Hooks
-
-Husky runs automatically on commit:
-- ESLint fix for TypeScript files
-- Prettier formatting
-
----
-
-## Deployment
-
-### Vercel (Recommended)
-
-1. Connect repository to Vercel
-2. Configure environment variables
-3. Deploy
-
-### Firebase
-
-```bash
-# Deploy Firestore rules
-firebase deploy --only firestore:rules
-
-# Deploy Storage rules
-firebase deploy --only storage
-
-# Deploy indexes
-firebase deploy --only firestore:indexes
-```
-
-### Environment Requirements
-
-- Node.js 20.x runtime
-- 512MB+ memory for AI scoring
-- Redis for production rate limiting
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes following the code style
-4. Run tests: `pnpm test && pnpm test:e2e`
-5. Commit with conventional commits
-6. Push and create a Pull Request
-
-### Code Style
-
-- TypeScript strict mode
-- ESLint with strict rules
-- Prettier for formatting
-- No `console.log` (use `logger`)
-- No `any` types
-
----
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## Support
-
-For questions or issues, please open a GitHub issue or contact the development team.
+This is client work, and no licence is given to use, copy or share the code.
