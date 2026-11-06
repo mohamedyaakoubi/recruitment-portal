@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 import { useCandidateDashboard } from '@/hooks/useCandidateDashboard';
@@ -10,20 +10,14 @@ import WelcomeSection from '../components/candidate-dashboard/WelcomeSection';
 import HelpSection from '../components/candidate-dashboard/HelpSection';
 
 export default function CandidateDashboard() {
-  const {
-    candidateEmail,
-    applications,
-    isLoading,
-    error,
-    handleNewApplication,
-    formatDate,
-  } = useCandidateDashboard();
+  const { candidateEmail, applications, isLoading, error, handleNewApplication, formatDate } =
+    useCandidateDashboard();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-[#003A70] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-[#003A70] border-t-transparent"></div>
           <p className="text-slate-600">Loading your applications...</p>
         </div>
       </div>
@@ -31,24 +25,24 @@ export default function CandidateDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 font-sans">
+    <div className="min-h-screen bg-slate-50 font-sans dark:bg-gray-900">
       <DashboardHeader />
-      
-      <main className="flex min-h-screen flex-col items-center justify-start py-12 px-4 sm:px-6">
+
+      <main className="flex min-h-screen flex-col items-center justify-start px-4 py-12 sm:px-6">
         <div className="w-full max-w-6xl space-y-8">
           <WelcomeSection
             candidateEmail={candidateEmail}
             handleNewApplication={handleNewApplication}
           />
-          
+
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
               <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
           <ApplicationStatus applications={applications} formatDate={formatDate} />
-          
+
           <InterviewDetails applications={applications} formatDate={formatDate} />
 
           <HelpSection />

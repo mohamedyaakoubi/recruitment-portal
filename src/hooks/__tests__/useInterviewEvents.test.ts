@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 
 import { renderHook } from '@testing-library/react';
 import { useInterviewEvents } from '../useInterviewEvents';
@@ -5,14 +6,14 @@ import { Candidate } from '@/types';
 
 // Mock current date to be July 21, 2025
 const MOCK_NOW = new Date('2025-07-21T12:00:00Z');
-jest.useFakeTimers().setSystemTime(MOCK_NOW);
+vi.useFakeTimers().setSystemTime(MOCK_NOW);
 
 const mockCandidates: Candidate[] = [
   // Upcoming interview
-  { 
-    id: '1', 
-    fullName: 'Upcoming Candidate', 
-    interviewDate: { toDate: () => new Date('2025-08-01T10:00:00Z') }, 
+  {
+    id: '1',
+    fullName: 'Upcoming Candidate',
+    interviewDate: { toDate: () => new Date('2025-08-01T10:00:00Z') },
     duration: 60,
     email: '',
     status: 'interview_scheduled',
@@ -37,13 +38,13 @@ const mockCandidates: Candidate[] = [
     startDate: '',
     comments: '',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   },
   // Completed interview
-  { 
-    id: '2', 
-    fullName: 'Completed Candidate', 
-    interviewDate: { toDate: () => new Date('2025-07-20T14:00:00Z') }, 
+  {
+    id: '2',
+    fullName: 'Completed Candidate',
+    interviewDate: { toDate: () => new Date('2025-07-20T14:00:00Z') },
     duration: 30,
     email: '',
     status: 'interview_scheduled',
@@ -68,12 +69,12 @@ const mockCandidates: Candidate[] = [
     startDate: '',
     comments: '',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   },
   // No interview date
-  { 
-    id: '3', 
-    fullName: 'No Interview Candidate', 
+  {
+    id: '3',
+    fullName: 'No Interview Candidate',
     interviewDate: null,
     email: '',
     status: 'submitted',
@@ -99,7 +100,7 @@ const mockCandidates: Candidate[] = [
     startDate: '',
     comments: '',
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   },
 ];
 
@@ -112,8 +113,8 @@ describe('useInterviewEvents', () => {
 
   it('should correctly identify completed and upcoming events', () => {
     const { result } = renderHook(() => useInterviewEvents(mockCandidates, 'all'));
-    const upcomingEvent = result.current.allInterviewEvents.find(e => e.resource.id === '1');
-    const completedEvent = result.current.allInterviewEvents.find(e => e.resource.id === '2');
+    const upcomingEvent = result.current.allInterviewEvents.find((e) => e.resource.id === '1');
+    const completedEvent = result.current.allInterviewEvents.find((e) => e.resource.id === '2');
 
     expect(upcomingEvent?.isCompleted).toBe(false);
     expect(upcomingEvent?.title).toBe('Interview: Upcoming Candidate');

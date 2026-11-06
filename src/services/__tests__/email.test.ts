@@ -1,99 +1,142 @@
-/**
- * @jest-environment node
- */
+import { vi } from 'vitest';
 
-const mockSendMail = jest.fn().mockResolvedValue({ messageId: 'mock-message-id' });
-const mockVerify = jest.fn((callback) => callback(null, true));
+const { mockEmailSend } = vi.hoisted(() => ({
+  mockEmailSend: vi.fn().mockResolvedValue({ data: { id: 'mock-email-id' }, error: null }),
+}));
 
-jest.mock('nodemailer', () => ({
-    createTransport: jest.fn().mockReturnValue({
-        sendMail: mockSendMail,
-        verify: mockVerify,
-    }),
+vi.mock('resend', () => ({
+  Resend: vi.fn().mockImplementation(() => ({
+    emails: { send: mockEmailSend },
+  })),
 }));
 
 describe('Email Service', () => {
-    let sendNotificationEmail: any, sendRejectionEmail: any, sendCancellationEmail: any;
+  let sendNotificationEmail: any,
+    sendRejectionEmail: any,
+    sendCancellationEmail: any,
+    sendInterviewerNotificationEmail: any;
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        // Set up SMTP env vars for tests
-        process.env.SMTP_HOST = 'smtp.example.com';
-        process.env.SMTP_USER = 'user';
-        process.env.SMTP_PASS = 'pass';
-        process.env.SMTP_FROM_EMAIL = 'from@example.com';
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    process.env.RESEND_API_KEY = 'test-resend-api-key';
+    process.env.RESEND_FROM_EMAIL = 'noreply@example.com';
+    process.env.COMPANY_NAME = 'Test Company';
+    process.env.SUPPORT_EMAIL = 'support@example.com';
 
-        // Since the transporter is created at the module level, we need to re-require the module
-        // to get the new mock implementation.
-        const emailService = require('../email');
-        sendNotificationEmail = emailService.sendNotificationEmail;
-        sendRejectionEmail = emailService.sendRejectionEmail;
-        sendCancellationEmail = emailService.sendCancellationEmail;
+    const emailService = await import('../email');
+    sendNotificationEmail = emailService.sendNotificationEmail;
+    sendRejectionEmail = emailService.sendRejectionEmail;
+    sendCancellationEmail = emailService.sendCancellationEmail;
+    sendInterviewerNotificationEmail = emailService.sendInterviewerNotificationEmail;
+  });
+
+  describe('sendNotificationEmail', () => {
+    it('should send an interview scheduled email', async () => {
+      const to = 'test@example.com';
+      const candidateName = 'Test User';
+      const interviewDate = new Date();
+
+      await sendNotificationEmail(to, 'interview_scheduled', candidateName, interviewDate);
+
+      expect(mockEmailSend).toHaveBeenCalledOnce();
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.to).toBe(to);
+      expect(callArg.subject).toContain('Interview Invitation');
+      expect(callArg.react).toBeDefined();
     });
 
-    describe('sendNotificationEmail', () => {
-        it('should send an interview scheduled email', async () => {
-            const to = 'test@example.com';
-            const candidateName = 'Test User';
-            const interviewDate = new Date();
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-            await sendNotificationEmail(to, 'interview_scheduled', candidateName, interviewDate);
+    it('should include the meet link in the interview email component props', async () => {
+      const meetLink = 'https://meet.google.com/test-link';
 
-            expect(mockSendMail).toHaveBeenCalled();
-            const mailOptions = mockSendMail.mock.calls[0][0];
-            expect(mailOptions.to).toBe(to);
-            expect(mailOptions.subject).toContain('Interview Invitation');
-            expect(mailOptions.html).toContain(candidateName);
-            consoleLogSpy.mockRestore();
-        });
+      await sendNotificationEmail(
+        'test@example.com',
+        'interview_scheduled',
+        'Test User',
+        new Date(),
+        meetLink
+      );
 
-        it('should send a rejection email', async () => {
-            const to = 'test@example.com';
-            const candidateName = 'Test User';
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-            await sendNotificationEmail(to, 'rejected', candidateName);
-
-            expect(mockSendMail).toHaveBeenCalled();
-            const mailOptions = mockSendMail.mock.calls[0][0];
-            expect(mailOptions.to).toBe(to);
-            expect(mailOptions.subject).toContain('Application Status Update');
-            expect(mailOptions.html).toContain('decided not to move forward');
-            consoleLogSpy.mockRestore();
-        });
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.react.props.meetLink).toBe(meetLink);
     });
 
-    describe('sendRejectionEmail', () => {
-        it('should send a detailed rejection email', async () => {
-            const to = 'test@example.com';
-            const candidateName = 'Test User';
-            const jobTitle = 'Developer';
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-            await sendRejectionEmail(to, candidateName, jobTitle);
+    it('should send a rejection notification email', async () => {
+      const to = 'test@example.com';
+      const candidateName = 'Test User';
 
-            expect(mockSendMail).toHaveBeenCalled();
-            const mailOptions = mockSendMail.mock.calls[0][0];
-            expect(mailOptions.to).toBe(to);
-            expect(mailOptions.subject).toContain('Application Status Update');
-            expect(mailOptions.html).toContain(jobTitle);
-            consoleLogSpy.mockRestore();
-        });
+      await sendNotificationEmail(to, 'rejected', candidateName);
+
+      expect(mockEmailSend).toHaveBeenCalledOnce();
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.to).toBe(to);
+      expect(callArg.subject).toContain('Application Status Update');
+      expect(callArg.react).toBeDefined();
     });
 
-    describe('sendCancellationEmail', () => {
-        it('should send an interview cancellation email', async () => {
-            const to = 'test@example.com';
-            const candidateName = 'Test User';
-            const jobTitle = 'Developer';
-            const reason = 'Unforeseen circumstances';
-            const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-            await sendCancellationEmail({ candidateEmail: to, candidateName, jobTitle, reason });
-
-            expect(mockSendMail).toHaveBeenCalled();
-            const mailOptions = mockSendMail.mock.calls[0][0];
-            expect(mailOptions.to).toBe(to);
-            expect(mailOptions.subject).toContain('Interview Cancelled');
-            expect(mailOptions.html).toContain(reason);
-            consoleLogSpy.mockRestore();
-        });
+    it('should skip sending if no matching status', async () => {
+      await sendNotificationEmail('test@example.com', 'unknown_status', 'Test User');
+      expect(mockEmailSend).not.toHaveBeenCalled();
     });
+  });
+
+  describe('sendRejectionEmail', () => {
+    it('should send a detailed rejection email', async () => {
+      const to = 'test@example.com';
+      const candidateName = 'Test User';
+      const jobTitle = 'Developer';
+
+      await sendRejectionEmail(to, candidateName, jobTitle);
+
+      expect(mockEmailSend).toHaveBeenCalledOnce();
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.to).toBe(to);
+      expect(callArg.subject).toContain('Application Status Update');
+      expect(callArg.react).toBeDefined();
+    });
+
+    it('should throw if required fields are missing', async () => {
+      await expect(sendRejectionEmail('', '', 'Developer')).rejects.toThrow(
+        'Missing required fields'
+      );
+    });
+  });
+
+  describe('sendCancellationEmail', () => {
+    it('should send an interview cancellation email', async () => {
+      const to = 'test@example.com';
+      const candidateName = 'Test User';
+      const jobTitle = 'Developer';
+      const reason = 'Unforeseen circumstances';
+
+      await sendCancellationEmail({ candidateEmail: to, candidateName, jobTitle, reason });
+
+      expect(mockEmailSend).toHaveBeenCalledOnce();
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.to).toBe(to);
+      expect(callArg.subject).toContain('Interview Cancelled');
+      expect(callArg.react).toBeDefined();
+    });
+  });
+
+  describe('sendInterviewerNotificationEmail', () => {
+    it('should send an interviewer notification email with the meet link', async () => {
+      await sendInterviewerNotificationEmail({
+        adminEmail: 'admin@example.com',
+        candidateName: 'Test User',
+        candidateEmail: 'candidate@example.com',
+        jobTitle: 'Developer',
+        interviewDate: new Date(),
+        duration: 45,
+        meetLink: 'https://meet.google.com/test-link',
+        notes: 'Focus on backend architecture',
+      });
+
+      expect(mockEmailSend).toHaveBeenCalledOnce();
+      const callArg = mockEmailSend.mock.calls[0][0];
+      expect(callArg.to).toBe('admin@example.com');
+      expect(callArg.subject).toContain('Interview Scheduled');
+      expect(callArg.react).toBeDefined();
+    });
+  });
 });

@@ -1,14 +1,21 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CandidateTableActions from '../CandidateTableActions';
 import '@testing-library/jest-dom';
 
 describe('CandidateTableActions', () => {
-  const onViewCandidateMock = jest.fn();
-  const onScoreCandidateMock = jest.fn();
-  const onEditCandidateMock = jest.fn();
+  const onViewCandidateMock = vi.fn();
+  const onScoreCandidateMock = vi.fn();
+  const onEditCandidateMock = vi.fn();
 
-  const candidate = { id: '1', fullName: 'Test User', email: 'test@test.com', status: 'submitted', submittedAt: { toDate: () => new Date() } };
+  const candidate = {
+    id: '1',
+    fullName: 'Test User',
+    email: 'test@test.com',
+    status: 'submitted',
+    submittedAt: { toDate: () => new Date() },
+  };
 
   const defaultProps = {
     candidate,
@@ -39,7 +46,9 @@ describe('CandidateTableActions', () => {
   });
 
   it('should render the "Edit" button when onEditCandidate is provided', () => {
-    renderInTable(<CandidateTableActions {...defaultProps} onEditCandidate={onEditCandidateMock} />);
+    renderInTable(
+      <CandidateTableActions {...defaultProps} onEditCandidate={onEditCandidateMock} />
+    );
     expect(screen.getByText('Edit')).toBeInTheDocument();
   });
 
@@ -61,7 +70,9 @@ describe('CandidateTableActions', () => {
   });
 
   it('should call onEditCandidate when the "Edit" button is clicked', () => {
-    renderInTable(<CandidateTableActions {...defaultProps} onEditCandidate={onEditCandidateMock} />);
+    renderInTable(
+      <CandidateTableActions {...defaultProps} onEditCandidate={onEditCandidateMock} />
+    );
     fireEvent.click(screen.getByText('Edit'));
     expect(onEditCandidateMock).toHaveBeenCalledWith(candidate);
   });

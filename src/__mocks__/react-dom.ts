@@ -1,7 +1,11 @@
+// This mock is for testing environments that need to stub out react-dom
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const reactDomActual = require('react-dom');
+
 module.exports = {
-  ...jest.requireActual('react-dom'),
+  ...reactDomActual,
   createRoot: () => ({
-    render: (app) => {
+    render: (_app: unknown) => {
       // No-op
     },
     unmount: () => {

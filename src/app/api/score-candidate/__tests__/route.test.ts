@@ -1,0 +1,122 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { POST } from '../route';
+import { NextRequest } from 'next/server';
+import * as scoringService from '@/services/scoring';
+
+vi.mock('@/services/scoring');
+
+// Mock security logger
+vi.mock('@/lib/security-logger', () => ({
+  extractSecurityContext: vi.fn(() => ({
+    ip: 'test-ip',
+    userAgent: 'test-agent',
+    path: '/api/test',
+    method: 'POST',
+  })),
+  logSecurityEvent: vi.fn(),
+  SecurityEventType: {
+    SCORING_FAILED: 'scoring_failed',
+    INPUT_VALIDATION_FAILED: 'input_validation_failed',
+  },
+}));
+
+// Mock auth module
+vi.mock('@/lib/auth', () => ({
+  requireAdminAuth: vi.fn(async () => null),
+  isAdminAuthenticated: vi.fn(async () => true),
+  getUserFromRequest: vi.fn(() => ({ id: 'test-admin', ip: 'test-ip' })),
+}));
+
+describe('POST /api/score-candidate', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return 400 when required fields missing', async () => {
+    const request = {
+      json: async () => ({ candidateId: '123' }),
+    } as unknown as NextRequest;
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toBe('Validation failed');
+  });
+
+  it('should score candidate successfully', async () => {
+    const mockScore = {
+      score: 85,
+      analysis: 'Strong candidate',
+      keyStrengths: ['Technical skills'],
+      areasForImprovement: ['Leadership'],
+      recommendation: 'recommended' as const,
+    };
+
+    vi.mocked(scoringService.scoreCandidate).mockResolvedValue(mockScore);
+
+    const request = {
+      json: async () => ({
+        candidateId: '123',
+        jobTitle: 'Developer',
+        jobDescription: 'Build apps',
+      }),
+    } as unknown as NextRequest;
+
+    const response = await POST(request);
+    const result = await response.json();
+
+    expect(result.data.score).toBe(85);
+    expect(result.data.analysis).toBeDefined();
+  });
+
+  it('should normalize short job descriptions instead of returning 400', async () => {
+    const mockScore = {
+      score: 82,
+      analysis: 'Good candidate',
+      keyStrengths: ['Communication'],
+      areasForImprovement: ['Domain depth'],
+      recommendation: 'recommended' as const,
+    };
+
+    vi.mocked(scoringService.scoreCandidate).mockResolvedValue(mockScore);
+
+    const request = {
+      json: async () => ({
+        candidateId: '123',
+        jobTitle: 'Developer',
+        jobDescription: 'short',
+      }),
+    } as unknown as NextRequest;
+
+    const response = await POST(request);
+    const result = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(result.data.score).toBe(82);
+    expect(scoringService.scoreCandidate).toHaveBeenCalledWith(
+      '123',
+      '',
+      'Developer',
+      expect.stringContaining('No detailed job description was provided')
+    );
+  });
+
+  it('should handle scoring errors', async () => {
+    vi.mocked(scoringService.scoreCandidate).mockRejectedValue(new Error('Error'));
+
+    const request = {
+      json: async () => ({
+        candidateId: '123',
+        jobTitle: 'Developer',
+        jobDescription: 'Build apps',
+      }),
+    } as unknown as NextRequest;
+
+    const response = await POST(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(data.error).toBeDefined();
+  });
+});

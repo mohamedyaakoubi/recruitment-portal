@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { Candidate } from '@/types';
@@ -19,7 +19,7 @@ interface SearchableFilterDropdownProps {
 const SearchableFilterDropdown: React.FC<SearchableFilterDropdownProps> = ({
   label,
   placeholder,
-  filterValue,
+  filterValue: _filterValue,
   onFilterChange,
   searchValue,
   onSearchChange,
@@ -31,7 +31,7 @@ const SearchableFilterDropdown: React.FC<SearchableFilterDropdownProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [showList, setShowList] = useState(false);
 
-  const filteredOptions = options.filter(option => 
+  const filteredOptions = options.filter((option) =>
     option.toLowerCase().includes(searchValue.toLowerCase())
   );
 
@@ -41,15 +41,17 @@ const SearchableFilterDropdown: React.FC<SearchableFilterDropdownProps> = ({
         setShowList(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+      <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        {label}
+      </label>
       <input
         type="text"
         placeholder={placeholder}
@@ -60,26 +62,26 @@ const SearchableFilterDropdown: React.FC<SearchableFilterDropdownProps> = ({
           setShowList(true);
         }}
         onFocus={() => setShowList(true)}
-        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
         autoComplete="off"
         disabled={disabled}
       />
       {showList && filteredOptions.length > 0 && (
-        <div className="absolute z-20 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          {filteredOptions.map((option, index) => (
+        <div className="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
+          {filteredOptions.map((option) => (
             <button
-              key={index}
+              key={option}
               type="button"
               onClick={() => {
                 onFilterChange(option);
                 onSearchChange(option); // Update local search to match selected option
                 setShowList(false);
               }}
-              className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-600 focus:bg-gray-100 dark:focus:bg-gray-600 focus:outline-none flex justify-between items-center text-gray-900 dark:text-gray-200"
+              className="flex w-full items-center justify-between px-4 py-2 text-left text-gray-900 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:text-gray-200 dark:hover:bg-gray-600 dark:focus:bg-gray-600"
             >
               <span>{option}</span>
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                ({candidates.filter(c => c[filterKey] === option).length})
+                ({candidates.filter((c) => c[filterKey] === option).length})
               </span>
             </button>
           ))}

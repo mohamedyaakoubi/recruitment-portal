@@ -43,7 +43,10 @@ describe('PersonalInfoCard', () => {
   });
 
   it('should render the second nationality if provided', () => {
-    const candidateWithSecondNationality = { ...candidate, doubleNationality: 'Test Second Nationality' };
+    const candidateWithSecondNationality = {
+      ...candidate,
+      doubleNationality: 'Test Second Nationality',
+    };
     render(<PersonalInfoCard candidate={candidateWithSecondNationality} age={33} />);
     expect(screen.getByText(/2nd Nationality/)).toBeInTheDocument();
     expect(screen.getByText('Test Second Nationality')).toBeInTheDocument();

@@ -1,12 +1,13 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import AdditionalInfoSection from '../AdditionalInfoSection';
 import '@testing-library/jest-dom';
 
 describe('AdditionalInfoSection', () => {
-  const addAdditionalInfoMock = jest.fn();
-  const removeAdditionalInfoMock = jest.fn();
-  const updateAdditionalInfoMock = jest.fn();
+  const addAdditionalInfoMock = vi.fn();
+  const removeAdditionalInfoMock = vi.fn();
+  const updateAdditionalInfoMock = vi.fn();
 
   const defaultProps = {
     additionalInfo: [
@@ -50,7 +51,9 @@ describe('AdditionalInfoSection', () => {
 
   it('should call updateAdditionalInfo when the input value is changed', () => {
     render(<AdditionalInfoSection {...defaultProps} />);
-    fireEvent.change(screen.getByDisplayValue('http://example.com'), { target: { value: 'http://new.com' } });
+    fireEvent.change(screen.getByDisplayValue('http://example.com'), {
+      target: { value: 'http://new.com' },
+    });
     expect(updateAdditionalInfoMock).toHaveBeenCalledWith(0, 'http://new.com');
   });
 
@@ -62,7 +65,9 @@ describe('AdditionalInfoSection', () => {
   });
 
   it('should not show the remove button if there is only one item', () => {
-    render(<AdditionalInfoSection {...defaultProps} additionalInfo={[{ type: 'link', content: '' }]} />);
+    render(
+      <AdditionalInfoSection {...defaultProps} additionalInfo={[{ type: 'link', content: '' }]} />
+    );
     expect(screen.queryByRole('button', { name: '' })).not.toBeInTheDocument();
   });
 

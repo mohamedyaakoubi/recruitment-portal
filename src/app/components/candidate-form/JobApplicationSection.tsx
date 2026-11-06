@@ -19,12 +19,17 @@ const JobApplicationSection: React.FC<JobApplicationSectionProps> = ({
   isLoading,
 }) => {
   return (
-    <div className="bg-slate-50 dark:bg-gray-800/50 p-5 sm:p-6 rounded-lg">
-      <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-200 dark:border-gray-700 pb-3">Job Application</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div className="rounded-lg bg-slate-50 p-5 dark:bg-gray-800/50 sm:p-6">
+      <h2 className="mb-6 border-b border-slate-200 pb-3 text-xl font-bold text-slate-800 dark:border-gray-700 dark:text-slate-200">
+        Job Application
+      </h2>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {/* Job Category */}
         <div className="sm:col-span-2">
-          <label htmlFor="jobCategory" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
+          <label
+            htmlFor="jobCategory"
+            className="mb-2 block text-sm font-semibold text-slate-600 dark:text-slate-300"
+          >
             Job Category <span className="text-red-500">*</span>
           </label>
           <select
@@ -33,7 +38,7 @@ const JobApplicationSection: React.FC<JobApplicationSectionProps> = ({
             required
             value={selectedCategory}
             onChange={handleCategorySelection}
-            className="w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white"
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 shadow-sm focus:border-[#003A70] focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             disabled={isLoading}
           >
             <option value="">Select a category first</option>
@@ -47,7 +52,10 @@ const JobApplicationSection: React.FC<JobApplicationSectionProps> = ({
 
         {/* Job Title */}
         <div className="sm:col-span-2">
-          <label htmlFor="jobTitle" className="block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-2">
+          <label
+            htmlFor="jobTitle"
+            className="mb-2 block text-sm font-semibold text-slate-600 dark:text-slate-300"
+          >
             Job Position <span className="text-red-500">*</span>
           </label>
           <select
@@ -56,7 +64,7 @@ const JobApplicationSection: React.FC<JobApplicationSectionProps> = ({
             required
             value={jobTitle}
             onChange={handleJobSelection}
-            className="w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] dark:bg-gray-700 dark:text-white"
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 shadow-sm focus:border-[#003A70] focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             disabled={isLoading || !selectedCategory}
           >
             <option value="">
@@ -69,10 +77,16 @@ const JobApplicationSection: React.FC<JobApplicationSectionProps> = ({
             ))}
           </select>
           {selectedJob && (
-            <div className="mt-3 p-3 bg-slate-100 dark:bg-gray-700/50 border border-slate-200 dark:border-gray-700 rounded-lg">
-              <h4 className="font-semibold text-[#003A70] dark:text-blue-400 mb-1">Job Description:</h4>
-              <p className="text-sm text-slate-700 dark:text-slate-300">{selectedJob.description}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Category: {selectedJob.category}</p>
+            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-100 p-3 dark:border-gray-700 dark:bg-gray-700/50">
+              <h4 className="mb-1 font-semibold text-[#003A70] dark:text-blue-400">
+                Job Description:
+              </h4>
+              <p className="text-sm text-slate-700 dark:text-slate-300">
+                {selectedJob.description}
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Category: {selectedJob.category}
+              </p>
             </div>
           )}
         </div>

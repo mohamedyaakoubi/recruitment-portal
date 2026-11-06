@@ -1,20 +1,21 @@
+import { vi } from 'vitest';
 
 const mockCollection = {
-  orderBy: jest.fn().mockReturnThis(),
-  where: jest.fn().mockReturnThis(),
-  get: jest.fn(),
-  add: jest.fn(),
-  doc: jest.fn().mockReturnThis(),
-  update: jest.fn(),
-  delete: jest.fn(),
+  orderBy: vi.fn().mockReturnThis(),
+  where: vi.fn().mockReturnThis(),
+  get: vi.fn(),
+  add: vi.fn(),
+  doc: vi.fn().mockReturnThis(),
+  update: vi.fn(),
+  delete: vi.fn(),
 };
 
 const mockDb = {
-  collection: jest.fn().mockReturnValue(mockCollection),
+  collection: vi.fn().mockReturnValue(mockCollection),
 };
 
-jest.mock('@/lib/firebase-admin', () => ({
-  getFirestoreAdmin: jest.fn().mockReturnValue(mockDb),
+vi.mock('@/lib/firebase-admin', () => ({
+  getFirestoreAdmin: vi.fn().mockReturnValue(mockDb),
 }));
 
 import { JOB_CATEGORIES } from '@/lib/job-categories';
@@ -22,9 +23,10 @@ import { JOB_CATEGORIES } from '@/lib/job-categories';
 describe('Job Service', () => {
   let getJobs: any, createJob: any, updateJob: any, deleteJob: any;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    const jobs = require('../jobs');
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    const jobs = await import('../jobs');
     getJobs = jobs.getJobs;
     createJob = jobs.createJob;
     updateJob = jobs.updateJob;
@@ -38,12 +40,12 @@ describe('Job Service', () => {
         { id: '2', title: 'Job 2', category: 'Services', specialties: ['UX'] },
       ];
       mockCollection.get.mockResolvedValue({
-        docs: mockJobs.map(job => ({ id: job.id, data: () => job })),
+        docs: mockJobs.map((job) => ({ id: job.id, data: () => job })),
       });
 
       const { jobs, categories } = await getJobs();
 
-      expect(jobs).toEqual(mockJobs.map(j => ({...j, specialties: j.specialties || []})));
+      expect(jobs).toEqual(mockJobs.map((j) => ({ ...j, specialties: j.specialties || [] })));
       expect(categories).toEqual(JOB_CATEGORIES);
       expect(mockDb.collection).toHaveBeenCalledWith('jobs');
       expect(mockCollection.orderBy).toHaveBeenCalledWith('category');
@@ -71,23 +73,27 @@ describe('Job Service', () => {
       const { jobId } = await createJob(jobData as any);
 
       expect(jobId).toBe(mockJobRef.id);
-      expect(mockCollection.add).toHaveBeenCalledWith(expect.objectContaining({
-        ...jobData,
-        isActive: true,
-      }));
+      expect(mockCollection.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...jobData,
+          isActive: true,
+        })
+      );
     });
 
     it('should throw an error for missing required fields', async () => {
-      await expect(createJob({} as any)).rejects.toThrow('Missing title, description, category, or specialties');
+      await expect(createJob({} as any)).rejects.toThrow(
+        'Missing title, description, category, or specialties'
+      );
     });
 
     it('should throw an error for invalid category', async () => {
-        const jobData = {
-            title: 'New Job',
-            description: 'A new job',
-            category: 'Invalid Category',
-            specialties: ['Frontend'],
-          };
+      const jobData = {
+        title: 'New Job',
+        description: 'A new job',
+        category: 'Invalid Category',
+        specialties: ['Frontend'],
+      };
       await expect(createJob(jobData as any)).rejects.toThrow('Invalid category');
     });
   });
@@ -98,9 +104,11 @@ describe('Job Service', () => {
       const jobData = { title: 'Updated Title' };
       await updateJob(jobId, jobData);
       expect(mockCollection.doc).toHaveBeenCalledWith(jobId);
-      expect(mockCollection.update).toHaveBeenCalledWith(expect.objectContaining({
-        ...jobData,
-      }));
+      expect(mockCollection.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...jobData,
+        })
+      );
     });
 
     it('should throw an error for missing jobId', async () => {
@@ -108,8 +116,10 @@ describe('Job Service', () => {
     });
 
     it('should throw an error for invalid category', async () => {
-        await expect(updateJob('job-1', { category: 'Invalid Category' })).rejects.toThrow('Invalid category');
-      });
+      await expect(updateJob('job-1', { category: 'Invalid Category' })).rejects.toThrow(
+        'Invalid category'
+      );
+    });
   });
 
   describe('deleteJob', () => {

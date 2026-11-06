@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["vitest/globals"],
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "strict": false
+  },
+  "include": [
+    "**/__tests__/**/*",
+    "**/__mocks__/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "vitest.d.ts"
+  ]
+}

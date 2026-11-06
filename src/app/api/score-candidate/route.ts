@@ -1,48 +1,82 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { scoreCandidate } from '@/services/scoring';
+import logger from '@/lib/logger';
+import { scoreCandidateSchema } from '@/lib/validations';
+import { successResponse, ApiErrors, errorResponse } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
-export async function POST(request: NextRequest) {
+function normalizeJobDescription(jobTitle: string, jobDescription: string): string {
+  const trimmedDescription = jobDescription.trim();
+
+  if (trimmedDescription.length >= 10) {
+    return trimmedDescription;
+  }
+
+  return `No detailed job description was provided for the role "${jobTitle}". Evaluate the candidate against the job title, likely responsibilities, and the submitted application materials.`;
+}
+
+export const POST = withCsrfProtection(async (request: NextRequest) => {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
   try {
-    console.log('🎯 Starting Gemini 2.5 Pro scoring request...');
-    
-    const { candidateId, jobId, jobTitle, jobDescription } = await request.json();
+    logger.info('Starting Gemini 2.5 Pro scoring request');
 
-    if (!candidateId || !jobTitle || !jobDescription) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: candidateId, jobTitle, or jobDescription' 
-      }, { status: 400 });
+    const body = await request.json();
+    const validatedData = scoreCandidateSchema.safeParse(body);
+
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
 
-    console.log(`📊 Scoring candidate ${candidateId} for position: ${jobTitle}`);
+    const { candidateId, jobId, jobTitle, jobDescription } = validatedData.data;
+    const normalizedJobDescription = normalizeJobDescription(jobTitle, jobDescription);
 
-    const scoringResult = await scoreCandidate(candidateId, jobId, jobTitle, jobDescription);
+    logger.info('Scoring candidate', { candidateId, jobTitle });
 
-    console.log(`✅ Scoring completed with score: ${scoringResult.score}`);
+    const scoringResult = await scoreCandidate(
+      candidateId,
+      jobId || '',
+      jobTitle,
+      normalizedJobDescription
+    );
 
-    return NextResponse.json({ 
-        success: true, 
-        score: scoringResult.score, 
-        analysis: scoringResult.analysis,
-        keyStrengths: scoringResult.keyStrengths,
-        areasForImprovement: scoringResult.areasForImprovement,
+    logger.info('Scoring completed', { candidateId, score: scoringResult.score });
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_CANDIDATE_SCORED,
+      ...context,
+      details: {
+        candidateId,
+        score: scoringResult.score,
         recommendation: scoringResult.recommendation,
-        jobTitle: jobTitle,
-        scoringVersion: 'gemini-2.5-pro'
+      },
     });
 
+    return successResponse({
+      score: scoringResult.score,
+      analysis: scoringResult.analysis,
+      keyStrengths: scoringResult.keyStrengths,
+      areasForImprovement: scoringResult.areasForImprovement,
+      recommendation: scoringResult.recommendation,
+      jobTitle: jobTitle,
+      scoringVersion: 'gemini-2.5-pro',
+    });
   } catch (error) {
-    console.error("❌ Error in Gemini 2.5 Pro scoring:", error);
+    logger.error('Error in Gemini 2.5 Pro scoring', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
-    if (errorMessage.includes("AI Scoring is not configured")) {
-        return NextResponse.json({ 
-          error: 'AI Scoring is not configured on the server.' 
-        }, { status: 503 });
+
+    if (errorMessage.includes('AI Scoring is not configured')) {
+      return errorResponse('AI Scoring is not configured on the server.', {
+        status: 503,
+        code: 'SERVICE_UNAVAILABLE',
+      });
     }
-    
-    return NextResponse.json({ 
-      error: 'Failed to score candidate with Gemini 2.5 Pro', 
-      details: errorMessage 
-    }, { status: 500 });
+
+    return ApiErrors.internal('Failed to score candidate with Gemini 2.5 Pro', error);
   }
-}
+});

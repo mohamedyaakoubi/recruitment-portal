@@ -2,23 +2,54 @@ import { NextRequest, NextResponse } from 'next/server';
 import { exportCandidates } from '@/services/candidate';
 import { generateCSV } from '@/lib/csvUtils';
 import { format } from 'date-fns';
+import logger from '@/lib/logger';
+import { ApiErrors } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
+import { z } from 'zod';
 
-export async function GET(request: NextRequest) {
+// Mark as dynamic to prevent static optimization during build
+export const dynamic = 'force-dynamic';
+
+// Validation schema for export filters
+const exportFiltersSchema = z.object({
+  format: z.enum(['json', 'csv', 'xlsx']).default('json'),
+  status: z.string().max(50).default('all'),
+  name: z.string().max(200).default(''),
+  city: z.string().max(100).default(''),
+  country: z.string().max(100).default(''),
+  nationality: z.string().max(100).default(''),
+  jobTitle: z.string().max(200).default(''),
+  category: z.string().max(200).default(''),
+  specialty: z.string().max(200).default(''),
+  ageMin: z.string().max(3).default(''),
+  ageMax: z.string().max(3).default(''),
+});
+
+// Changed from GET to POST to support CSRF protection
+export const POST = withCsrfProtection(async (request: NextRequest) => {
+  // Require admin authentication for sensitive data export
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
-    const { searchParams } = new URL(request.url);
-    const exportFormat = searchParams.get('format') || 'json';
-    const filterStatus = searchParams.get('status') || 'all';
-    const filterName = searchParams.get('name') || '';
-    const filterCity = searchParams.get('city') || '';
-    const filterCountry = searchParams.get('country') || '';
-    const filterNationality = searchParams.get('nationality') || '';
-    const filterJobTitle = searchParams.get('jobTitle') || '';
-    const filterCategory = searchParams.get('category') || '';
-    const filterSpecialty = searchParams.get('specialty') || '';
-    const filterAgeMin = searchParams.get('ageMin') || '';
-    const filterAgeMax = searchParams.get('ageMax') || '';
+    // Parse request body instead of search params
+    const body = await request.json();
 
-    console.log('🔍 Export request with filters:', {
+    // Validate export filters
+    const validatedFilters = exportFiltersSchema.safeParse(body);
+
+    if (!validatedFilters.success) {
+      const context = extractSecurityContext(request);
+      logSecurityEvent({
+        type: SecurityEventType.INPUT_VALIDATION_FAILED,
+        ...context,
+        details: { endpoint: '/api/export-candidates', errors: validatedFilters.error.flatten() },
+      });
+      return ApiErrors.badRequest('Invalid export filters', validatedFilters.error.flatten());
+    }
+    const {
       format: exportFormat,
       status: filterStatus,
       name: filterName,
@@ -29,7 +60,21 @@ export async function GET(request: NextRequest) {
       category: filterCategory,
       specialty: filterSpecialty,
       ageMin: filterAgeMin,
-      ageMax: filterAgeMax
+      ageMax: filterAgeMax,
+    } = validatedFilters.data;
+
+    logger.info('Export request with filters', {
+      format: exportFormat,
+      status: filterStatus,
+      name: filterName,
+      city: filterCity,
+      country: filterCountry,
+      nationality: filterNationality,
+      jobTitle: filterJobTitle,
+      category: filterCategory,
+      specialty: filterSpecialty,
+      ageMin: filterAgeMin,
+      ageMax: filterAgeMax,
     });
 
     const candidates = await exportCandidates(
@@ -45,33 +90,46 @@ export async function GET(request: NextRequest) {
       filterAgeMax
     );
 
-    console.log(`✅ Exporting ${candidates.length} candidates in ${exportFormat} format`);
+    logger.info('Exporting candidates', { count: candidates.length, format: exportFormat });
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_DATA_EXPORTED,
+      ...context,
+      details: {
+        format: exportFormat,
+        count: candidates.length,
+        filters: { status: filterStatus, name: filterName },
+      },
+    });
 
     const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm-ss');
     const baseFilename = `candidates_${timestamp}`;
 
     switch (exportFormat) {
-      case 'csv':
-        const csvContent = generateCSV(candidates);
-        return new NextResponse(csvContent, {
+      case 'csv': {
+        const csv = generateCSV(candidates as Parameters<typeof generateCSV>[0]);
+        return new NextResponse(csv, {
           headers: {
             'Content-Type': 'text/csv; charset=utf-8',
             'Content-Disposition': `attachment; filename="${baseFilename}.csv"`,
-            'Cache-Control': 'no-cache'
-          }
+            'Cache-Control': 'no-cache',
+          },
         });
+      }
 
       case 'xlsx':
-        return NextResponse.json({ 
+        return NextResponse.json({
           data: candidates,
           format: 'xlsx',
           filename: `${baseFilename}.xlsx`,
           count: candidates.length,
-          exportedAt: new Date().toISOString()
+          exportedAt: new Date().toISOString(),
         });
 
       case 'json':
-      default:
+      default: {
         const jsonData = {
           candidates,
           metadata: {
@@ -86,30 +144,26 @@ export async function GET(request: NextRequest) {
               jobTitle: filterJobTitle,
               category: filterCategory,
               specialty: filterSpecialty,
-              ageRange: filterAgeMin || filterAgeMax ? `${filterAgeMin || '0'}-${filterAgeMax || '∞'}` : null
+              ageRange:
+                filterAgeMin || filterAgeMax
+                  ? `${filterAgeMin || '0'}-${filterAgeMax || '∞'}`
+                  : null,
             },
-            format: 'json'
-          }
+            format: 'json',
+          },
         };
 
         return new NextResponse(JSON.stringify(jsonData, null, 2), {
           headers: {
             'Content-Type': 'application/json; charset=utf-8',
             'Content-Disposition': `attachment; filename="${baseFilename}.json"`,
-            'Cache-Control': 'no-cache'
-          }
+            'Cache-Control': 'no-cache',
+          },
         });
+      }
     }
-
   } catch (error) {
-    console.error('❌ Export candidates error:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to export candidates',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      }, 
-      { status: 500 }
-    );
+    logger.error('Export candidates error', error);
+    return ApiErrors.internal('Failed to export candidates', error);
   }
-}
+});

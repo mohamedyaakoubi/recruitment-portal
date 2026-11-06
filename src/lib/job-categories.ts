@@ -9,8 +9,7 @@ export const JOB_CATEGORIES = [
   'Santé',
   'Services',
   'Sociale',
-  'Tourisme'
+  'Tourisme',
 ] as const;
 
-export type JobCategory = typeof JOB_CATEGORIES[number];
-
+export type JobCategory = (typeof JOB_CATEGORIES)[number];

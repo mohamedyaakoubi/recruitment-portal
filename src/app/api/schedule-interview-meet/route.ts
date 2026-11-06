@@ -1,22 +1,26 @@
 // src/app/api/schedule-interview-meet/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { scheduleInterview } from '@/services/interview';
+import logger from '@/lib/logger';
+import { scheduleInterviewSchema } from '@/lib/validations';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
-export async function POST(request: NextRequest) {
+export const POST = withCsrfProtection(async (request: NextRequest) => {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
   try {
-    const { 
-      candidateId, 
-      candidateEmail, 
-      candidateName, 
-      interviewDate, 
-      interviewTime, 
-      duration = 30,
-      jobTitle, 
-      adminEmail,
-      notes 
-    } = await request.json();
+    const body = await request.json();
+    const validatedData = scheduleInterviewSchema.safeParse(body);
 
-    const data = await scheduleInterview(
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
+    }
+
+    const {
       candidateId,
       candidateEmail,
       candidateName,
@@ -26,23 +30,31 @@ export async function POST(request: NextRequest) {
       jobTitle,
       adminEmail,
       notes,
-      request.nextUrl.origin
+    } = validatedData.data;
+
+    const data = await scheduleInterview(
+      candidateId,
+      candidateEmail,
+      candidateName,
+      interviewDate,
+      interviewTime,
+      duration,
+      jobTitle || '',
+      adminEmail,
+      notes || ''
     );
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Interview scheduled successfully with Google Meet',
-      data
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_INTERVIEW_SCHEDULED,
+      ...context,
+      details: { candidateId, interviewDate, interviewTime, duration },
     });
 
+    return successResponse(data, { message: 'Interview scheduled successfully with Google Meet' });
   } catch (error) {
-    console.error('Error scheduling interview:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to schedule interview', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      },
-      { status: 500 }
-    );
+    logger.error('Error scheduling interview', error);
+    return ApiErrors.internal('Failed to schedule interview', error);
   }
-}
+});

@@ -1,26 +1,40 @@
 // src/app/api/cancel-interview/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { cancelInterview } from '@/services/interview';
+import logger from '@/lib/logger';
+import { cancelInterviewSchema } from '@/lib/validations';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
-export async function POST(request: NextRequest) {
+export const POST = withCsrfProtection(async (request: NextRequest) => {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
   try {
-    const { candidateId, reason = 'Cancelled by admin' } = await request.json();
+    const body = await request.json();
+    const validatedData = cancelInterviewSchema.safeParse(body);
 
-    await cancelInterview(candidateId, reason);
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
+    }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Interview cancelled successfully' 
+    const { candidateId, reason } = validatedData.data;
+
+    await cancelInterview(candidateId, reason || 'Cancelled by admin');
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_INTERVIEW_CANCELLED,
+      ...context,
+      details: { candidateId, reason: reason || 'Cancelled by admin' },
     });
 
+    return successResponse({ candidateId }, { message: 'Interview cancelled successfully' });
   } catch (error) {
-    console.error('Error cancelling interview:', error);
-    return NextResponse.json(
-      { 
-        error: 'Failed to cancel interview', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
-      },
-      { status: 500 }
-    );
+    logger.error('Error cancelling interview', error);
+    return ApiErrors.internal('Failed to cancel interview', error);
   }
-}
+});

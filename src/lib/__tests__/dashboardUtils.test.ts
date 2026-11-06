@@ -1,13 +1,33 @@
-
 import { getStatusChartData, getScoreDistributionData, calculateStats } from '../dashboardUtils';
 import { Candidate } from '@/types';
 
 const mockCandidates: Candidate[] = [
   { id: '1', fullName: 'John Doe', status: 'submitted', score: null, email: 'a@a.com', cvUrl: '' },
-  { id: '2', fullName: 'Jane Doe', status: 'interview_scheduled', score: 75, email: 'a@a.com', cvUrl: '' },
+  {
+    id: '2',
+    fullName: 'Jane Doe',
+    status: 'interview_scheduled',
+    score: 75,
+    email: 'a@a.com',
+    cvUrl: '',
+  },
   { id: '3', fullName: 'Peter Pan', status: 'rejected', score: 30, email: 'a@a.com', cvUrl: '' },
-  { id: '4', fullName: 'Wendy Darling', status: 'approved', score: 90, email: 'a@a.com', cvUrl: '' },
-  { id: '5', fullName: 'Captain Hook', status: 'submitted', score: null, email: 'a@a.com', cvUrl: '' },
+  {
+    id: '4',
+    fullName: 'Wendy Darling',
+    status: 'approved',
+    score: 90,
+    email: 'a@a.com',
+    cvUrl: '',
+  },
+  {
+    id: '5',
+    fullName: 'Captain Hook',
+    status: 'submitted',
+    score: null,
+    email: 'a@a.com',
+    cvUrl: '',
+  },
   { id: '6', fullName: 'Tinker Bell', status: 'approved', score: 95, email: 'a@a.com', cvUrl: '' },
 ];
 

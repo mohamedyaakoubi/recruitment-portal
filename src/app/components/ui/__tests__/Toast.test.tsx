@@ -1,12 +1,13 @@
 import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import Toast from '../Toast';
 import '@testing-library/jest-dom';
 
-jest.useFakeTimers();
+vi.useFakeTimers();
 
 describe('Toast', () => {
-  const onCloseMock = jest.fn();
+  const onCloseMock = vi.fn();
 
   const defaultProps = {
     message: 'Test Message',
@@ -34,7 +35,7 @@ describe('Toast', () => {
   it('should call onClose after the duration', () => {
     render(<Toast {...defaultProps} />);
     act(() => {
-      jest.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(3000);
     });
     expect(onCloseMock).toHaveBeenCalledTimes(1);
   });

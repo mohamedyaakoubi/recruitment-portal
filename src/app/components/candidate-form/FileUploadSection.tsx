@@ -8,16 +8,16 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
   isLoading,
   isExistingCandidate,
 }) => (
-  <div className="bg-slate-50 dark:bg-gray-800/50 p-5 sm:p-6 rounded-lg">
-    <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-200 dark:border-gray-700 pb-3">
+  <div className="rounded-lg bg-slate-50 p-5 dark:bg-gray-800/50 sm:p-6">
+    <h2 className="mb-6 border-b border-slate-200 pb-3 text-xl font-bold text-slate-800 dark:border-gray-700 dark:text-slate-200">
       Required Documents
       {isExistingCandidate && (
-        <span className="text-sm font-normal text-gray-600 dark:text-gray-400 ml-2">
+        <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
           (Please upload fresh copies of your documents)
         </span>
       )}
     </h2>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
       <FileInput
         name="cv"
         label="CV/Resume"
@@ -25,7 +25,7 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
         accept=".pdf,.doc,.docx"
         onChange={handleFileChange}
         disabled={isLoading}
-        helpText="Accepted formats: PDF, DOC, DOCX"
+        helpText="PDF, DOC, DOCX • Max 5 MB"
       />
       <FileInput
         name="passport"
@@ -34,7 +34,7 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
         accept=".pdf,.jpg,.jpeg,.png"
         onChange={handleFileChange}
         disabled={isLoading}
-        helpText="Accepted formats: PDF, JPG, PNG"
+        helpText="PDF, JPG, PNG • Max 5 MB"
       />
       <div className="sm:col-span-2">
         <FileInput
@@ -43,7 +43,7 @@ const FileUploadSection: React.FC<FileUploadSectionProps> = ({
           accept=".jpg,.jpeg,.png"
           onChange={handleFileChange}
           disabled={isLoading}
-          helpText="Accepted formats: JPG, PNG (Optional)"
+          helpText="JPG, PNG • Max 2 MB (Optional)"
         />
       </div>
     </div>

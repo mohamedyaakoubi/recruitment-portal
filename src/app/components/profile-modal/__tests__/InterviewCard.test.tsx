@@ -1,12 +1,12 @@
-
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import InterviewCard from '../InterviewCard';
 import '@testing-library/jest-dom';
 
 describe('InterviewCard', () => {
-  const onScheduleInterviewMock = jest.fn();
-  const onCancelInterviewMock = jest.fn();
+  const onScheduleInterviewMock = vi.fn();
+  const onCancelInterviewMock = vi.fn();
 
   const candidate = {
     id: '1',
@@ -32,12 +32,16 @@ describe('InterviewCard', () => {
   });
 
   it('should not render if the candidate status is not "interview_scheduled"', () => {
-    const { container } = render(<InterviewCard {...defaultProps} candidate={{ ...candidate, status: 'submitted' }} />);
+    const { container } = render(
+      <InterviewCard {...defaultProps} candidate={{ ...candidate, status: 'submitted' }} />
+    );
     expect(container.firstChild).toBeNull();
   });
 
   it('should not render if interviewDate is not provided', () => {
-    const { container } = render(<InterviewCard {...defaultProps} candidate={{ ...candidate, interviewDate: undefined }} />);
+    const { container } = render(
+      <InterviewCard {...defaultProps} candidate={{ ...candidate, interviewDate: undefined }} />
+    );
     expect(container.firstChild).toBeNull();
   });
 

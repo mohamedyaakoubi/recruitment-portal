@@ -1,43 +1,51 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { updateCandidateStatus } from '@/services/candidate';
+import logger from '@/lib/logger';
+import { statusUpdateSchema } from '@/lib/validations';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
-export async function POST(request: NextRequest) {
-    try {
-        const { 
-            candidateId, 
-            newStatus, 
-            interviewTimestampISO,
-            calendarEventId,
-            meetLink,
-            duration
-        } = await request.json();
+export const POST = withCsrfProtection(async (request: NextRequest) => {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+  try {
+    const body = await request.json();
+    const validatedData = statusUpdateSchema.safeParse(body);
 
-        if (!candidateId || !newStatus) {
-            return NextResponse.json({ error: 'Missing candidateId or newStatus' }, { status: 400 });
-        }
-
-        // 🔥 UPDATED: Get email status from service
-        const result = await updateCandidateStatus(
-            candidateId, 
-            newStatus, 
-            interviewTimestampISO,
-            calendarEventId,
-            meetLink,
-            duration
-        );
-
-        return NextResponse.json({ 
-            success: true, 
-            newStatus: result.status,
-            emailSent: result.emailSent // 🔥 NEW: Include email status
-        });
-
-    } catch (error) {
-        console.error("Error in /api/update-status:", error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        return NextResponse.json({ 
-            error: 'Failed to update candidate status', 
-            details: errorMessage 
-        }, { status: 500 });
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
-}
+
+    const { candidateId, newStatus, interviewTimestampISO, calendarEventId, meetLink, duration } =
+      validatedData.data;
+
+    // 🔥 UPDATED: Get email status from service
+    const result = await updateCandidateStatus(
+      candidateId,
+      newStatus,
+      interviewTimestampISO,
+      calendarEventId,
+      meetLink,
+      duration
+    );
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_STATUS_CHANGED,
+      ...context,
+      details: { candidateId, newStatus, emailSent: result.emailSent },
+    });
+
+    return successResponse({
+      newStatus: result.status,
+      emailSent: result.emailSent, // 🔥 NEW: Include email status
+    });
+  } catch (error) {
+    logger.error('Error in /api/update-status', error);
+    return ApiErrors.internal('Failed to update candidate status', error);
+  }
+});

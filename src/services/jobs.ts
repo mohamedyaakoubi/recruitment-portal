@@ -5,23 +5,25 @@ import { Job } from '@/types';
 import admin from 'firebase-admin';
 
 const db = getFirestoreAdmin();
-const jobsCollection = db.collection("jobs");
+const jobsCollection = db.collection('jobs');
 
-export const getJobs = async (activeOnly = false): Promise<{ jobs: Job[], categories: typeof JOB_CATEGORIES }> => {
-  let query = jobsCollection.orderBy("category").orderBy("title");
+export const getJobs = async (
+  activeOnly = false
+): Promise<{ jobs: Job[]; categories: typeof JOB_CATEGORIES }> => {
+  let query = jobsCollection.orderBy('category').orderBy('title');
 
   if (activeOnly) {
-    query = query.where("isActive", "==", true);
+    query = query.where('isActive', '==', true);
   }
 
   const jobsSnapshot = await query.get();
 
-  const jobs = jobsSnapshot.docs.map(doc => {
+  const jobs = jobsSnapshot.docs.map((doc) => {
     const data = doc.data();
     return {
       id: doc.id,
       ...data,
-      specialties: data.specialties || []
+      specialties: data.specialties || [],
     } as Job;
   });
 
@@ -31,7 +33,14 @@ export const getJobs = async (activeOnly = false): Promise<{ jobs: Job[], catego
 export const createJob = async (jobData: Omit<Job, 'id'>): Promise<{ jobId: string }> => {
   const { title, description, category, specialties } = jobData;
 
-  if (!title || !description || !category || !specialties || !Array.isArray(specialties) || specialties.length === 0) {
+  if (
+    !title ||
+    !description ||
+    !category ||
+    !specialties ||
+    !Array.isArray(specialties) ||
+    specialties.length === 0
+  ) {
     throw new Error('Missing title, description, category, or specialties');
   }
 
@@ -39,7 +48,7 @@ export const createJob = async (jobData: Omit<Job, 'id'>): Promise<{ jobId: stri
     throw new Error('Invalid category');
   }
 
-  const validSpecialties = specialties.filter(spec => spec && spec.trim() !== '');
+  const validSpecialties = specialties.filter((spec) => spec && spec.trim() !== '');
   if (validSpecialties.length === 0) {
     throw new Error('At least one specialty is required');
   }
@@ -48,7 +57,7 @@ export const createJob = async (jobData: Omit<Job, 'id'>): Promise<{ jobId: stri
     ...jobData,
     specialties: validSpecialties,
     createdAt: admin.firestore.Timestamp.now(),
-    isActive: true
+    isActive: true,
   });
 
   return { jobId: jobRef.id };
@@ -63,16 +72,16 @@ export const updateJob = async (jobId: string, jobData: Partial<Job>): Promise<v
     throw new Error('Invalid category');
   }
 
-  const updateData: any = {
+  const updateData: Record<string, unknown> = {
     ...jobData,
-    updatedAt: admin.firestore.Timestamp.now()
+    updatedAt: admin.firestore.Timestamp.now(),
   };
 
   if (jobData.specialties !== undefined) {
     if (!Array.isArray(jobData.specialties)) {
       throw new Error('Specialties must be an array');
     }
-    const validSpecialties = jobData.specialties.filter(spec => spec && spec.trim() !== '');
+    const validSpecialties = jobData.specialties.filter((spec) => spec && spec.trim() !== '');
     if (validSpecialties.length === 0) {
       throw new Error('At least one specialty is required');
     }

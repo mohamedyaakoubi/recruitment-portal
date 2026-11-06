@@ -1,11 +1,11 @@
-
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import SearchableDropdown from '../SearchableDropdown';
 import '@testing-library/jest-dom';
 
 describe('SearchableDropdown', () => {
-  const onChangeMock = jest.fn();
+  const onChangeMock = vi.fn();
   const options = ['Apple', 'Banana', 'Cherry'];
 
   const defaultProps = {

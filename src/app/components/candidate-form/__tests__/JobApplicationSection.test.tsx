@@ -1,22 +1,34 @@
-
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import JobApplicationSection from '../JobApplicationSection';
 import '@testing-library/jest-dom';
 
 describe('JobApplicationSection', () => {
-  const handleCategorySelectionMock = jest.fn();
-  const handleJobSelectionMock = jest.fn();
-  const setSpecialtyMock = jest.fn();
-  const setSpecialtySearchMock = jest.fn();
+  const handleCategorySelectionMock = vi.fn();
+  const handleJobSelectionMock = vi.fn();
+  const setSpecialtyMock = vi.fn();
+  const setSpecialtySearchMock = vi.fn();
 
   const defaultProps = {
     selectedCategory: 'Development & IT',
     handleCategorySelection: handleCategorySelectionMock,
     jobTitle: 'job1',
     handleJobSelection: handleJobSelectionMock,
-    filteredJobs: [{ id: 'job1', title: 'Software Engineer', description: 'Job description', category: 'Development & IT' }],
-    selectedJob: { id: 'job1', title: 'Software Engineer', description: 'Job description', category: 'Development & IT' },
+    filteredJobs: [
+      {
+        id: 'job1',
+        title: 'Software Engineer',
+        description: 'Job description',
+        category: 'Development & IT',
+      },
+    ],
+    selectedJob: {
+      id: 'job1',
+      title: 'Software Engineer',
+      description: 'Job description',
+      category: 'Development & IT',
+    },
     specialty: 'Frontend',
     setSpecialty: setSpecialtyMock,
     specialtySearch: 'Frontend',
@@ -71,7 +83,9 @@ describe('JobApplicationSection', () => {
 
   it('should show a message when no specialties are available', () => {
     render(<JobApplicationSection {...defaultProps} availableSpecialties={[]} />);
-    expect(screen.getByText('No specialties defined for this job position. Please contact admin.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No specialties defined for this job position. Please contact admin.')
+    ).toBeInTheDocument();
   });
 
   it('should disable the form fields when isLoading is true', () => {

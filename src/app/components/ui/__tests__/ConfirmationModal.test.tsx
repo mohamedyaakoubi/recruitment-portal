@@ -1,12 +1,12 @@
-
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ConfirmationModal from '../ConfirmationModal';
 import '@testing-library/jest-dom';
 
 describe('ConfirmationModal', () => {
-  const onConfirmMock = jest.fn();
-  const onCancelMock = jest.fn();
+  const onConfirmMock = vi.fn();
+  const onCancelMock = vi.fn();
 
   const defaultProps = {
     isOpen: true,

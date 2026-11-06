@@ -1,5 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase-admin';
+import logger from '@/lib/logger';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
+import { z } from 'zod';
+
+const getCandidateSchema = z.object({
+  email: z.string().email('Invalid email address').toLowerCase().trim().max(254),
+});
 
 interface CandidateApplication {
   id: string;
@@ -35,33 +43,42 @@ interface CandidateApplication {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    const validatedData = getCandidateSchema.safeParse(body);
 
-    if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      );
+    if (!validatedData.success) {
+      // Audit log validation failure
+      const context = extractSecurityContext(request);
+      logSecurityEvent({
+        type: SecurityEventType.INPUT_VALIDATION_FAILED,
+        ...context,
+        details: {
+          endpoint: '/api/get-candidate-applications',
+          errors: validatedData.error.flatten(),
+        },
+      });
+      return ApiErrors.badRequest('Invalid email address', validatedData.error.flatten());
     }
 
-    const searchEmail = email.toLowerCase().trim();
-    console.log('🔍 Fetching applications for email:', searchEmail);
+    const { email } = validatedData.data;
+
+    logger.info('Fetching applications for email', { email });
 
     const db = getFirestoreAdmin();
     const candidatesRef = db.collection('candidates');
-    
+
     // Get all applications for this email, ordered by submission date (newest first)
     const snapshot = await candidatesRef
-      .where('email', '==', searchEmail)
+      .where('email', '==', email)
       .orderBy('submittedAt', 'desc')
       .get();
 
     const applications: CandidateApplication[] = [];
 
     if (!snapshot.empty) {
-      snapshot.forEach(doc => {
+      snapshot.forEach((doc) => {
         const data = doc.data();
-        
+
         // Convert Firestore data to JavaScript objects
         const application: CandidateApplication = {
           id: doc.id,
@@ -92,25 +109,21 @@ export async function POST(request: NextRequest) {
           interviewDate: data.interviewDate ? data.interviewDate.toDate().toISOString() : null,
           meetLink: data.meetLink || '',
           calendarEventId: data.calendarEventId || '',
-          duration: data.duration || null
+          duration: data.duration || null,
         };
-        
+
         applications.push(application);
       });
     }
 
-    console.log(`✅ Found ${applications.length} applications for ${searchEmail}`);
+    logger.info('Found applications', { count: applications.length, email });
 
-    return NextResponse.json({
+    return successResponse({
       applications,
-      count: applications.length
+      count: applications.length,
     });
-
   } catch (error) {
-    console.error('❌ Get candidate applications error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error while fetching applications' },
-      { status: 500 }
-    );
+    logger.error('Get candidate applications error', error);
+    return ApiErrors.internal('Internal server error while fetching applications', error);
   }
 }

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, FormEvent, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -6,79 +6,123 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { user, signIn, loading, error } = useAuth();
+  const [otp, setOtp] = useState('');
+  const { user, requestOtp, verifyOtp, loading, error, otpStep, pendingEmail } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // If user is already logged in, redirect to the dashboard
     if (user) {
       router.push('/admin-dashboard-secret');
     }
   }, [user, router]);
 
-  const handleLogin = async (e: FormEvent) => {
+  const handleRequestOtp = async (e: FormEvent) => {
     e.preventDefault();
-    await signIn(email, password);
-    // Redirect is handled by the useEffect hook
+    await requestOtp(email);
   };
 
-  // Don't render the form if the user is already logged in and redirecting
+  const handleVerifyOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    await verifyOtp(pendingEmail, otp);
+  };
+
   if (user) {
-    return <p>Redirecting...</p>; // Or a loading spinner
+    return <p>Redirecting...</p>;
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-gray-200">Admin Login</h2>
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-              placeholder="you@example.com"
-              disabled={loading}
-            />
-          </div>
+      <div className="w-full max-w-md space-y-6 rounded-lg bg-white p-8 shadow-md dark:bg-gray-800">
+        <h2 className="text-center text-2xl font-bold text-gray-900 dark:text-gray-200">
+          Admin Login
+        </h2>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-              placeholder="Password"
-              disabled={loading}
-            />
-          </div>
+        {otpStep === 'email' ? (
+          <form onSubmit={handleRequestOtp} className="space-y-6">
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 sm:text-sm"
+                placeholder="you@example.com"
+                disabled={loading}
+              />
+            </div>
 
-          {error && <p className="text-sm text-red-600 dark:text-red-400">Error: {error}</p>}
+            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-          <div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Sending...' : 'Send verification code'}
             </button>
-          </div>
-        </form>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-6">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              A 6-digit verification code was sent to{' '}
+              <strong className="text-gray-900 dark:text-gray-200">{pendingEmail}</strong>. Enter it
+              below to sign in.
+            </p>
+
+            <div>
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Verification code
+              </label>
+              <input
+                id="otp"
+                name="otp"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                maxLength={6}
+                pattern="\d{6}"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-center font-mono text-2xl tracking-widest text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 sm:text-sm"
+                placeholder="000000"
+                disabled={loading}
+              />
+            </div>
+
+            {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading || otp.length !== 6}
+              className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+            >
+              {loading ? 'Verifying...' : 'Verify & sign in'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => requestOtp(pendingEmail)}
+              disabled={loading}
+              className="w-full text-sm text-indigo-600 hover:text-indigo-500 disabled:opacity-50 dark:text-indigo-400"
+            >
+              Resend code
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );
 }
-

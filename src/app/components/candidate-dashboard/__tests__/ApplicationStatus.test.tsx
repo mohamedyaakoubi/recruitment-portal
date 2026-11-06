@@ -1,10 +1,11 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import ApplicationStatus from '../ApplicationStatus';
 import '@testing-library/jest-dom';
 
 describe('ApplicationStatus', () => {
-  const formatDateMock = jest.fn((date) => new Date(date.toDate()).toLocaleDateString());
+  const formatDateMock = vi.fn((date) => new Date(date.toDate()).toLocaleDateString());
 
   const applications = [
     {

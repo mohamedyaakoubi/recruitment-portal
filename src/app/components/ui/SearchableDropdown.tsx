@@ -24,13 +24,13 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         setShowList(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
-  const filteredOptions = options.filter(option =>
+  const filteredOptions = options.filter((option) =>
     option.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -46,23 +46,23 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
           setShowList(true);
         }}
         onFocus={() => setShowList(true)}
-        className="w-full px-4 py-3 border border-slate-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 focus:border-[#003A70] bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-gray-900 shadow-sm focus:border-[#003A70] focus:outline-none focus:ring-2 focus:ring-[#003A70]/50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
         placeholder={placeholder}
         disabled={disabled}
         autoComplete="off"
       />
       {showList && filteredOptions.length > 0 && (
-        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-slate-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-          {filteredOptions.map((option, index) => (
+        <div className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-700">
+          {filteredOptions.map((option) => (
             <button
-              key={index}
+              key={option}
               type="button"
               onClick={() => {
                 onChange(option);
                 setSearch(option);
                 setShowList(false);
               }}
-              className="w-full px-4 py-2 text-left hover:bg-slate-100 dark:hover:bg-gray-600 focus:bg-slate-100 dark:focus:bg-gray-600 focus:outline-none text-gray-900 dark:text-gray-200"
+              className="w-full px-4 py-2 text-left text-gray-900 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none dark:text-gray-200 dark:hover:bg-gray-600 dark:focus:bg-gray-600"
             >
               {option}
             </button>

@@ -1,10 +1,12 @@
 // src/lib/firebase-admin.ts
 import admin from 'firebase-admin';
 import { getApps } from 'firebase-admin/app';
+import logger from '@/lib/logger';
 
 // Function to initialize Firebase Admin SDK lazily
 const initializeFirebaseAdmin = () => {
-  if (!getApps().length) { // Check if already initialized
+  if (!getApps().length) {
+    // Check if already initialized
     try {
       const serviceAccount = {
         projectId: process.env.FIREBASE_PROJECT_ID,
@@ -13,17 +15,17 @@ const initializeFirebaseAdmin = () => {
       };
 
       if (!serviceAccount.projectId || !serviceAccount.clientEmail || !serviceAccount.privateKey) {
-        throw new Error("Firebase Admin SDK environment variables are not fully set.");
+        throw new Error('Firebase Admin SDK environment variables are not fully set.');
       }
 
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
-      console.log("Firebase Admin SDK initialized successfully.");
+      logger.info('Firebase Admin SDK initialized successfully');
     } catch (error) {
-      console.error('Firebase Admin SDK initialization error:', error);
+      logger.error('Firebase Admin SDK initialization error', error);
       // Throw the error to prevent API routes from proceeding without proper admin access
-      throw new Error("Failed to initialize Firebase Admin SDK."); 
+      throw new Error('Failed to initialize Firebase Admin SDK.');
     }
   }
   return admin;
@@ -47,4 +49,3 @@ const getStorageAdmin = () => {
 
 // Export the functions, not the direct instances
 export { getFirestoreAdmin, getAuthAdmin, getStorageAdmin, initializeFirebaseAdmin };
-

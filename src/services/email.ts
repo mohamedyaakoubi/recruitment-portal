@@ -1,300 +1,535 @@
-import nodemailer from 'nodemailer';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { Resend } from 'resend';
+import React from 'react';
+import logger from '@/lib/logger';
+import { EMAIL_ADDRESSES } from '@/lib/constants/emails';
+import { sanitizeText } from '@/lib/sanitize';
+import { ApplicationConfirmationEmail } from '@/components/emails/ApplicationConfirmationEmail';
+import { InterviewScheduledEmail } from '@/components/emails/InterviewScheduledEmail';
+import { RejectionEmail } from '@/components/emails/RejectionEmail';
+import { CancellationEmail } from '@/components/emails/CancellationEmail';
+import { AdminOtpEmail } from '@/components/emails/AdminOtpEmail';
+import { MagicLinkEmail } from '@/components/emails/MagicLinkEmail';
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const SMTP_FROM = process.env.SMTP_FROM_EMAIL;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-const smtpConfigured = SMTP_HOST && SMTP_USER && SMTP_PASS && SMTP_FROM;
-
-if (!smtpConfigured) {
-    console.warn("SMTP environment variables are not fully set. Email notifications will be disabled.");
+if (!RESEND_API_KEY) {
+  logger.warn('RESEND_API_KEY is not set. Email notifications will be disabled.');
 }
 
-const transporter = smtpConfigured ? nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-    },
-    connectionTimeout: 15000,
-    greetingTimeout: 10000,
-    socketTimeout: 20000,
-    pool: true,
-    maxConnections: 3,
-    maxMessages: 50,
-    tls: {
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.2'
-    },
-    debug: process.env.NODE_ENV === 'development',
-    logger: process.env.NODE_ENV === 'development'
-}) : null;
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
-if (transporter && process.env.NODE_ENV === 'development') {
-    transporter.verify((error, success) => {
-        if (error) {
-            console.error('❌ SMTP connection failed:', error);
-        } else {
-            console.log('✅ SMTP server is ready to take our messages');
-        }
+const OTP_EXPIRY_MINUTES = 5;
+
+const getEmailMeta = () => ({
+  from: `${EMAIL_ADDRESSES.COMPANY_NAME} <${EMAIL_ADDRESSES.NOREPLY}>`,
+  replyTo: EMAIL_ADDRESSES.SUPPORT,
+  companyName: EMAIL_ADDRESSES.COMPANY_NAME,
+  supportEmail: EMAIL_ADDRESSES.SUPPORT,
+  contactPhone: EMAIL_ADDRESSES.CONTACT_PHONE || undefined,
+});
+
+export const sendNotificationEmail = async (
+  to: string,
+  status: string,
+  candidateName: string,
+  interviewDate?: Date,
+  meetLink?: string
+) => {
+  if (!resend) {
+    logger.info('Resend not configured, skipping email notification');
+    return;
+  }
+
+  const meta = getEmailMeta();
+  const safeCandidateName = sanitizeText(candidateName);
+
+  if (status === 'rejected') {
+    const { data, error } = await resend.emails.send({
+      from: meta.from,
+      to,
+      replyTo: meta.replyTo,
+      subject: `Application Status Update - ${meta.companyName}`,
+      react: React.createElement(RejectionEmail, {
+        candidateName: safeCandidateName,
+        jobTitleText: 'opportunities',
+        companyName: meta.companyName,
+        supportEmail: meta.supportEmail,
+        contactPhone: meta.contactPhone,
+      }),
     });
-}
-
-const getTemplate = (templateName: string, type: 'html' | 'txt') => {
-    const filePath = path.join(process.cwd(), 'src', 'lib', 'emailTemplates', `${templateName}.${type}`);
-    return readFileSync(filePath, 'utf8');
-};
-
-export const sendNotificationEmail = async (to: string, status: string, candidateName: string, interviewDate?: Date, meetLink?: string) => {
-    if (!transporter) {
-        console.log("SMTP not configured, skipping email notification.");
-        return;
+    if (error) {
+      logger.error('Error sending rejection notification email', error, { to, status });
+      throw new Error(error.message);
     }
+    logger.info('Rejection notification email sent', { messageId: data?.id, to });
+    return data;
+  }
 
-    let subject = '';
-    let htmlBody = '';
-    let textBody = '';
-    const companyName = "International Skills Labor Company";
-    let fromAddress = SMTP_FROM || 'noreply@internationalskills.fi';
-    let replyToAddress = 'Apply@internationalskills.fi';
-
-    if (status === 'rejected') {
-        subject = `Application Status Update - ${companyName}`;
-        htmlBody = getTemplate('statusRejected', 'html').replace(/\${companyName}/g, companyName).replace(/\${candidateName}/g, candidateName);
-        textBody = getTemplate('statusRejected', 'txt').replace(/\${companyName}/g, companyName).replace(/\${candidateName}/g, candidateName);
-    } else if (status === 'interview_scheduled' && interviewDate) {
-        subject = `Interview Invitation from ${companyName}`;
-        fromAddress = 'recruit@internationalskills.fi';
-        replyToAddress = 'recruit@internationalskills.fi';
-        const formattedDate = interviewDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        const formattedTime = interviewDate.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
-        htmlBody = getTemplate('statusInterviewScheduled', 'html')
-            .replace(/\${companyName}/g, companyName)
-            .replace(/\${candidateName}/g, candidateName)
-            .replace(/\${formattedDate}/g, formattedDate)
-            .replace(/\${formattedTime}/g, formattedTime);
-        textBody = getTemplate('statusInterviewScheduled', 'txt')
-            .replace(/\${companyName}/g, companyName)
-            .replace(/\${candidateName}/g, candidateName)
-            .replace(/\${formattedDate}/g, formattedDate)
-            .replace(/\${formattedTime}/g, formattedTime);
-    } else {
-        console.log(`No email template for status: ${status}`);
-        return;
+  if (status === 'interview_scheduled' && interviewDate) {
+    const formattedDate = interviewDate.toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    const formattedTime = interviewDate.toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short',
+    });
+    const { data, error } = await resend.emails.send({
+      from: meta.from,
+      to,
+      replyTo: meta.replyTo,
+      subject: `Interview Invitation from ${meta.companyName}`,
+      react: React.createElement(InterviewScheduledEmail, {
+        candidateName: safeCandidateName,
+        companyName: meta.companyName,
+        formattedDate,
+        formattedTime,
+        supportEmail: meta.supportEmail,
+        meetLink,
+      }),
+    });
+    if (error) {
+      logger.error('Error sending interview scheduled email', error, { to, status });
+      throw new Error(error.message);
     }
+    logger.info('Interview scheduled email sent', { messageId: data?.id, to });
+    return data;
+  }
 
-    const mailOptions = {
-        from: {
-            name: 'International Skills Labor Company',
-            address: fromAddress
-        },
-        to: to,
-        subject: subject,
-        html: htmlBody,
-        text: textBody,
-        replyTo: replyToAddress
-    };
-
-    try {
-        console.log(`📧 Sending ${status} email to ${to}...`);
-        const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Email sent successfully:', info.messageId);
-        return info;
-    } catch (error) {
-        console.error('❌ Error sending email:', error);
-        throw error;
-    }
+  logger.info('No email template for status', { status });
 };
 
 export const sendApplicationConfirmationEmail = async ({
-    candidateEmail,
-    candidateName,
-    jobTitle,
-    jobCategory,
-    specialty,
-    applicationId,
-    submissionDate
+  candidateEmail,
+  candidateName,
+  jobTitle,
+  jobCategory,
+  specialty,
+  applicationId,
+  submissionDate,
 }: {
-    candidateEmail: string;
-    candidateName: string;
-    jobTitle: string;
-    jobCategory?: string;
-    specialty?: string;
-    applicationId: string;
-    submissionDate: Date;
+  candidateEmail: string;
+  candidateName: string;
+  jobTitle: string;
+  jobCategory?: string;
+  specialty?: string;
+  applicationId: string;
+  submissionDate: Date;
 }) => {
-    if (!transporter) {
-        console.warn("SMTP not configured, skipping confirmation email.");
-        return;
-    }
+  if (!resend) {
+    logger.warn('Resend not configured, skipping confirmation email');
+    return;
+  }
 
-    const formattedDate = submissionDate.toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Europe/Helsinki'
-    });
+  const meta = getEmailMeta();
+  const safeCandidateName = sanitizeText(candidateName);
+  const safeJobTitle = sanitizeText(jobTitle);
+  const safeApplicationId = sanitizeText(applicationId);
 
-    let htmlTemplate = getTemplate('applicationConfirmation', 'html')
-        .replace(/\${candidateName}/g, candidateName)
-        .replace(/\${jobTitle}/g, jobTitle)
-        .replace(/\${applicationId}/g, applicationId)
-        .replace(/\${formattedDate}/g, formattedDate);
+  const formattedDate = submissionDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/Helsinki',
+  });
 
-    let textTemplate = getTemplate('applicationConfirmation', 'txt')
-        .replace(/\${candidateName}/g, candidateName)
-        .replace(/\${jobTitle}/g, jobTitle)
-        .replace(/\${applicationId}/g, applicationId)
-        .replace(/\${formattedDate}/g, formattedDate);
+  const { data, error } = await resend.emails.send({
+    from: meta.from,
+    to: candidateEmail,
+    replyTo: meta.replyTo,
+    subject: `Application Confirmed - ${safeJobTitle} | Application #${safeApplicationId}`,
+    react: React.createElement(ApplicationConfirmationEmail, {
+      candidateName: safeCandidateName,
+      jobTitle: safeJobTitle,
+      applicationId: safeApplicationId,
+      formattedDate,
+      companyName: meta.companyName,
+      supportEmail: meta.supportEmail,
+      contactPhone: meta.contactPhone,
+      jobCategory: jobCategory ? sanitizeText(jobCategory) : undefined,
+      specialty: specialty ? sanitizeText(specialty) : undefined,
+    }),
+  });
 
-    let jobCategoryHtml = '';
-    let jobCategoryText = '';
-    if (jobCategory) {
-        jobCategoryHtml = `
-                        <div class="detail-row">
-                            <span class="detail-label">Job Category:</span>
-                            <span class="detail-value">${jobCategory}</span>
-                        </div>`;
-        jobCategoryText = `- Job Category: ${jobCategory}`;
-    }
-    htmlTemplate = htmlTemplate.replace('<!-- JOB_CATEGORY_PLACEHOLDER -->', jobCategoryHtml);
-    textTemplate = textTemplate.replace('<!-- JOB_CATEGORY_PLACEHOLDER -->', jobCategoryText);
+  if (error) {
+    logger.error('Error sending confirmation email', error, { candidateEmail });
+    throw new Error(error.message);
+  }
 
-    let specialtyHtml = '';
-    let specialtyText = '';
-    if (specialty) {
-        specialtyHtml = `
-                        <div class="detail-row">
-                            <span class="detail-label">Specialty:</span>
-                            <span class="detail-value">${specialty}</span>
-                        </div>`;
-        specialtyText = `- Specialty: ${specialty}`;
-    }
-    htmlTemplate = htmlTemplate.replace('<!-- SPECIALTY_PLACEHOLDER -->', specialtyHtml);
-    textTemplate = textTemplate.replace('<!-- SPECIALTY_PLACEHOLDER -->', specialtyText);
-
-    const mailOptions = {
-        from: {
-            name: 'International Skills Labor Company',
-            address: SMTP_FROM || 'noreply@internationalskills.fi'
-        },
-        to: candidateEmail,
-        subject: `✅ Application Confirmed - ${jobTitle} Position | Application #${applicationId}`,
-        text: textTemplate,
-        html: htmlTemplate,
-        replyTo: 'Apply@internationalskills.fi'
-    };
-
-    try {
-        console.log(`📧 Sending confirmation email to ${candidateEmail}...`);
-        const info = await transporter.sendMail(mailOptions);
-        console.log('✅ Confirmation email sent successfully:', info.messageId);
-        return info;
-    } catch (error) {
-        console.error('❌ Error sending confirmation email:', error);
-        throw error;
-    }
+  logger.info('Confirmation email sent successfully', { messageId: data?.id, candidateEmail });
+  return data;
 };
 
-export const sendRejectionEmail = async (candidateEmail: string, candidateName: string, jobTitle: string) => {
+export const sendRejectionEmail = async (
+  candidateEmail: string,
+  candidateName: string,
+  jobTitle: string
+) => {
   if (!candidateEmail || !candidateName) {
     throw new Error('Missing required fields');
   }
 
-  if (!transporter) {
-    console.warn("SMTP not configured, skipping rejection email.");
+  if (!resend) {
+    logger.warn('Resend not configured, skipping rejection email');
     return;
   }
 
-  const jobTitleText = jobTitle ? `the ${jobTitle} position` : 'opportunities';
+  const meta = getEmailMeta();
+  const jobTitleText = jobTitle ? `the ${sanitizeText(jobTitle)} position` : 'opportunities';
+  const safeCandidateName = sanitizeText(candidateName);
 
-  const htmlTemplate = getTemplate('rejectionEmail', 'html')
-    .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitleText}/g, jobTitleText);
-
-  const textTemplate = getTemplate('rejectionEmail', 'txt')
-    .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitleText}/g, jobTitleText);
-
-  const mailOptions = {
-    from: {
-      name: 'International Skills Labor Company',
-      address: SMTP_FROM || 'noreply@internationalskills.fi'
-      
-    },
+  const { data, error } = await resend.emails.send({
+    from: meta.from,
     to: candidateEmail,
-    subject: `Application Status Update - International Skills Labor Company`,
-    text: textTemplate,
-    html: htmlTemplate,
-    replyTo: 'Apply@internationalskills.fi'
-  };
+    replyTo: meta.replyTo,
+    subject: `Application Status Update - ${meta.companyName}`,
+    react: React.createElement(RejectionEmail, {
+      candidateName: safeCandidateName,
+      jobTitleText,
+      companyName: meta.companyName,
+      supportEmail: meta.supportEmail,
+      contactPhone: meta.contactPhone,
+    }),
+  });
 
-  try {
-    console.log(`📧 Sending rejection email to ${candidateEmail}...`);
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Rejection email sent successfully:', info.messageId);
-    return info;
-  } catch (error) {
-    console.error('❌ Error sending rejection email:', error);
-    throw error;
+  if (error) {
+    logger.error('Error sending rejection email', error, { candidateEmail });
+    throw new Error(error.message);
   }
+
+  logger.info('Rejection email sent successfully', { messageId: data?.id, candidateEmail });
+  return data;
 };
 
 export const sendCancellationEmail = async ({
   candidateEmail,
   candidateName,
   jobTitle,
-  reason
+  reason,
 }: {
   candidateEmail: string;
   candidateName: string;
   jobTitle?: string;
   reason: string;
 }) => {
-  if (!transporter) {
-    console.warn("SMTP not configured, skipping cancellation email.");
+  if (!resend) {
+    logger.warn('Resend not configured, skipping cancellation email');
     return;
   }
 
+  const meta = getEmailMeta();
   const jobTitleText = jobTitle || 'the position';
+  const safeCandidateName = sanitizeText(candidateName);
+  const safeJobTitleText = sanitizeText(jobTitleText);
+  const safeReason = sanitizeText(reason);
 
-  const htmlTemplate = getTemplate('cancellationEmail', 'html')
-    .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitleText}/g, jobTitleText)
-    .replace(/\${reason}/g, reason);
-
-  const textTemplate = getTemplate('cancellationEmail', 'txt')
-    .replace(/\${candidateName}/g, candidateName)
-    .replace(/\${jobTitleText}/g, jobTitleText)
-    .replace(/\${reason}/g, reason);
-
-  const mailOptions = {
-    from: {
-      name: 'International Skills Labor Company',
-      address: SMTP_FROM || 'noreply@internationalskills.fi'
-    },
+  const { data, error } = await resend.emails.send({
+    from: meta.from,
     to: candidateEmail,
-    subject: `⚠️ Interview Cancelled - ${jobTitle || 'Position'} at International Skills`,
-    html: htmlTemplate,
-    text: textTemplate,
-    replyTo: 'Apply@internationalskills.fi'
-  };
+    replyTo: meta.replyTo,
+    subject: `Interview Cancelled - ${safeJobTitleText}`,
+    react: React.createElement(CancellationEmail, {
+      candidateName: safeCandidateName,
+      jobTitleText: safeJobTitleText,
+      reason: safeReason,
+      companyName: meta.companyName,
+      supportEmail: meta.supportEmail,
+      contactPhone: meta.contactPhone,
+    }),
+  });
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`📧 Cancellation email sent to ${candidateEmail}:`, info.messageId);
-    return info;
-  } catch (error) {
-    console.error('❌ Error sending cancellation email:', error);
-    throw error;
+  if (error) {
+    logger.error('Error sending cancellation email', error, { candidateEmail });
+    throw new Error(error.message);
   }
+
+  logger.info('Cancellation email sent', { messageId: data?.id, candidateEmail });
+  return data;
+};
+
+export const sendAdminOtpEmail = async (adminEmail: string, otp: string): Promise<void> => {
+  if (!resend) {
+    logger.warn('Resend not configured, skipping OTP email');
+    return;
+  }
+
+  const meta = getEmailMeta();
+
+  const { data, error } = await resend.emails.send({
+    from: meta.from,
+    to: adminEmail,
+    subject: `Your ${meta.companyName} Admin verification code — ${otp}`,
+    react: React.createElement(AdminOtpEmail, {
+      otp,
+      companyName: meta.companyName,
+      expiryMinutes: OTP_EXPIRY_MINUTES,
+    }),
+  });
+
+  if (error) {
+    logger.error('Error sending admin OTP email', error, { adminEmail });
+    throw new Error(error.message);
+  }
+
+  logger.info('Admin OTP email sent', { messageId: data?.id, adminEmail });
+};
+
+export const sendMagicLinkEmail = async ({
+  to,
+  magicLinkUrl,
+  expiryMinutes,
+}: {
+  to: string;
+  magicLinkUrl: string;
+  expiryMinutes: number;
+}) => {
+  if (!resend) {
+    logger.warn('Resend not configured, skipping magic link email');
+    return;
+  }
+
+  const meta = getEmailMeta();
+
+  const { data, error } = await resend.emails.send({
+    from: meta.from,
+    to,
+    subject: `Your sign-in link for ${meta.companyName}`,
+    react: React.createElement(MagicLinkEmail, {
+      magicLinkUrl,
+      companyName: meta.companyName,
+      expiryMinutes,
+    }),
+  });
+
+  if (error) {
+    logger.error('Error sending magic link email', error, { to: '[redacted]' });
+    throw new Error(error.message);
+  }
+
+  logger.info('Magic link email sent', { messageId: data?.id });
+  return data;
+};
+
+export const sendInterviewerNotificationEmail = async ({
+  adminEmail,
+  candidateName,
+  candidateEmail,
+  jobTitle,
+  interviewDate,
+  duration,
+  meetLink,
+  notes,
+}: {
+  adminEmail: string;
+  candidateName: string;
+  candidateEmail: string;
+  jobTitle: string;
+  interviewDate: Date;
+  duration: number;
+  meetLink: string;
+  notes?: string;
+}): Promise<void> => {
+  if (!resend) {
+    logger.info('Resend not configured, skipping interviewer notification email');
+    return;
+  }
+
+  const meta = getEmailMeta();
+  const safeCandidateName = sanitizeText(candidateName);
+  const safeJobTitle = sanitizeText(jobTitle);
+  const safeNotes = notes ? sanitizeText(notes) : '';
+
+  const formattedDate = interviewDate.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const formattedTime = interviewDate.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
+
+  const { data, error } = await resend.emails.send({
+    from: meta.from,
+    to: adminEmail,
+    subject: `Interview Scheduled: ${safeCandidateName} - ${safeJobTitle}`,
+    react: React.createElement(
+      'div',
+      {
+        style: {
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+          lineHeight: '1.6',
+          color: '#333',
+          maxWidth: '600px',
+          margin: '20px auto',
+          padding: '0',
+        },
+      },
+      React.createElement(
+        'div',
+        {
+          style: {
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
+            overflow: 'hidden',
+          },
+        },
+        React.createElement(
+          'div',
+          {
+            style: {
+              background: 'linear-gradient(135deg, #003A70 0%, #004080 100%)',
+              color: 'white',
+              padding: '25px 30px',
+            },
+          },
+          React.createElement(
+            'p',
+            {
+              style: { margin: '0', fontSize: '1.2em', fontWeight: 'bold' },
+            },
+            `Interview Confirmed — ${safeJobTitle}`
+          )
+        ),
+        React.createElement(
+          'div',
+          {
+            style: { padding: '30px', backgroundColor: '#ffffff' },
+          },
+          React.createElement(
+            'p',
+            null,
+            `An interview has been scheduled with ${safeCandidateName}.`
+          ),
+          React.createElement(
+            'div',
+            {
+              style: {
+                backgroundColor: '#f9f9f9',
+                border: '1px solid #eee',
+                padding: '20px',
+                margin: '20px 0',
+                borderRadius: '5px',
+              },
+            },
+            React.createElement(
+              'p',
+              { style: { margin: '0 0 8px 0', fontWeight: '600' } },
+              'Interview Details'
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Candidate: '),
+              safeCandidateName
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Candidate Email: '),
+              candidateEmail
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Position: '),
+              safeJobTitle
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Date: '),
+              formattedDate
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Time: '),
+              formattedTime
+            ),
+            React.createElement(
+              'p',
+              { style: { margin: '4px 0' } },
+              React.createElement('strong', null, 'Duration: '),
+              `${duration} minutes`
+            ),
+            safeNotes
+              ? React.createElement(
+                  'p',
+                  { style: { margin: '4px 0' } },
+                  React.createElement('strong', null, 'Notes: '),
+                  safeNotes
+                )
+              : null
+          ),
+          meetLink
+            ? React.createElement(
+                'div',
+                { style: { textAlign: 'center', margin: '24px 0' } },
+                React.createElement(
+                  'a',
+                  {
+                    href: meetLink,
+                    style: {
+                      backgroundColor: '#003A70',
+                      color: '#ffffff',
+                      padding: '12px 28px',
+                      borderRadius: '6px',
+                      textDecoration: 'none',
+                      fontWeight: '600',
+                      display: 'inline-block',
+                      fontSize: '15px',
+                    },
+                  },
+                  'Join Google Meet'
+                ),
+                React.createElement(
+                  'p',
+                  { style: { margin: '10px 0 0 0', fontSize: '13px', color: '#666' } },
+                  'Or copy the link: ',
+                  React.createElement(
+                    'a',
+                    { href: meetLink, style: { color: '#003A70', wordBreak: 'break-all' } },
+                    meetLink
+                  )
+                )
+              )
+            : null
+        ),
+        React.createElement(
+          'div',
+          {
+            style: {
+              padding: '20px 30px',
+              backgroundColor: '#f8f9fa',
+              borderTop: '1px solid #e0e0e0',
+              fontSize: '0.9em',
+              color: '#666',
+            },
+          },
+          React.createElement(
+            'p',
+            { style: { margin: '0', fontSize: '12px', color: '#94a3b8' } },
+            'This is an automated message from the Hiring Platform.'
+          )
+        )
+      )
+    ),
+  });
+
+  if (error) {
+    logger.error('Error sending interviewer notification email', error, { adminEmail });
+    throw new Error(error.message);
+  }
+
+  logger.info('Interviewer notification email sent', { messageId: data?.id, adminEmail });
 };

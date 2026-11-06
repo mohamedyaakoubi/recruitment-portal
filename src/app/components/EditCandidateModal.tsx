@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
 import React from 'react';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useEditCandidateForm } from '@/hooks/useEditCandidateForm';
 import type { Candidate } from '@/types';
 import EditModalHeader from './edit-candidate-modal/EditModalHeader';
@@ -20,7 +21,7 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
   onClose,
   candidate,
   onSave,
-  isLoading
+  isLoading,
 }) => {
   const {
     formData,
@@ -34,14 +35,23 @@ const EditCandidateModal: React.FC<EditCandidateModalProps> = ({
     handleJobChange,
     handleSubmit,
   } = useEditCandidateForm(candidate, isOpen, onSave, onClose);
+  const modalRef = useFocusTrap(isOpen);
 
   if (!isOpen || !candidate) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[95vh] flex flex-col">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-modal-title"
+    >
+      <div
+        ref={modalRef}
+        className="flex max-h-[95vh] w-full max-w-4xl flex-col rounded-xl bg-white shadow-2xl dark:bg-gray-800"
+      >
         <EditModalHeader onClose={onClose} isLoading={isLoading} />
-        <div className="p-6 overflow-y-auto flex-grow">
+        <div className="flex-grow overflow-y-auto p-6">
           <EditCandidateForm
             formData={formData}
             errors={errors}

@@ -1,27 +1,50 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CandidateFilters from '../CandidateFilters';
-import { Candidate } from '@/types';
+import { createMockCandidate } from '@/__tests__/utils/factories';
 
 // Mock candidates data for testing
-const mockCandidates: Candidate[] = [
-  { id: '1', name: 'Alice Smith', city: 'New York', country: 'USA', nationality: 'American', jobTitleText: 'Software Engineer', jobCategory: 'IT', specialty: 'Frontend', age: 28, status: 'submitted' },
-  { id: '2', name: 'Bob Johnson', city: 'London', country: 'UK', nationality: 'British', jobTitleText: 'Data Scientist', jobCategory: 'Data', specialty: 'Machine Learning', age: 35, status: 'interview_scheduled' },
+const mockCandidates = [
+  createMockCandidate({
+    id: '1',
+    fullName: 'Alice Smith',
+    city: 'New York',
+    country: 'USA',
+    nationality: 'American',
+    jobTitleText: 'Software Engineer',
+    jobCategory: 'IT',
+    specialty: 'Frontend',
+    age: 28,
+    status: 'submitted',
+  }),
+  createMockCandidate({
+    id: '2',
+    fullName: 'Bob Johnson',
+    city: 'London',
+    country: 'UK',
+    nationality: 'British',
+    jobTitleText: 'Data Scientist',
+    jobCategory: 'Data',
+    specialty: 'Machine Learning',
+    age: 35,
+    status: 'interview_scheduled',
+  }),
 ];
 
 describe('CandidateFilters', () => {
   // Mock functions for filter change handlers
-  const onFilterStatusChange = jest.fn();
-  const onFilterNameChange = jest.fn();
-  const onFilterCityChange = jest.fn();
-  const onFilterCountryChange = jest.fn();
-  const onFilterNationalityChange = jest.fn();
-  const onFilterJobTitleChange = jest.fn();
-  const onFilterCategoryChange = jest.fn();
-  const onFilterSpecialtyChange = jest.fn();
-  const onFilterAgeMinChange = jest.fn();
-  const onFilterAgeMaxChange = jest.fn();
-  const onClearAllFilters = jest.fn();
+  const onFilterStatusChange = vi.fn();
+  const onFilterNameChange = vi.fn();
+  const onFilterCityChange = vi.fn();
+  const onFilterCountryChange = vi.fn();
+  const onFilterNationalityChange = vi.fn();
+  const onFilterJobTitleChange = vi.fn();
+  const onFilterCategoryChange = vi.fn();
+  const onFilterSpecialtyChange = vi.fn();
+  const onFilterAgeMinChange = vi.fn();
+  const onFilterAgeMaxChange = vi.fn();
+  const onClearAllFilters = vi.fn();
 
   const defaultProps = {
     candidates: mockCandidates,
@@ -50,7 +73,7 @@ describe('CandidateFilters', () => {
 
   beforeEach(() => {
     // Clear mock function calls before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders all filter inputs correctly', () => {
@@ -94,7 +117,7 @@ describe('CandidateFilters', () => {
 
   it('calls onFilterStatusChange when a status quick filter is clicked', () => {
     render(<CandidateFilters {...defaultProps} />);
-    const submittedButton = screen.getByRole('button', { name: /Submitted/ });
+    const submittedButton = screen.getByRole('button', { name: /submitted/i });
     fireEvent.click(submittedButton);
     expect(onFilterStatusChange).toHaveBeenCalledWith('submitted');
   });

@@ -2,7 +2,7 @@ Dear ${candidateName},
 
 ✅ APPLICATION SUCCESSFULLY RECEIVED!
 
-We have successfully received your application for the ${jobTitle} position at International Skills Labor Company. Thank you for your interest in joining our team!
+We have successfully received your application for the ${jobTitle} position at The Organization. Thank you for your interest in joining our team!
 
 APPLICATION DETAILS:
 - Application ID: #${applicationId}
@@ -20,16 +20,16 @@ WHAT HAPPENS NEXT?
 ✓ The entire process typically takes 1-2 weeks
 
 NEED HELP? CONTACT US:
-📧 Email: Apply@internationalskills.fi
+📧 Email: support@example.com
 📱 Phone: +358 452644966 | +216 29 581 180
-🌐 Website: internationalskills.fi
+🌐 Website: example.com
 
 IMPORTANT: Please keep this confirmation email for your records. You may need the Application ID for future reference.
 
-We appreciate your interest in International Skills Labor Company and look forward to potentially welcoming you to our team!
+We appreciate your interest in The Organization and look forward to potentially welcoming you to our team!
 
 Best regards,
-International Skills Labor Company
+The Organization
 Human Resources Department
 
 This is an automated confirmation email. Please do not reply to this message. For inquiries, please use the contact information provided above.

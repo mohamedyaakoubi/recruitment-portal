@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import DocumentsAndLinksCard from '../DocumentsAndLinksCard';
@@ -33,7 +32,10 @@ describe('DocumentsAndLinksCard', () => {
   });
 
   it('should render the website links if websites are provided', () => {
-    const candidateWithWebsites = { ...candidate, websites: ['http://example.com', 'http://anotherexample.com'] };
+    const candidateWithWebsites = {
+      ...candidate,
+      websites: ['http://example.com', 'http://anotherexample.com'],
+    };
     render(<DocumentsAndLinksCard candidate={candidateWithWebsites} />);
     expect(screen.getByText('http://example.com')).toBeInTheDocument();
     expect(screen.getByText('http://anotherexample.com')).toBeInTheDocument();

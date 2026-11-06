@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import {
   basicPhoneValidation,
   validatePhoneWithRegex,
@@ -6,135 +6,176 @@ import {
   checkRateLimit,
   updateRateLimit,
 } from '@/lib/phoneValidationService';
+import logger from '@/lib/logger';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
+import { z } from 'zod';
+
+// Validation schema for phone validation
+const phoneValidationSchema = z.object({
+  countryCode: z.string().min(1, 'Country code is required').max(10),
+  phoneNumber: z.string().min(1, 'Phone number is required').max(20),
+});
 
 // 🔥 MAIN API HANDLER
 export async function POST(request: NextRequest) {
   try {
-    const { countryCode, phoneNumber } = await request.json();
+    const body = await request.json();
+    const validatedData = phoneValidationSchema.safeParse(body);
 
-    if (!countryCode || !phoneNumber) {
-      return NextResponse.json(
-        { error: 'Country code and phone number are required' },
-        { status: 400 }
-      );
+    if (!validatedData.success) {
+      // Audit log validation failure
+      const context = extractSecurityContext(request);
+      logSecurityEvent({
+        type: SecurityEventType.INPUT_VALIDATION_FAILED,
+        ...context,
+        details: { endpoint: '/api/validate-phone', errors: validatedData.error.flatten() },
+      });
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
     }
 
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     '127.0.0.1';
+    const { countryCode, phoneNumber } = validatedData.data;
+
+    const clientIP =
+      request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
 
     const cleanPhone = phoneNumber.replace(/\D/g, '');
     const fullPhone = `${countryCode}${cleanPhone}`;
 
-    console.log(`📞 [PRODUCTION] Starting validation for: ${fullPhone}`);
+    logger.info('Starting phone validation', { phone: fullPhone });
 
     // 🔥 STEP 1: Basic format validation
-    console.log('📞 [STEP 1] Basic format validation...');
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Phone validation step 1: Basic format');
+    }
     const basicResult = basicPhoneValidation(fullPhone);
-    
+
     if (!basicResult.isValid) {
-      console.log('❌ [STEP 1] Basic validation failed');
-      return NextResponse.json({
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Basic validation failed', { phone: fullPhone });
+      }
+      return successResponse({
         ...basicResult,
-        message: 'Phone number format is invalid. Please check your input.'
+        message: 'Phone number format is invalid. Please check your input.',
       });
     }
-    console.log('✅ [STEP 1] Basic validation passed');
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Basic validation passed', { phone: fullPhone });
+    }
 
     // 🔥 STEP 2: Regex pattern validation
-    console.log('📞 [STEP 2] Regex pattern validation...');
-    const regexResult = validatePhoneWithRegex(fullPhone);
-    
-    if (!regexResult.isValid) {
-      console.log('❌ [STEP 2] Regex validation failed');
-      updateRateLimit(clientIP.split(',')[0], fullPhone, false);
-      return NextResponse.json({
-        ...regexResult,
-        message: `Phone number format is invalid for ${regexResult.country?.name || 'this country'}. Please check your input.`,
-        suggestion: 'Please verify your phone number format and country code.'
-      });
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Phone validation step 2: Regex pattern');
     }
-    console.log('✅ [STEP 2] Regex validation passed');
+    const regexResult = validatePhoneWithRegex(fullPhone);
 
-    // 🔥 STEP 3: Abstract API validation
-    console.log('📞 [STEP 3] Checking API rate limits...');
-    const rateLimit = checkRateLimit(clientIP.split(',')[0], fullPhone);
-    
-    if (!rateLimit.allowed) {
-      console.log(`🚫 [STEP 3] ${rateLimit.reason}`);
-      
-      if (rateLimit.isFailedNumber) {
-        return NextResponse.json({
-          ...regexResult,
-          warning: 'This phone number was previously validated. Using cached result.',
-          message: '⚠️ Phone number format appears valid (using pattern matching)'
+    if (!regexResult.isValid) {
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Regex validation failed', {
+          phone: fullPhone,
+          country: regexResult.country?.name,
         });
       }
-      
-      return NextResponse.json({
+      const clientIPFirst = clientIP.split(',')[0];
+      if (clientIPFirst) {
+        updateRateLimit(clientIPFirst, fullPhone, false);
+      }
+      return successResponse({
+        ...regexResult,
+        message: `Phone number format is invalid for ${regexResult.country?.name || 'this country'}. Please check your input.`,
+        suggestion: 'Please verify your phone number format and country code.',
+      });
+    }
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Regex validation passed', { phone: fullPhone });
+    }
+
+    // 🔥 STEP 3: Abstract API validation
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Phone validation step 3: Checking API rate limits');
+    }
+    const clientIPFirst = clientIP.split(',')[0];
+    if (!clientIPFirst) {
+      logger.error('No client IP found');
+      return ApiErrors.badRequest('Invalid request');
+    }
+    const rateLimit = checkRateLimit(clientIPFirst, fullPhone);
+
+    if (!rateLimit.allowed) {
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug('Rate limit reached', { reason: rateLimit.reason, phone: fullPhone });
+      }
+
+      if (rateLimit.isFailedNumber) {
+        return successResponse({
+          ...regexResult,
+          warning: 'This phone number was previously validated. Using cached result.',
+          message: '⚠️ Phone number format appears valid (using pattern matching)',
+        });
+      }
+
+      return successResponse({
         ...regexResult,
         warning: 'API limit reached. Using pattern matching validation.',
-        message: '⚠️ Phone number format appears valid (using pattern matching)'
+        message: '⚠️ Phone number format appears valid (using pattern matching)',
       });
     }
 
     // Try Abstract API
     try {
       if (process.env.ABSTRACT_PHONE_API_KEY) {
-        console.log('📞 [STEP 3] Calling Abstract API...');
-        const apiResult = await validatePhoneWithAbstractAPI(fullPhone);
-        updateRateLimit(clientIP.split(',')[0], fullPhone, true);
-        
-        console.log(`✅ [STEP 3] API validation completed: ${apiResult.isValid ? 'VALID' : 'INVALID'}`);
-        
-        if (!apiResult.isValid) {
-          updateRateLimit(clientIP.split(',')[0], fullPhone, false);
+        if (process.env.NODE_ENV === 'development') {
+          logger.debug('Calling Abstract API for phone validation', { phone: fullPhone });
         }
-        
-        return NextResponse.json({
+        const apiResult = await validatePhoneWithAbstractAPI(fullPhone);
+        if (clientIPFirst) {
+          updateRateLimit(clientIPFirst, fullPhone, true);
+        }
+
+        logger.info('API validation completed', { phone: fullPhone, isValid: apiResult.isValid });
+
+        if (!apiResult.isValid && clientIPFirst) {
+          updateRateLimit(clientIPFirst, fullPhone, false);
+        }
+
+        return successResponse({
           ...apiResult,
-          message: apiResult.isValid 
+          message: apiResult.isValid
             ? `✅ Phone number verified for ${apiResult.country?.name || 'your country'}${apiResult.carrier ? ` (${apiResult.carrier})` : ''}`
             : `❌ Phone number verification failed: ${apiResult.error || 'Invalid number'}`,
-          attemptsLeft: rateLimit.attemptsLeft - 1
+          attemptsLeft: rateLimit.attemptsLeft - 1,
         });
       } else {
         throw new Error('No API key configured');
       }
     } catch (error) {
-      console.warn('📞 [STEP 3] Abstract API failed, using regex result:', error);
-      
-      return NextResponse.json({
+      logger.warn('Abstract API failed, using regex result', { phone: fullPhone, error });
+
+      return successResponse({
         ...regexResult,
         warning: 'Phone verification service temporarily unavailable. Using pattern matching.',
-        message: '⚠️ Phone number format appears valid (verification service unavailable)'
+        message: '⚠️ Phone number format appears valid (verification service unavailable)',
       });
     }
-
   } catch (error) {
-    console.error('Phone validation error:', error);
-    
+    logger.error('Phone validation error', error);
+
     try {
       const { countryCode, phoneNumber } = await request.json();
       const cleanPhone = phoneNumber.replace(/\D/g, '');
       const fullPhone = `${countryCode}${cleanPhone}`;
       const basicResult = basicPhoneValidation(fullPhone);
-      
-      return NextResponse.json({
+
+      return successResponse({
         ...basicResult,
         warning: 'Validation service temporarily unavailable. Using basic format check.',
-        message: basicResult.isValid 
+        message: basicResult.isValid
           ? '⚠️ Phone format appears valid (service unavailable)'
           : '❌ Invalid phone number format',
-        error: 'Service temporarily unavailable'
+        error: 'Service temporarily unavailable',
       });
     } catch {
-      return NextResponse.json({
-        isValid: false,
-        error: 'Service temporarily unavailable',
-        fallbackUsed: 'failed',
-        validationLevel: 'low'
-      }, { status: 500 });
+      return ApiErrors.internal('Service temporarily unavailable');
     }
   }
 }

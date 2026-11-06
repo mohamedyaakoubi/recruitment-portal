@@ -1,26 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { verifyEmail } from '@/services/emailVerification';
+import logger from '@/lib/logger';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
+import { z } from 'zod';
+
+const verifyEmailSchema = z.object({
+  email: z.string().email('Invalid email address').toLowerCase().trim().max(254),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    const validatedData = verifyEmailSchema.safeParse(body);
 
-    if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      );
+    if (!validatedData.success) {
+      // Audit log validation failure
+      const context = extractSecurityContext(request);
+      logSecurityEvent({
+        type: SecurityEventType.INPUT_VALIDATION_FAILED,
+        ...context,
+        details: { endpoint: '/api/verify-email', errors: validatedData.error.flatten() },
+      });
+      return ApiErrors.badRequest('Invalid email address', validatedData.error.flatten());
     }
+
+    const { email } = validatedData.data;
 
     const verificationResult = await verifyEmail(email);
 
-    return NextResponse.json(verificationResult);
-
+    return successResponse(verificationResult);
   } catch (error) {
-    console.error('Email verification error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error during email verification' },
-      { status: 500 }
-    );
+    logger.error('Email verification error', error);
+    return ApiErrors.internal('Internal server error during email verification', error);
   }
 }

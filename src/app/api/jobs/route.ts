@@ -1,65 +1,112 @@
 // src/app/api/jobs/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getJobs, createJob, updateJob, deleteJob } from '@/services/jobs';
+import logger from '@/lib/logger';
+import { successResponse, ApiErrors } from '@/lib/apiResponse';
+import { jobSchema, jobUpdateSchema } from '@/lib/validations';
+import { requireAdminAuth } from '@/lib/auth';
+import { withCsrfProtection } from '@/lib/csrf-middleware';
+import { logSecurityEvent, SecurityEventType, extractSecurityContext } from '@/lib/security-logger';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const activeOnly = searchParams.get('activeOnly') === 'true';
     const { jobs, categories } = await getJobs(activeOnly);
-    return NextResponse.json({ jobs, categories });
+    return successResponse({ jobs, categories });
   } catch (error) {
-    console.error("Error fetching jobs:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch jobs';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    logger.error('Error fetching jobs', error);
+    return ApiErrors.internal('Failed to fetch jobs', error);
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withCsrfProtection(async (request: NextRequest) => {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
-    const jobData = await request.json();
-    const { jobId } = await createJob(jobData);
-    return NextResponse.json({ 
-      success: true, 
-      jobId,
-      message: 'Job created successfully'
+    const body = await request.json();
+    const validatedData = jobSchema.safeParse(body);
+
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
+    }
+
+    const { jobId } = await createJob(validatedData.data);
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_JOB_CREATED,
+      ...context,
+      details: { jobId, jobTitle: validatedData.data.title },
     });
-  } catch (error) {
-    console.error("Error creating job:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create job';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
-  }
-}
 
-export async function PUT(request: NextRequest) {
+    return successResponse({ jobId }, { message: 'Job created successfully' });
+  } catch (error) {
+    logger.error('Error creating job', error);
+    return ApiErrors.internal('Failed to create job', error);
+  }
+});
+
+export const PUT = withCsrfProtection(async (request: NextRequest) => {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
-    const { jobId, ...jobData } = await request.json();
+    const body = await request.json();
+    const validatedData = jobUpdateSchema.safeParse(body);
+
+    if (!validatedData.success) {
+      return ApiErrors.badRequest('Validation failed', validatedData.error.flatten());
+    }
+
+    const { jobId, ...jobData } = validatedData.data;
     await updateJob(jobId, jobData);
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Job updated successfully'
-    });
-  } catch (error) {
-    console.error("Error updating job:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to update job';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
-  }
-}
 
-export async function DELETE(request: NextRequest) {
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_JOB_UPDATED,
+      ...context,
+      details: { jobId, updatedFields: Object.keys(jobData) },
+    });
+
+    return successResponse({ jobId }, { message: 'Job updated successfully' });
+  } catch (error) {
+    logger.error('Error updating job', error);
+    return ApiErrors.internal('Failed to update job', error);
+  }
+});
+
+export const DELETE = withCsrfProtection(async (request: NextRequest) => {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get('jobId');
-    if (jobId) {
-      await deleteJob(jobId);
+
+    if (!jobId) {
+      return ApiErrors.badRequest('Job ID is required');
     }
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Job deleted successfully'
+
+    await deleteJob(jobId);
+
+    // Log admin operation
+    const context = extractSecurityContext(request);
+    logSecurityEvent({
+      type: SecurityEventType.ADMIN_JOB_DELETED,
+      ...context,
+      details: { jobId },
     });
+
+    return successResponse({ jobId }, { message: 'Job deleted successfully' });
   } catch (error) {
-    console.error("Error deleting job:", error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to delete job';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    logger.error('Error deleting job', error);
+    return ApiErrors.internal('Failed to delete job', error);
   }
-}
+});

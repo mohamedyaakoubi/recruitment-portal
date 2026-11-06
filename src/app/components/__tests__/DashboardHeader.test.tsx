@@ -1,10 +1,11 @@
 import React from 'react';
+import { vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import DashboardHeader from '../DashboardHeader';
 
 describe('DashboardHeader', () => {
-  const onManageJobsClick = jest.fn();
-  const onSignOut = jest.fn();
+  const onManageJobsClick = vi.fn();
+  const onSignOut = vi.fn();
 
   const defaultProps = {
     userEmail: 'test@example.com',
@@ -13,12 +14,13 @@ describe('DashboardHeader', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the welcome message with the user email', () => {
     render(<DashboardHeader {...defaultProps} />);
-    expect(screen.getByText('Welcome back, test@example.com')).toBeInTheDocument();
+    expect(screen.getByText(/Welcome back/)).toBeInTheDocument();
+    expect(screen.getByText('test@example.com')).toBeInTheDocument();
   });
 
   it('calls onManageJobsClick when the "Manage Jobs" button is clicked', () => {
