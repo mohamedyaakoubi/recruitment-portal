@@ -72,3 +72,6 @@ ui-debug.log
 !public/**/*.txt
 !src/lib/emailTemplates/*.txt
 
+
+# Playwright login snapshot, recreated by e2e/global-setup.ts (holds the Firebase key)
+e2e/.auth/
