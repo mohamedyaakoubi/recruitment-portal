@@ -38,13 +38,11 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
-__mocks__/
-# Ignore test files
-__tests__/
-**/*.test.*
-**/*.spec.*
+# Markdown files (except the README) and Word documents
+*.md
+!README.md
+*.docx
 
 # Ignore test snapshots (used with Jest)
 *.snap
@@ -55,9 +53,22 @@ coverage/
 
 # Ignore test result outputs (Vitest/Jest, etc.)
 test-results/
+test-results.json
 *.log
 
-# Ignore Playwright/Cypress test artifacts (optional if you use them)
+# Ignore Playwright/Cypress test artifacts
 playwright-report/
 cypress/videos/
 cypress/screenshots/
+
+# Firebase emulator data
+emulator-data/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Temporary/generated files
+*.txt
+!public/**/*.txt
+!src/lib/emailTemplates/*.txt
+
