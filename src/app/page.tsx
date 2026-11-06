@@ -1,7 +1,9 @@
 ﻿'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { ThemeSwitcher } from './components/ui/ThemeSwitcher';
+import { useTheme } from 'next-themes';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import logger from '@/lib/logger';
@@ -25,8 +27,11 @@ export default function LandingPage() {
   const [error, setError] = useState<string | null>(null);
   const [linkSent, setLinkSent] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Show expiry / error messages from magic link redirects
     const params = new URLSearchParams(window.location.search);
     const urlError = params.get('error');
@@ -168,9 +173,17 @@ export default function LandingPage() {
         </div>
         <nav className="mx-auto max-w-screen-xl px-4 sm:px-6">
           <div className="flex items-center justify-between py-4">
-            <span className="text-xl font-bold text-[#003A70] dark:text-white">
-              {process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
-            </span>
+            {mounted ? (
+              <Image
+                src={resolvedTheme === 'dark' ? '/logo-skills-white.png' : '/logo-skills.png'}
+                alt={process.env.NEXT_PUBLIC_COMPANY_NAME || 'International Skills Labor Company'}
+                width={180}
+                height={45}
+                priority
+              />
+            ) : (
+              <div style={{ width: 180, height: 45 }} />
+            )}
             <ThemeSwitcher />
           </div>
         </nav>
@@ -381,9 +394,13 @@ export default function LandingPage() {
         <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6">
           <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
             <div>
-              <p className="mb-4 text-xl font-bold text-white">
-                {process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
-              </p>
+              <Image
+                src="/logo-skills-white.png"
+                alt={process.env.NEXT_PUBLIC_COMPANY_NAME || 'International Skills Labor Company'}
+                width={180}
+                height={45}
+                className="mb-4"
+              />
               <p className="text-sm text-slate-300">
                 Connecting talented professionals with international opportunities.
               </p>
@@ -463,7 +480,8 @@ export default function LandingPage() {
           <div className="mt-12 border-t border-slate-700 pt-8 text-center">
             <p className="text-sm text-slate-400">
               © {new Date().getFullYear()}{' '}
-              {process.env.NEXT_PUBLIC_COMPANY_NAME || 'The Organization'}. All Rights Reserved.
+              {process.env.NEXT_PUBLIC_COMPANY_NAME || 'International Skills Labor Company'}. All
+              Rights Reserved.
             </p>
           </div>
         </div>

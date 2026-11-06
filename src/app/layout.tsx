@@ -7,15 +7,15 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: {
-    default: 'Career Portal',
-    template: '%s | Career Portal',
+    default: 'International Skills - Career Portal',
+    template: '%s | International Skills',
   },
   description:
     'Connect with international job opportunities and take the next step in your professional journey.',
-  keywords: ['jobs', 'careers', 'international', 'recruitment'],
-  authors: [{ name: 'The Organization' }],
+  keywords: ['jobs', 'careers', 'international', 'recruitment', 'Finland'],
+  authors: [{ name: 'International Skills Labor Company' }],
   openGraph: {
-    title: 'Career Portal',
+    title: 'International Skills - Career Portal',
     description: 'Your career journey starts here',
     type: 'website',
     locale: 'en_US',

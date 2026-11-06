@@ -4,7 +4,7 @@
 export const EMAIL_ADDRESSES = {
   NOREPLY: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
   SUPPORT: process.env.SUPPORT_EMAIL || 'support@example.com',
-  COMPANY_NAME: process.env.COMPANY_NAME || 'The Organization',
+  COMPANY_NAME: process.env.COMPANY_NAME || 'International Skills Labor Company',
   CONTACT_PHONE: process.env.CONTACT_PHONE || '',
 } as const;
 

@@ -1,10 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useTheme } from 'next-themes';
 import { ThemeSwitcher } from '@/app/components/ui/ThemeSwitcher';
 import LogoutButton from '@/app/components/candidate-common/LogoutButton';
 
 const Header: React.FC = () => {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <header className="sticky top-0 z-20 bg-white shadow-sm dark:bg-gray-800">
       <div className="bg-[#003A70] py-1.5 text-xs text-white">
@@ -63,9 +72,17 @@ const Header: React.FC = () => {
       </div>
       <nav className="mx-auto max-w-screen-xl px-4 sm:px-6">
         <div className="flex items-center justify-between py-4">
-          <span className="text-xl font-bold text-[#003A70] dark:text-white">
-            {process.env.NEXT_PUBLIC_COMPANY_NAME || 'Career Portal'}
-          </span>
+          {mounted ? (
+            <Image
+              src={resolvedTheme === 'dark' ? '/logo-skills-white.png' : '/logo-skills.png'}
+              alt={process.env.NEXT_PUBLIC_COMPANY_NAME || 'International Skills Labor Company'}
+              width={180}
+              height={45}
+              priority
+            />
+          ) : (
+            <div style={{ width: 180, height: 45 }} />
+          )}
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
             <LogoutButton />
