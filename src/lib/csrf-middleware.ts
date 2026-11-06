@@ -69,10 +69,13 @@ export async function validateCsrf(request: NextRequest): Promise<NextResponse |
 /**
  * Higher-order function to wrap API route handlers with CSRF protection
  */
-export function withCsrfProtection<T>(
-  handler: (request: NextRequest, ...args: T[]) => Promise<NextResponse>
+export function withCsrfProtection<C = unknown>(
+  handler: (request: NextRequest, context?: C) => Promise<NextResponse>
 ) {
-  return async (request: NextRequest, ...args: T[]): Promise<NextResponse> => {
+  // The second parameter is Next.js's route context ({ params }). Next.js 15.5
+  // checks that every exported handler accepts it, so it must not be typed as
+  // a rest parameter, which TypeScript infers as never[] for one-argument handlers.
+  return async (request: NextRequest, context?: C): Promise<NextResponse> => {
     // Validate CSRF
     const csrfError = await validateCsrf(request);
     if (csrfError) {
@@ -80,6 +83,6 @@ export function withCsrfProtection<T>(
     }
 
     // If validation passes, call the original handler
-    return handler(request, ...args);
+    return handler(request, context);
   };
 }
