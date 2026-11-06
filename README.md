@@ -166,26 +166,6 @@ Each value goes into `.env.local` for local work, and into the project settings 
 
 The 8 failures come from tests that were not updated after the code changed in April 2026. The recruiter sign-in moved from a password to a one-time code, so `useAuth.test.tsx` (3 tests) still calls a password sign-in that no longer exists. The candidate header started to read the page address, and the mock in `DashboardHeader.test.tsx` (4 tests) does not provide it. `useCandidateDashboard.test.ts` (1 test) has the same kind of out-of-date mock.
 
-## Project structure
-
-```text
-src/
-  app/                  pages: home, candidate choices, application form, candidate dashboard, recruiter dashboard
-    api/                25 API routes: sign-in, candidates, jobs, scoring, interviews, export, health
-    components/         the interface, one folder per feature
-  components/emails/    the 6 email templates
-  hooks/                React hooks, one per feature
-  lib/                  security (CSRF, rate limits, origin check, encryption), Firebase, logging, validation
-  services/             the logic: candidates, jobs, scoring, interviews, email, codes, links
-  middleware.ts         security headers, CORS and rate limits on every request
-  instrumentation.ts    checks the environment when the server starts
-e2e/                    Playwright tests
-scripts/                maintenance scripts
-firestore.rules         database rules
-storage.rules           file storage rules
-vercel.json             the daily cron
-```
-
 ## Deploy
 
 1. Import the repository in Vercel, and add every variable of the setup steps in the project settings.
